@@ -1,0 +1,12 @@
+*.x86f
+*.fasl
+*.dfsl
+*.lx64fsl
+*.elc
+_darcs
+.DS_Store
+.gitignore
+.hg
+*~
+.cvsignore
+*CVS
