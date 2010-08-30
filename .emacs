@@ -184,12 +184,23 @@ by using nxml's indentation rules."
 
 ;;
 ;; save-visited-files
+;;  * http://github.com/nflath/save-visited-files
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/save-visited-files/")
 (require 'save-visited-files)
 (turn-on-save-visited-files-mode)
 
-;labrepl
-;(setq inferior-lisp-program "script/swank")
-;(setq load-path (append (list "/Users/ffailla/dev/labrepl")))
-;(setq load-path (cons "~/dev/org-mode/lisp" "/opt/local/bin" load-path))
+;;labrepl
+;;(setq inferior-lisp-program "script/swank")
+;;(setq load-path (append (list "/Users/ffailla/dev/labrepl")))
+;;(setq load-path (cons "~/dev/org-mode/lisp" "/opt/local/bin" load-path))
+
+;;
+;; jdee
+;;  * http://jdee.sourceforge.net/
+;; 
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/jdee/lisp"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/cedet/common"))
+(load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
+(require 'jde)
