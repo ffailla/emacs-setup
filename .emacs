@@ -21,7 +21,7 @@
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
 ;(setq inferior-lisp-program "/opt/sbcl/bin/sbcl") ; your Lisp system
-;(setq inferior-lisp-program "/opt/local/bin/lisp")
+(setq inferior-lisp-program "/opt/local/bin/lisp")
 (require 'slime)
 (slime-setup '(slime-repl slime-fuzzy))
 
@@ -68,18 +68,23 @@
 (setq hl-paren-colors
       '(;"#8f8f8f" ; this comes from Zenburn
                    ; and I guess I'll try to make the far-outer parens look likethis
-        "orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"))
+        ;"orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
+	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154" 
+	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
+	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
+	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
+))
 
 ;;
 ;; setup clojure-mode hook
 ;;
 (defun clojure-mode-setup ()
   (highlight-parentheses-mode t)
-  (paredit-mode t)
-;  (set-up-slime-ac t)
-)
+  (paredit-mode t))
+
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
-;(add-hook 'slime-repl-mode-hook #'list-setup)
+;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
+(add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 ;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
 
 ;;
@@ -112,6 +117,14 @@ by using nxml's indentation rules."
       (indent-region begin end))
     (message "Ah, much better!"))
 
+(defun pprint-xml ()
+  (interactive)
+  (push-mark)
+  (pprint-xml-region (point-min) (point-max)))
+
+;;
+;; slime java helers
+;;
 (defun slime-java-describe (symbol-name)
   "Get details on Java class/instance at point."
   (interactive (list (slime-read-symbol-name "Java Class/instance: ")))
@@ -204,3 +217,34 @@ by using nxml's indentation rules."
 (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
 (require 'jde)
+
+;;
+;; diff-mode customization
+;;
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(diff-added ((t (:foreground "#559944"))))
+ '(diff-context ((t nil)))
+ '(diff-file-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
+ '(diff-function ((t (:foreground "#00bbdd"))))
+ '(diff-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
+ '(diff-hunk-header ((t (:foreground "#fbde2d"))))
+ '(diff-nonexistent ((t (:inherit diff-file-header :strike-through nil))))
+ '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
+ '(diff-removed ((t (:foreground "#de1923")))))(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(diff-added ((t (:foreground "#559944"))))
+ '(diff-context ((t nil)))
+ '(diff-file-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
+ '(diff-function ((t (:foreground "#00bbdd"))))
+ '(diff-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
+ '(diff-hunk-header ((t (:foreground "#fbde2d"))))
+ '(diff-nonexistent ((t (:inherit diff-file-header :strike-through nil))))
+ '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
+ '(diff-removed ((t (:foreground "#de1923")))))
