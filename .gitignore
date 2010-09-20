@@ -12,3 +12,4 @@ _darcs
 *CVS
 *.svn
 ac-comphist.dat
+semantic.cache

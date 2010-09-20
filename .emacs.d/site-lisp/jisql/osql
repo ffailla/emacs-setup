@@ -1,0 +1,49 @@
+#!/bin/sh
+
+export CLASSPATH=$CLASSPATH:~/.m2/repository/com/microsoft/sqljdbc4/3.0/sqljdbc4-3.0.jar:~/dev/jisql-2.0.7/lib/jisql-2.0.7.jar:~/dev/jisql-2.0.7/lib/jopt-simple-3.2.jar:~/dev/jisql-2.0.7/lib/javacsv.jar
+
+java -server -Xmx1G -cp $CLASSPATH com.xigole.util.sql.Jisql -user $4 -password $2 -driver com.microsoft.sqlserver.jdbc.SQLServerDriver -cstring jdbc:sqlserver://$8:1433\;database=$6 
+
+#-w "50"
+
+#echo $1
+#echo $2
+#echo $3
+#echo $4
+#echo $5
+#echo $6
+#echo $7
+#echo $8  
+#echo $9
+#echo $10
+#echo $11
+#echo $12
+#echo $13
+#echo $14
+#echo $15
+#echo $16
+#echo $17
+#echo $18
+#echo $19
+#echo $20
+
+#-P
+#PASSWORD
+#-U
+#sa
+#-d
+#EASProd
+#-S
+#10.166.128.75
+#-w
+#-P0
+#-P1
+#-P2
+#-P3
+#-P4
+#-P5
+#-P6
+#-P7
+#-P8
+#-P9
+#PASSWORD
