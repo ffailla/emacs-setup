@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export CLASSPATH=$CLASSPATH:~/.m2/repository/com/microsoft/sqljdbc4/3.0/sqljdbc4-3.0.jar:~/dev/jisql-2.0.7/lib/jisql-2.0.7.jar:~/dev/jisql-2.0.7/lib/jopt-simple-3.2.jar:~/dev/jisql-2.0.7/lib/javacsv.jar
+export CLASSPATH=$CLASSPATH:~/.m2/repository/com/microsoft/sqljdbc4/3.0/sqljdbc4-3.0.jar:./lib/jisql-2.0.7.jar:./lib/jopt-simple-3.2.jar:./lib/javacsv.jar
 
 java -server -Xmx1G -cp $CLASSPATH com.xigole.util.sql.Jisql -user $4 -password $2 -driver com.microsoft.sqlserver.jdbc.SQLServerDriver -cstring jdbc:sqlserver://$8:1433\;database=$6 
 

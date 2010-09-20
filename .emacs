@@ -276,8 +276,8 @@ by using nxml's indentation rules."
 
 
 ;;
-;; sql-mode
-;;
+;; sql-mode / jisql
+;;  * http://www.xigole.com/software/jisql/jisql.jsp
 (defun my-sql-save-history-hook ()
   (let ((lval 'sql-input-ring-file-name)
 	(rval 'sql-product))
