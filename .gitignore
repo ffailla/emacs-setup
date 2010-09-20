@@ -10,3 +10,5 @@ _darcs
 *~
 .cvsignore
 *CVS
+*.svn
+ac-comphist.dat

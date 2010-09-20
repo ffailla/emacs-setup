@@ -1,8 +1,14 @@
-;; init env paths
+(defvar *emacs-load-start* (current-time))
+
+;; init env 
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
-(setenv "PATH" (concat (getenv "PATH") ":/opt/local/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":/opt/local/bin:/usr/local/bin"))
 (setq exec-path (append exec-path '("/opt/local/bin")))
+(setq exec-path (append exec-path '("/usr/local/bin")))
 
 ;;; This was installed by package-install.el.
 ;;; This provides support for the package system and
@@ -24,6 +30,7 @@
 (setq inferior-lisp-program "/opt/local/bin/lisp")
 (require 'slime)
 (slime-setup '(slime-repl slime-fuzzy))
+(eval-after-load 'slime '(setq slime-protocol-version 'ignore))
 
 ;;
 ;; paredit
@@ -221,6 +228,7 @@ by using nxml's indentation rules."
 ;;
 ;; diff-mode customization
 ;;
+(add-to-list 'auto-mode-alist '("\\COMMIT_EDITMSG\\'" . diff-mode))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
@@ -248,3 +256,65 @@ by using nxml's indentation rules."
  '(diff-nonexistent ((t (:inherit diff-file-header :strike-through nil))))
  '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
  '(diff-removed ((t (:foreground "#de1923")))))
+
+;;
+;; csharpmode
+;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
+;;
+(add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
+(autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
+(setq auto-mode-alist
+      (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
+;find . -name "*.cs" -print | etags -
+
+;(defun my-csharp-mode-fn ()
+;  "function that runs when csharp-mode is initialized for a buffer."
+;  ...insert your code here...
+;  ...most commonly, your custom key bindings ...
+;  )
+;(add-hook  'csharp-mode-hook 'my-csharp-mode-fn t)
+
+
+;;
+;; sql-mode
+;;
+(defun my-sql-save-history-hook ()
+  (let ((lval 'sql-input-ring-file-name)
+	(rval 'sql-product))
+    (if (symbol-value rval)
+	(let ((filename 
+	       (concat "~/.emacs.d/sql/"
+		       (symbol-name (symbol-value rval))
+		       "-history.sql")))
+	  (set (make-local-variable lval) filename))
+      (error
+         (format "SQL history will not be saved because %s is nil"
+                 (symbol-name rval))))))
+(add-hook 'sql-interactive-mode-hook 'my-sql-save-history-hook)
+(setq exec-path (append exec-path '("~/.emacs.d/site-lisp/jisql")))
+
+;;(defun sql-add-newline-first (output)
+;;  "Add newline to beginning of OUTPUT for `comint-preoutput-filter-functions'"
+;;  (concat "\n" output))
+
+;;(defun sqli-add-hooks ()
+;;  "Add hooks to `sql-interactive-mode-hook'."
+;;  (add-hook 'comint-preoutput-filter-functions
+;;	    'sql-add-newline-first))
+;;  (add-hook 'sql-interactive-mode-hook 'sqli-add-hooks)
+
+;;
+;; ess
+;;  * http://ess.r-project.org/
+;;
+(add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
+(require 'ess-site)
+;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
+
+;;
+;; start emacs server
+;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
+(server-start)
+
+(message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
+				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
