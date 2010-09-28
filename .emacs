@@ -1,5 +1,7 @@
 (defvar *emacs-load-start* (current-time))
 
+(require 'cl)
+
 ;; init env 
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
@@ -55,6 +57,7 @@
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-complete/")
 (require 'auto-complete-config)
+(autoload 'ac-config-load "auto-complete-config" t)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
 (ac-config-default)
 
