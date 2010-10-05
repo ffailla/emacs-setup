@@ -28,9 +28,12 @@
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
 (setq inferior-lisp-program "/opt/local/bin/lisp")
-(require 'slime)
-(slime-setup '(slime-repl slime-fuzzy))
-(eval-after-load 'slime '(setq slime-protocol-version 'ignore))
+(autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
+(autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
+(eval-after-load 'slime 
+  '(progn 
+     (setq slime-protocol-version 'ignore)
+     (slime-setup '(slime-repl slime-fuzzy))))
 
 ;;
 ;; paredit
@@ -50,13 +53,39 @@
 (autoload 'clojure-mode "clojure-mode" nil t)
 (autoload 'clojure-test-mode "clojure-test-mode" nil t)
 
+;;
+;; setup clojure-mode hook
+;;
+;; cdt
+;;  * http://georgejahad.com/clojure/emacs-cdt.html
+;;  * git://github.com/GeorgeJahad/cdt.git
+;;
+(defun clojure-mode-setup ()
+  (slime-mode t)
+  (show-paren-mode t)
+  (highlight-parentheses-mode t)
+  (paredit-mode t)
+  (progn
+    (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
+    (setq cdt-source-path 
+	  (reduce (lambda (acc f)
+		    (concat (expand-file-name acc) ":" (expand-file-name f)))
+		  '("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
+    (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
+
+(add-hook 'clojure-mode-hook #'clojure-mode-setup)
+(add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
+(add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
+;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
+;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
+
 ;;  
 ;; auto-complete
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-complete/")
 (require 'auto-complete-config)
-;;(autoload 'auto-complete-config "auto-complete-config" nil t)
-(autoload 'ac-config-load "auto-complete-config" nil t)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
 (ac-config-default)
 
@@ -73,29 +102,13 @@
 ;;  * http://nschum.de/src/emacs/highlight-parentheses/
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/highlight-parentheses/")
-(require 'highlight-parentheses)
+(autoload 'highlight-parentheses-mode "highlight-parentheses" "highlight parentheses mode" t)
 (setq hl-paren-colors
       '(;;"orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
-	"grey55" "#7F9F7F" "#8CD0D3" "#DCA3A3" "#385F38" "#F0DFAF" "#BCA3A3" "#C0BED1" "#FFCFAF" "#F0EFD0" "#F0DFAF" "#DFCFAF"
-	
+	"grey55" "#7F9F7F" "#8CD0D3" "#DCA3A3" "#385F38" "#F0DFAF" "#BCA3A3" "#C0BED1" "#FFCFAF" "#F0EFD0" "#F0DFAF" "#DFCFAF"	
 	"brown" "Darkblue" "darkgray" "darkgreen" "darkcyan" "darkred" "darkmagenta" "brown" "gray" "black" "darkmagenta" "Darkblue" "darkgreen" "darkcyan" "darkred" "red"
-	
 	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154" 
 ))
-
-;;
-;; setup clojure-mode hook
-;;
-(defun clojure-mode-setup ()
-  (show-paren-mode t)
-  (highlight-parentheses-mode t)
-  (paredit-mode t))
-
-(add-hook 'clojure-mode-hook #'clojure-mode-setup)
-(add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
-(add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
-;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
-;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
 ;;
 ;; nxml-mode
@@ -145,7 +158,7 @@ by using nxml's indentation rules."
 ;;  * http://github.com/philjackson/magit
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/magit/")
-(require 'magit)
+(autoload 'magit-status "magit" nil t)
 
 ;;
 ;; log4j mode
@@ -174,8 +187,8 @@ by using nxml's indentation rules."
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
-;(global-font-lock-mode 1)                     ; for all buffers
 (add-hook 'org-mode-hook 'turn-on-font-lock)  ; Org buffers only
+;(global-font-lock-mode 1)                     ; for all buffers
 
 ;;
 ;; save-visited-files
@@ -261,24 +274,47 @@ by using nxml's indentation rules."
 ;;  * http://ess.r-project.org/
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
-(autoload 'ess-site "ess-site" nil t)
-(add-to-list 'auto-mode-alist '("\\.R\\'" . ess-site))
-;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
+(setq ess-r-versions nil)
 
-;;
-;; cdt
-;;  * http://georgejahad.com/clojure/emacs-cdt.html
-;;  * git://github.com/GeorgeJahad/cdt.git
-;;
-(progn
-  (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
-  (setq cdt-source-path 
-	(reduce (lambda (acc f)
-		  (concat (expand-file-name acc) ":" (expand-file-name f)))
-		'("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
-  (load-file (format "%s/ide/emacs/cdt.el" cdt-dir)))
+(autoload 'ess-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'R-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'R "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'S-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'Rnw-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'omegahat-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'XLS-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'STA-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'SAS-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'S-transcript-mode "ess-site" "Emacs Speaks Statistics" t)
+(autoload 'R-transcript-mode "ess-site" "Emacs Speaks Statistics" t)
+
+(autoload 'actr-mode "actr-mode" "ACT-R mode" 'interactive nil)
+(add-to-list (quote auto-mode-alist) (quote ("\\.actr\\'" . actr-mode)))
+
+(setq auto-mode-alist
+	(append
+	 '(("\\.sp\\'"		. S-mode) ;; re: Don MacQueen <macq@llnl.gov>
+	   ("\\.[qsS]\\'"	. S-mode) ;; q,s,S [see ess-restore-asm-extns above!]
+	   ("\\.ssc\\'"		. S-mode) ;; Splus 4.x script files.
+	   ("\\.[rR]\\'"	. R-mode)
+	   ("\\.[rR]nw\\'"	. Rnw-mode)
+	   ("\\.[rR]profile\\'" . R-mode)
+	   ("NAMESPACE\\'"	. R-mode)
+	   ("\\.omg\\'"         . omegahat-mode)
+	   ("\\.hat\\'"         . omegahat-mode) ;; Duncan's pref'd...
+	   ("\\.lsp\\'"		. XLS-mode)
+	   ("\\.do\\'"		. STA-mode)
+	   ("\\.ado\\'"		. STA-mode)
+	   ("\\.[Ss][Aa][Ss]\\'"	. SAS-mode)
+	   ;; Many .log/.lst files, not just SAS
+	   ;;("\\.log\\'"	. SAS-log-mode)
+	   ;;("\\.lst\\'"	. SAS-listing-mode)
+	   ("\\.[Ss]t\\'"	. S-transcript-mode)
+	   ("\\.[Ss]out"	. S-transcript-mode)
+	   ("\\.[Rr]t\\'"	. R-transcript-mode)
+	   ("\\.[Rr]out"	. R-transcript-mode) 
+          )
+	 auto-mode-alist))
 
 ;;
 ;; start emacs server
