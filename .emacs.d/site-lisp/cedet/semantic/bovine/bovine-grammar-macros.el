@@ -1,12 +1,12 @@
 ;;; bovine-grammar-macros.el --- Semantic macros for LL grammars
 ;;
-;; Copyright (C) 2003 David Ponce
+;; Copyright (C) 2003, 2005 David Ponce
 ;;
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 02 Aug 2003
 ;; Keywords: syntax
-;; X-RCS: $Id: bovine-grammar-macros.el,v 1.2 2003/08/31 15:06:12 ponced Exp $
+;; X-RCS: $Id: bovine-grammar-macros.el,v 1.4 2005/09/30 20:21:46 zappo Exp $
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -22,8 +22,8 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -98,6 +98,13 @@ See the function `semantic-tag-new-code' for the meaning of arguments
 NAME, DETAIL and ATTRIBUTES."
   `(semantic-tag-new-code ,name ,detail ,@attributes))
 
+(defun bovine-grammar-ALIAS-TAG (name aliasclass definition &rest attributes)
+  "Expand call to ALIAS-TAG grammar macro.
+Return the form to create a semantic tag of class alias.
+See the function `semantic-tag-new-alias' for the meaning of arguments
+NAME, ALIASCLASS, DEFINITION and ATTRIBUTES."
+  `(semantic-tag-new-alias ,name ,aliasclass ,definition ,@attributes))
+
 (defvar-mode-local bovine-grammar-mode semantic-grammar-macros
   '(
     (ASSOC          . semantic-grammar-ASSOC)
@@ -110,6 +117,7 @@ NAME, DETAIL and ATTRIBUTES."
     (INCLUDE-TAG    . bovine-grammar-INCLUDE-TAG)
     (PACKAGE-TAG    . bovine-grammar-PACKAGE-TAG)
     (CODE-TAG       . bovine-grammar-CODE-TAG)
+    (ALIAS-TAG      . bovine-grammar-ALIAS-TAG)
     )
   "Semantic grammar macros used in bovine grammars.")
 

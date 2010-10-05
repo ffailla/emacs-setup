@@ -1,10 +1,10 @@
 ;;; semantic-find.el --- Search routines
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-find.el,v 1.20 2004/03/19 23:48:58 zappo Exp $
+;; X-RCS: $Id: semantic-find.el,v 1.29 2010/03/15 13:40:54 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -34,11 +34,11 @@
 ;;    used for compatibility with the semantic 1.x search routines.
 ;;
 ;; 1.5) semantic-brute-find-first-tag-by-*
-;;    Like 1, except seraching stops on the first match for the given
+;;    Like 1, except searching stops on the first match for the given
 ;;    information.
 ;;
 ;; 2) semantic-find-tag-by-*
-;;    These prefered search routines attempt to scan through lists
+;;    These preferred search routines attempt to scan through lists
 ;;    in an intelligent way based on questions asked.
 ;;
 ;; 3) semantic-find-*-overlay
@@ -85,7 +85,7 @@ from largest to smallest via the start location."
 ;;;###autoload
 (defun semantic-find-tag-by-overlay-in-region (start end &optional buffer)
   "Find all tags which exist in whole or in part between START and END.
-Uses overlays to determine positin.
+Uses overlays to determine position.
 Optional BUFFER argument specifies the buffer to use."
   (save-excursion
     (if buffer (set-buffer buffer))
@@ -141,14 +141,16 @@ not the current tag."
 	(setq os (semantic-overlay-previous-change os))
 	(when os
 	  ;; Get overlays at position
-	  (setq ol (semantic-overlays-at os))
+	  (setq ol (semantic-overlays-at (1- os)))
 	  ;; find the overlay that belongs to semantic
-	  ;; and starts at the found position.
+	  ;; and ENDS at the found position.
+	  ;;
+	  ;; Use end because we are going backward.
 	  (while (and ol (listp ol))
 	    (if (and (semantic-overlay-get (car ol) 'semantic)
 		     (semantic-tag-p
 		      (semantic-overlay-get (car ol) 'semantic))
-		     (= (semantic-overlay-start (car ol)) os))
+		     (= (semantic-overlay-end (car ol)) os))
 		(setq ol (car ol)))
 	    (when (listp ol) (setq ol (cdr ol))))))
       ;; convert ol to a tag
@@ -279,7 +281,7 @@ TABLE is a tag table.  See `semantic-something-to-tag-table'."
 
 ;;;###autoload
 (defmacro semantic-find-tags-for-completion (prefix &optional table)
-  "Find all tags whos name begins with PREFIX in TABLE.
+  "Find all tags whose name begins with PREFIX in TABLE.
 PREFIX is a string.
 TABLE is a tag table.  See `semantic-something-to-tag-table'.
 While it would be nice to use `try-completion' or `all-completions',
@@ -337,8 +339,8 @@ Used in completion."
     ,table))
 
 ;;;###autoload
-(defun semantic-find-tags-by-scope-protection (scopeprotection parent &optional table)
-  "Find all tags accessable by SCOPEPROTECTION.
+(define-overloadable-function semantic-find-tags-by-scope-protection (scopeprotection parent &optional table)
+  "Find all tags accessible by SCOPEPROTECTION.
 SCOPEPROTECTION is a symbol which can be returned by the method
 `semantic-tag-protection'.  A hard-coded order is used to determine a match.
 PARENT is a tag representing the PARENT slot needed for
@@ -350,12 +352,24 @@ See `semantic-tag-protected-p' for details on which tags are returned."
       (signal 'wrong-type-argument '(semantic-find-tags-by-scope-protection
 				     parent
 				     semantic-tag-class type))
+    (:override)))
+
+(defun semantic-find-tags-by-scope-protection-default
+  (scopeprotection parent &optional table)
+  "Find all tags accessable by SCOPEPROTECTION.
+SCOPEPROTECTION is a symbol which can be returned by the method
+`semantic-tag-protection'.  A hard-coded order is used to determine a match.
+PARENT is a tag representing the PARENT slot needed for
+`semantic-tag-protection'.
+TABLE is a list of tags (a subset of PARENT members) to scan.  If TABLE is nil,
+the type members of PARENT are used.
+See `semantic-tag-protected-p' for details on which tags are returned."
     (if (not table) (setq table (semantic-tag-type-members parent)))
     (if (null scopeprotection)
 	table
       (semantic--find-tags-by-macro
        (not (semantic-tag-protected-p (car tags) scopeprotection parent))
-       table))))
+       table)))
 
 ;;;###autoload
 (defsubst semantic-find-tags-included (&optional table)
@@ -378,7 +392,7 @@ See also `semantic-find-tags-by-name'."
 
 ;;;###autoload
 (defmacro semantic-deep-find-tags-for-completion (prefix &optional table)
-  "Find all tags whos name begins with PREFIX in TABLE.
+  "Find all tags whose name begins with PREFIX in TABLE.
 Search in top level tags, and their components, in TABLE.
 TABLE is a tag table.  See `semantic-flatten-tags-table'.
 See also `semantic-find-tags-for-completion'."
@@ -407,6 +421,16 @@ TABLE is a tag table.  See `semantic-something-to-tag-table'."
    (equal (semantic-tag-external-member-parent (car tags))
 	  type)
    table))
+
+(defun semantic-find-tags-subclasses-of-type (type &optional table)
+  "Find all tags of class type in whose parent is TYPE in TABLE.
+These tags are defined outside the scope of the original TYPE declaration.
+TABLE is a tag table.  See `semantic-something-to-tag-table'."
+  (semantic--find-tags-by-macro
+   (and (eq (semantic-tag-class (car tags)) 'type)
+	(or (member type (semantic-tag-type-superclasses (car tags)))
+	    (member type (semantic-tag-type-interfaces (car tags)))))
+   table))
 
 ;;
 ;; ************************** Compatibility ***************************
@@ -427,7 +451,7 @@ TABLE is a tag table.  See `semantic-something-to-tag-table'."
   (name streamorbuffer &optional search-parts search-include)
   "Find a tag NAME within STREAMORBUFFER.  NAME is a string.
 If SEARCH-PARTS is non-nil, search children of tags.
-If SEARCH-INCLUDE is non-nil, search include files.
+If SEARCH-INCLUDE was never implemented.
 
 Use `semantic-find-first-tag-by-name' instead."
   (let* ((stream (semantic-something-to-tag-table streamorbuffer))
@@ -576,52 +600,35 @@ used for the searching child lists.  If SEARCH-PARTS is the symbol
 'positiononly, then only children that have positional information are
 searched.
 
-If SEARCH-INCLUDES is non-nil, then all include files are also
-searched for matches.  This parameter hasn't be active for a while
-and is obsolete."
-  (let ((streamlist (list
-		     (semantic-something-to-tag-table streamorbuffer)))
-	(includes nil)			;list of includes
-	(stream nil)			;current stream
-        (tag  nil)                    ;current tag
+If SEARCH-INCLUDES has not been implemented.
+This parameter hasn't be active for a while and is obsolete."
+  (let ((stream (semantic-something-to-tag-table streamorbuffer))
 	(sl nil)			;list of tag children
 	(nl nil)			;new list
         (case-fold-search semantic-case-fold))
-    (if search-includes
-	(setq includes (semantic-brute-find-tag-by-class
-			'include (car streamlist))))
-    (while streamlist
-      (setq stream     (car streamlist)
-            streamlist (cdr streamlist))
-      (while stream
-        (setq tag  (car stream)
-              stream (cdr stream))
-	(if (not (semantic-tag-p tag))
-            ;; `semantic-tag-components-with-overlays' can return invalid
-            ;; tags if search-parts is not equal to 'positiononly
-            nil ;; Ignore them!
-          (if (funcall function tag)
-              (setq nl (cons tag nl)))
-          (and search-parts
-               (setq sl (if (eq search-parts 'positiononly)
-			    (semantic-tag-components-with-overlays tag)
-			  (semantic-tag-components tag))
-		     )
-               (setq nl (nconc nl
-                               (semantic-brute-find-tag-by-function
-                                function sl
-                                search-parts search-includes)))))))
+    (dolist (tag stream)
+      (if (not (semantic-tag-p tag))
+	  ;; `semantic-tag-components-with-overlays' can return invalid
+	  ;; tags if search-parts is not equal to 'positiononly
+	  nil ;; Ignore them!
+	(if (funcall function tag)
+	    (setq nl (cons tag nl)))
+	(and search-parts
+	     (setq sl (if (eq search-parts 'positiononly)
+			  (semantic-tag-components-with-overlays tag)
+			(semantic-tag-components tag))
+		   )
+	     (setq nl (nconc nl
+			     (semantic-brute-find-tag-by-function
+			      function sl
+			      search-parts))))))
     (setq nl (nreverse nl))
-;;;    (while includes
-;;;      (setq nl (append nl (semantic-brute-find-tag-by-function
-;;;			   
-;;;			   ))))
     nl))
 
 ;;;###autoload
 (defun semantic-brute-find-first-tag-by-function
   (function streamorbuffer &optional search-parts search-includes)
-  "Find the first nonterminal which FUNCTION match within STREAMORBUFFER.
+  "Find the first tag which FUNCTION match within STREAMORBUFFER.
 FUNCTION must return non-nil if an element of STREAM will be included
 in the new list.
 
@@ -649,14 +656,13 @@ searched for matches."
 ;;;###autoload
 (defun semantic-brute-find-tag-by-position (position streamorbuffer
 						     &optional nomedian)
-  "Find a nonterminal covering POSITION within STREAMORBUFFER.
+  "Find a tag covering POSITION within STREAMORBUFFER.
 POSITION is a number, or marker.  If NOMEDIAN is non-nil, don't do
 the median calculation, and return nil."
   (save-excursion
     (if (markerp position) (set-buffer (marker-buffer position)))
     (let* ((stream (if (bufferp streamorbuffer)
-		       (save-excursion
-			 (set-buffer streamorbuffer)
+		       (with-current-buffer streamorbuffer
 			 (semantic-fetch-tags))
 		     streamorbuffer))
 	   (prev nil)
@@ -833,7 +839,7 @@ Optional argument ARG is the number of iterations to run."
 	  (benchmark-run-compiled
 	      1000 (semantic-find-tags-by-name-regexp "^method"
 						      "test/test.cpp")))
-    
+
     (message "Name [new old] [ %.3f %.3f ] Complete [newc/new old] [ %.3f/%.3f %.3f ]"
 	     (car f-name) (car b-name)
 	     (car f-comp) (car f-regex)

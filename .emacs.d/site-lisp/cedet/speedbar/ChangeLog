@@ -1,36 +1,250 @@
-2004-04-11  Eric M. Ludlam  <eric@siege-engine.com>
+2010-08-22  Eric M. Ludlam  <zappo@gnu.org>
 
-	* Makefile (dist): Add autoloads
+	* .cvsignore: Ignore info files.
 
-2004-04-06  Eric M. Ludlam  <eric@siege-engine.com>
+2010-05-30  Richard Y. Kim <emacs18@gmail.com>
+
+	* speedbar.texi:
+	Replaced ll tab charactersin all texinfo files with equivalent number of spaces assuming tab width of 8.
+
+2010-05-21  Eric M. Ludlam  <zappo@gnu.org>
+
+	* dframe.el (custom): Remove old compat stuff for custom.
+
+2009-03-19  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile, Project.ede, speedbar.el (speedbar-version):
+	Update version.
+
+2009-03-12  Eric M. Ludlam  <zappo@gnu.org>
+
+	* sb-info.el (Info-speedbar-buttons): Solve recentering problem.
+
+2009-03-05  Alex Ott <alexott@gmail.com>
+
+	* .cvsignore:
+	add ignore files to not show auxiliary scripts, not included into CVS
+
+2009-02-24  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile (EMACSFLAGS): New variable.
+	(init,speedbar,opt): Use above.
+
+2008-04-14  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile (VERSION): Update to 1.0.2
+
+	* speedbar.el (speedbar-update-current-file):
+	Make sure we have a frame to select.
+
+2008-02-18  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-directory-buttons):
+	Make sure ~ is at the beginning of the
+	directory name when shortening.  Protects against tramp issues.
+
+2008-02-10  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (define-obsolete-function-alias): Make usage optional.
+
+	* speedbar.el (define-obsolete-variable-alias): Make usage optional.
+
+2008-01-26  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Project.ede ("speedbar"): Update version number.
+
+2008-01-22  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el:
+	Summary of Change: rename "path" to "directory" obsoletions.
+	and adopt diffs from Emacs 23.
+	(speedbar-version): Update.
+	(speedbar-show-unknown-files): Doc fix
+	(speedbar-frame-parameters): Add better custom type
+	(speedbar-dynamic-tags-function-list): Doc fix.
+	(speedbar-after-create-hook): Doc fix.
+	(speedbar-file-regexp): Moved
+	(speedbar-supported-extension-expressions): Improved custom :set
+	(speedbar-make-specialized-keymap): doc fix.
+	(speedbar-file-key-map): Name change: "contract-line"
+	(speedbar-frame-mode): doc fix
+	(speedbar-frame-width): Use defsubst.  Doc fix.
+	(speedbar-set-mode-line-format): Don't show warnings.
+	(speedbar-reconfigure-keymaps): Special local binding setup for
+	easymenu definition.
+	(speedbar-item-info-file-helper): doc fix.
+	(speedbar-item-info-tag-helper): doc fix.  Hide semantic warnings.
+	(speedbar-generic-list-tag-p): doc fix.
+	(speedbar-try-completion): consp to test alist.
+	(speedbar-update-contents): same
+	(speedbar-update-localized-contents): Use dolist
+	(speedbar-update-directory-contents): use dolist
+	(speedbar-update-special-contents): Use dolist
+	(speedbar-timer-fn): use consp
+	(speedbar-check-read-only): GUD specialization
+	(speedbar-check-vc): Try to eliminate warnings
+	(speedbar-line-directory): doc fix.
+	(speedbar-buffer-easymenu-definition): Add spacer
+	(end of file): Add obsolete variable aliases.
+
+2007-08-14  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-highlight-one-tag-line):
+	Use pulse when available, otherwise
+	use below.
+	(speedbar-highlight-one-tag-line-internal): Old fcn, new name.
+
+2007-03-18  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile (LOADPATH): Strip out duplicates
+
+2007-02-07  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-line-file): Fix 'cond' bug.
+
+2007-02-03  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-line-file):
+	It some cases, speedbar-line-directory returns a
+	file.  Be robust to this condition.
+
+2006-06-23  David Ponce  <david@dponce.com>
+
+	* sb-info.el:
+	Put (provide 'sb-info) before (eval-after-load "info") to fix
+	recursive (require 'sb-info) error on Emacs 22.
+
+2005-12-07  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-dynamic-tags-function-list): Doc fix.
+	(speedbar-default-position): New user option.
+	(speedbar-frame-reposition-smartly): Pass new option when positioning
+	the speedbar frame.
+
+	* dframe.el (dframe-reposition-frame-emacs):
+	Fix left-only position case.
+
+2005-10-22  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.texi (Top): Merge from Emacs 22.
+	(Basic Key Bindings): Remove keybindings no longer active.
+	(Hidden Files): fix
+	(Major Display Modes): Discuss stealthy functions
+	(Generic Tag Lists): New section.
+	(Expand Buttons): New section.
+
+2005-10-13  David Ponce  <david@dponce.com>
+
+	* Makefile: Re-generate.
+
+	* speedbar.el (speedbar-version): Update to 1.0.1.
+
+	* Project.ede (ede-proj-project): Update :version.
+
+2005-09-30  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.texi, speedbar-load.el, speedbar.el, sb-w3.el, sb-texinfo.el, sb-image.el, sb-html.el, sb-ant.el, rpm.el, fsum.el, dframe.el, bigclock.el:
+	Update all GPL headers with script from savannah.gnu.org.
+
+2005-09-29  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile (VERSION): Updated to 1.0
+
+	* Project.ede ("speedbar"): Version changed to 1.0 (same as default.)
+
+2005-09-13  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-version): Updated to 1.0.
+
+2005-07-28  Eric M. Ludlam  <zappo@gnu.org>
+
+	* fsum.el: Frame Summary Mode
+
+2005-06-30  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-version): Updated.
+
+	* Project.ede (:version): Updated.
+
+	* Makefile (VERSION): Updated.
+
+	* sb-info.el (Info-speedbar-image-button-alist): Use ezimage.
+	(toplevel): Added eval-after-load with autoload cookie to load in this
+	file whenever Info is initialized.
+
+2005-05-06  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-require-version):
+	Replace with an inversion implementation.
+
+2005-04-19  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-version): Update version number
+
+	* Makefile (VERSION): Updated.
+
+	* Project.ede ("speedbar"): update
+
+2005-02-20  Eric M. Ludlam  <zappo@gnu.org>
+
+	* speedbar.el (speedbar-select-frame-method):
+	Change default to 'attached, which is
+	what a typical single-frame user would get.  Also prevents unexpected
+	frame switching.
+
+2005-02-06  Klaus Berndl <klaus.berndl@sdm.de>
+
+	* dframe.el:
+	* dframe-after-select-attached-frame-hook: New hook, defcustom
+	* dframe-select-attached-frame: Use the new hook
+	* Replaced most (select-frame dframe-attached-frame) by
+	  `dframe-select-attached-frame'
+
+2005-02-03  Eric M. Ludlam  <zappo@gnu.org>
+
+	* Makefile (VERSION): Update version number.
+	(Makefile): updated from new ede code.
+
+	* speedbar.el (speedbar-version): Update version number
+	(speedbar-find-file-in-frame): Comment.
+
+	* Project.ede ("speedbar"): update version number
+
+2004-12-29  Eric M. Ludlam  <zappo@gnu.org>
+
+	* dframe.el: (dframe-handle-make-frame-visible)
+	(dframe-handle-iconify-frame)
+	(dframe-handle-delete-frame): Remove message.
+
+2004-10-05  Klaus Berndl <klaus.berndl@sdm.de>
+
+	* speedbar.el:
+	speedbar-vc-check-dir-p: uses now run-hook-with-args-until-success instead of
+	run-hook-with-args.
+
+2004-04-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Makefile (autoloads, init, speedbar, opt):
 	Compile with --no-site-file.
 	(clean): all info files.
 	(dist): Distribute the autoload file
 
-2004-03-30  Eric M. Ludlam  <eric@siege-engine.com>
-
-	* Makefile (autoloads, init, speedbar, opt): Use --no-site-file
-	(clean): New info garbage pattern.
-	(dist): rearrangement of some arguments.
-
-2004-03-13  Eric M. Ludlam  <eric@siege-engine.com>
+2004-03-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-item-info-tag-helper):
 	Use new names of semantic 2.0
 	(speedbar-contract-line-descendants): Fix compile warning.
 	(speedbar-buffer-buttons-engine): Stop displaying hidden buffers.
 
-2004-03-06  Eric M. Ludlam  <eric@siege-engine.com>
+2004-03-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-power-click): Fix bug getting last event frame.
 
-2004-02-29  Eric M. Ludlam  <eric@siege-engine.com>
+2004-02-29  Eric M. Ludlam  <zappo@gnu.org>
 
 	* INSTALL: Revamped. We are a part of a CEDET install now.
 
-2004-02-28  Eric M. Ludlam  <eric@siege-engine.com>
+2004-02-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-power-click):
 	Attempt to fix a button problem by selecting
@@ -40,36 +254,36 @@
 	* speedbar.el (speedbar-line-text, speedbar-line-token):
 	Support expand buttons with no text
 
-2004-02-24  Eric M. Ludlam  <eric@siege-engine.com>
+2004-02-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-refresh): Make argument optional.
 
 	* speedbar.el (speedbar-refresh):
 	Allow universal argument to act as "power click".
 
-2004-02-23  Eric M. Ludlam  <eric@siege-engine.com>
+2004-02-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-version): Update
 	(speedbar-update-localized-contents): New fcn.
 	(speedbar-timer-fn): Remove some logic from here up into new fcn above.
 
-2004-01-08  Eric M. Ludlam  <eric@siege-engine.com>
+2004-01-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-fetch-dynamic-tags):
 	If a buffer is in Emacs, switch to
 	that buffer to get variable values.
 
-2004-01-01  Eric M. Ludlam  <eric@siege-engine.com>
+2004-01-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-edit-line):
 	Handle single-character file/directory names.
 
-2003-11-20  Eric M. Ludlam  <eric@siege-engine.com>
+2003-11-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi (Version Control):
 	Fix name of speedbar-vc-directory-enable-hook.
 
-2003-10-02  Eric M. Ludlam  <eric@siege-engine.com>
+2003-10-02  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-incompatible-version): Doc fix.
 
@@ -77,19 +291,19 @@
 
 	* Makefile (dist): Remove local creation of tar file.
 
-2003-09-26  Eric M. Ludlam  <eric@siege-engine.com>
+2003-09-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-this-file-in-vc):
 	If VC state is nil, then it is not
 	checked out.
 
-2003-09-18  ponced  <ponced@projectile>
+2003-09-18  David Ponce  <david@dponce.com>
 
 	* Makefile: Re-generated.
 
 	* Project.ede (init): New target.
 
-2003-09-17  ponced  <ponced@projectile>
+2003-09-17  David Ponce  <david@dponce.com>
 
 	* sb-gud.el (gud-speedbar-buttons): Fix typo.
 
@@ -100,15 +314,15 @@
 
 	* speedbar-load.el: New file.
 
-2003-09-16  ponced  <ponced@projectile>
+2003-09-16  David Ponce  <david@dponce.com>
 
 	* Makefile: Re-generated.
 
-2003-09-10  ponced  <ponced@projectile>
+2003-09-10  David Ponce  <david@dponce.com>
 
 	* Makefile: Re-generated.
 
-2003-09-07  Eric M. Ludlam  <eric@siege-engine.com>
+2003-09-07  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-version): Updated.
 
@@ -116,7 +330,7 @@
 
 	* Project.ede ("autoloads"): New
 
-2003-08-25  Eric M. Ludlam  <eric@siege-engine.com>
+2003-08-25  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Project.ede ("speedbar"): Add ezimage as a dependency.
 
@@ -150,12 +364,12 @@
 	(speedbar-info-tag): Removed
 	(speedbar-expand-image-button-alist): New default value (from ezimage.)
 
-2003-08-06  ponced  <ponced@projectile>
+2003-08-06  David Ponce  <david@dponce.com>
 
 	* speedbar.el (speedbar-frame-mode): Fix XEmacs frame plist passed to
 	`dframe-frame-mode'.
 
-2003-07-24  Eric M. Ludlam  <eric@siege-engine.com>
+2003-07-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-frame-parameters): Set left-fringe to be empty.
 	(speedbar-frame-plist): Remove gutter visibility.
@@ -165,17 +379,17 @@
 	(speedbar-expand-line-descendants)
 	speedbar-contract-line-descendants): New commands
 
-2003-07-23  Eric M. Ludlam  <eric@siege-engine.com>
+2003-07-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-mouse-set-point):
 	Set the point when clicking on a glyph.
 
-2003-06-09  Eric M. Ludlam  <eric@siege-engine.com>
+2003-06-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-ant.el (speedbar-fetch-dynamic-ant-project):
 	Allow white space around = sign.
 
-2003-02-21  Eric M. Ludlam  <eric@siege-engine.com>
+2003-02-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-version): Updated
 	(speedbar-incompatible-version): New
@@ -271,17 +485,17 @@
 	before visiting a file.
 	(speedbar-directory-buttons-follow): Do not use `directory-sep-char'.
 
-2003-02-11  Eric M. Ludlam  <eric@siege-engine.com>
+2003-02-11  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-frame-width):
 	Use window-width instead of frame-width.
 
-2003-02-05  Eric M. Ludlam  <eric@siege-engine.com>
+2003-02-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-add-indicator): Account for readonly indicator.
 	Thanks: "Wittmann, Ralph"
 
-2002-11-28  Eric M. Ludlam  <eric@siege-engine.com>
+2002-11-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-center-buffer-smartly): Center other frame.
 
@@ -289,44 +503,44 @@
 	(dframe-pass-event-to-popup-mode-menu): New flag.
 	(dframe-xemacs-popup-kludge): Use it.
 
-2002-10-26  Eric M. Ludlam  <eric@siege-engine.com>
+2002-10-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-file-regexp): Fix doc.
 
-2002-09-03  Eric M. Ludlam  <eric@siege-engine.com>
+2002-09-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-frame-mode):
 	Added support for double-clicking in XEmacs.
 	Found by Barnabas Wolf and restored from old speedbar.el into dframe.el.
 
-2002-08-26  Eric M. Ludlam  <eric@siege-engine.com>
+2002-08-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* rpm.el (rpm-speedbar-key-map):
 	Fixed to bind keys into the correct key map.
 
-2002-08-17  Eric M. Ludlam  <eric@siege-engine.com>
+2002-08-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-mode): Make sure case is obeyed.
 	(speedbar-files-line-path): Use `speedbar-line-text' instead
 	of `buffer-substring'.
 
-2002-03-27  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-default-directory-list):
 	Made robust against deleted directories.
 
-2002-03-23  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-image.el (speedbar-use-images):
 	Test to see if xpm is available too.
 
 	* sb-dir-minus.xpm: It now opens.
 
-2002-03-22  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-require-version): New function
 
-2002-03-17  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Project.ede: Added box images.
 
@@ -359,7 +573,7 @@
 	* speedbar.el (speedbar-check-read-only):
 	Get the correct file name during test.
 
-2002-03-16  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-16  Eric M. Ludlam  <zappo@gnu.org>
 
 	* INSTALL: Add info about optional packages.
 
@@ -395,7 +609,7 @@
 	* speedbar.el (speedbar-version): New beta
 	(speedbar-separator-face): Added gray overline.
 
-2002-03-15  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-stealthy-function-list):
 	Added new "locked files" stealthy function
@@ -412,15 +626,15 @@
 
 	* sb-label.xpm: Bitmap prefixing labes to make them look cool.
 
-2002-03-02  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-02  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Project.ede, speedbar.el: Update version number
 
-2002-03-01  Eric M. Ludlam  <eric@siege-engine.com>
+2002-03-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Project.ede: Added ChangeLog to the project.
 
-2002-02-28  Eric M. Ludlam  <eric@siege-engine.com>
+2002-02-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi (Hidden Files):
 	Updated doc near `speedbar-supported-extension-expressions'.
@@ -439,7 +653,7 @@
 	(speedbar-supported-extension-expressions): Updated doc.
 	(speedbar-make-button): Do not add help echo if tool-tips are disabled.
 
-2002-02-26  Eric M. Ludlam  <eric@siege-engine.com>
+2002-02-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-frame-plist): Remove XEmacs gutter
 	(speedbar-supported-extension-expressions): Added .ma?k Makefiles
@@ -459,7 +673,7 @@
 	make sure we are in speedbar's buffer.  Specify argument to
 	`window-height'.
 
-2002-02-06  Eric M. Ludlam  <eric@siege-engine.com>
+2002-02-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-w3.el (w3-speedbar-buttons): Added ###autoload tag.
 
@@ -473,12 +687,12 @@
 
 	* INSTALL: Added property quoting for `eval-after-load' example.
 
-2001-12-17  Eric M. Ludlam  <eric@siege-engine.com>
+2001-12-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-frame-mode):
 	Select the speedar frame when using a terminal.
 
-2001-10-31  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-31  Eric M. Ludlam  <zappo@gnu.org>
 
 	* Project.ede: Added web information.
 
@@ -489,7 +703,7 @@
 
 	* sb-ant.el: ANT support
 
-2001-10-28  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* rpm.el (rpm-speedbar, rpm-tag-expand):
 	Use proper sort hierarchy method.
@@ -502,7 +716,7 @@
 	Disable setting the default minibuffer frame
 	(dframe-y-or-n-p): Don't compare against the default-minibuffer-frame
 
-2001-10-27  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-frame-mode):
 	Add function to `dframe-delete-frame-function
@@ -517,7 +731,7 @@
 	 dframe-handle-iconify-frame,
 	 dframe-handle-delete-frame): New Commands bound to special events.
 
-2001-10-26  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-key-map):
 	Removed old SPC and DEL page up/down keys
@@ -525,13 +739,13 @@
 	(speedbar-toggle-line-expansion): New command.
 	(speedbar-buffers-key-map): Added SPC to toggle expansion of a node
 
-2001-10-22  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el (dframe-click):
 	Do not call `dframe-mouse-click-function' if it has
 	no value.
 
-2001-10-18  Eric M. Ludlam  <eric@siege-engine.com>
+2001-10-18  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-try-completion): New function
 	(speedbar-prefix-group-tag-hierarchy, speedbar-trim-words-tag-hierarchy,
@@ -542,29 +756,29 @@
 	(speedbar-toggle-images, speedbar-toggle-sorting): Fix doc.
 	(speedbar-fetch-egags-parse-list): Add cxx.
 
-2001-08-17  Eric M. Ludlam  <eric@siege-engine.com>
+2001-08-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Update version
 	(speedbar-find-file-in-frame): fixed `other-frame' typo.
 
-2001-08-08  Eric M. Ludlam  <eric@siege-engine.com>
+2001-08-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-item-info-tag-helper):
 	Use two new features of `semantic-sb'.
 	speedbar.el will now require semantic beta9 or later, or no semantic
 	at all.
 
-2001-07-20  Eric M. Ludlam  <eric@siege-engine.com>
+2001-07-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-select-frame-method): New variable
 	(speedbar-find-file-in-frame): Use above.
 
-2001-05-31  Eric M. Ludlam  <eric@siege-engine.com>
+2001-05-31  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-find-selected-file):
 	Regexp quote the file before finding it.
 
-2001-05-09  Eric M. Ludlam  <eric@siege-engine.com>
+2001-05-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-objod.xpm, sb-obj.xpm, sb-chk.xpm: *** empty log message ***
 
@@ -577,7 +791,7 @@
 	* speedbar.el (speedbar-version): Update to 0.14beta1
 	(speedbar-add-indicator): Call image display fcn when inserting indicators.
 
-2001-05-08  Eric M. Ludlam  <eric@siege-engine.com>
+2001-05-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-vc-check-dir-p):
 	Use vc-state if available for CVS.
@@ -590,7 +804,7 @@
 	Fixed to used `default-directory'
 	instead of buffer-file-name since some buffers do not have file names.
 
-2001-04-29  Eric M. Ludlam  <eric@siege-engine.com>
+2001-04-29  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-query-confirmation-method): new option.
 	(speedbar-visiting-file-hook, speedbar-visiting-tag-hook,
@@ -602,7 +816,7 @@
 	General: Use `summarize' instead of `summerize'
 	         Added true to deleting flag to speedbar-y-or-n-p where needed.
 
-2001-04-27  Eric M. Ludlam  <eric@siege-engine.com>
+2001-04-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* INSTALL: Added info about sb-html.
 
@@ -630,26 +844,26 @@
 	(dframe-mouse-hscroll): Fixed to work better (submitted by someone I
 	 forgot, sorry.)
 
-2001-01-31  Eric M. Ludlam  <eric@siege-engine.com>
+2001-01-31  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-dir-minus.xpm, sb-dir-plus.xpm, sb-dir.xpm, sb-mail.xpm, sb-pg-minus.xpm, sb-pg-plus.xpm, sb-pg.xpm, sb-tag-gt.xpm, sb-tag-minus.xpm, sb-tag-plus.xpm, sb-tag-type.xpm, sb-tag-v.xpm, sb-tag.xpm:
 	*** empty log message ***
 
 	* Project.ede: Project file for Speedbar
 
-2001-01-08  Eric M. Ludlam  <eric@siege-engine.com>
+2001-01-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Hacked out many comments.
 	Tried to fix accidentaly reversal of tags when alpha binning.
 
-2000-12-13  Eric M. Ludlam  <eric@siege-engine.com>
+2000-12-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added `speedbar-create-directory', bound in keymap and menu for file mode.
 	Removed "SPEEDBAR" word from modeline.  Replaced with mode name.
 	Turn list of display modes to radio buttons.
 
-2000-12-11  Eric M. Ludlam  <eric@siege-engine.com>
+2000-12-11  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el:
 	Find the file before tagging due to changes in speedbar.
@@ -670,7 +884,7 @@
 	Pass file down to method getting tags, do not use the buffer name.
 	Load a file for imenu support.
 
-2000-10-21  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Always call the speedbar timer during a get-focus to get things
@@ -685,12 +899,12 @@
 	* speedbar.texi: Updated the copyright.
 	Vast changes by Eli.
 
-2000-10-15  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Overlay compatibility updated for xemacs fsf compatibility hack workaround.
 
-2000-10-09  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: 2000-10-07  Dave Love  <fx@gnu.org>
 
@@ -698,7 +912,7 @@
 		conditionally.
 		(speedbar-frame-mode): Set automatic-hscrolling locally.
 
-2000-10-06  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed `detatched' word.  Fixed `speedbar-detatch' but by protecting
@@ -713,23 +927,23 @@
 	* speedbar.texi:
 	Proof read the doc, and fixed many simple english things.
 
-2000-10-05  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Bring doc back to speedbar-power-click.
 	Make sure C-u + command sets speedbar-power-click.
 
-2000-10-01  Eric M. Ludlam  <eric@siege-engine.com>
+2000-10-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Do not display Emacs 21 toolbar in the speedbar frame.
 
-2000-09-30  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-30  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Removed toggle-updates.
 
 	* speedbar.el: Moved toggle-updates into speedbar keymap.
 	Made check for generic list types more reliable.
 
-2000-09-22  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Added xemacs frame repositioning function.
 	Pass event down on XEmacs for mouse click.
@@ -740,13 +954,13 @@
 	* sb-info.el:
 	Updated regexps for node finding based in info from Richard Kim <ryk@dspwiz.com>
 
-2000-09-09  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Stop running through timeouts if there is user input.
 
 	* speedbar.el: Added backward compatible speed variables.
 
-2000-09-08  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Fixed up timers to restart properly.
 
@@ -754,13 +968,13 @@
 
 	* INSTALL: Added details about programs that use speedbar.
 
-2000-09-07  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-07  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	re-enabled speedbar-power-click via let statement in speedbar-click.
 	Added `speedbar-current-frame'.
 
-2000-09-05  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* bigclock.el: Added in some function quotes.
 	Fixed comma typo.
@@ -778,20 +992,20 @@
 
 	* INSTALL: Updated for next version of speedbar.
 
-2000-09-04  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Checkdoc updates.
 	Reindent dframe-help-echo
 
 	* bigclock.el: Checkdoc.
 
-2000-09-02  Eric M. Ludlam  <eric@siege-engine.com>
+2000-09-02  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Removed all the image handling code.
 
 	* sb-image.el: New file.
 
-2000-08-31  Eric M. Ludlam  <eric@siege-engine.com>
+2000-08-31  Eric M. Ludlam  <zappo@gnu.org>
 
 	* dframe.el: Added a version variable.
 	Fixed defgroup up.
@@ -802,11 +1016,11 @@
 	for compatibility.
 	Removed `speedbar-show-info-under-mouse' call from timer.
 
-2000-08-21  Eric M. Ludlam  <eric@siege-engine.com>
+2000-08-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* bigclock.el: New file.
 
-2000-08-17  Eric M. Ludlam  <eric@siege-engine.com>
+2000-08-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added a version variable, added it near top, removed version slot from lm.
@@ -820,7 +1034,7 @@
 	* dframe.el: Updated doc.
 	Added variable specifying if we should use timers.
 
-2000-08-14  Eric M. Ludlam  <eric@siege-engine.com>
+2000-08-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Stripped out all frame management stuff, including timer, and mouse
@@ -829,17 +1043,17 @@
 
 	* dframe.el: New file.
 
-2000-08-09  Eric M. Ludlam  <eric@siege-engine.com>
+2000-08-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el: Added provide.
 
-2000-07-22  Eric M. Ludlam  <eric@siege-engine.com>
+2000-07-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added `speedbar-current-frame', and use this in place of
 	`speedbar-frame' variable.  This should help make detatched frames
 	more reliable.
 
-2000-07-19  Eric M. Ludlam  <eric@siege-engine.com>
+2000-07-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* INSTALL: New file.
 
@@ -851,7 +1065,7 @@
 	Fixed detached frame mouse-3 menu popup.
 	Fixed up new code for specialized tag/group buttons.
 
-2000-07-13  Eric M. Ludlam  <eric@siege-engine.com>
+2000-07-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el:
 	speedbar-insert-texinfo-list no longer sets sthm to nil.
@@ -887,14 +1101,14 @@
 	that also contains a position.
 	(Generic list stuff for new texinfo tagger.)
 
-2000-07-05  Eric M. Ludlam  <eric@siege-engine.com>
+2000-07-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el: 1.5 - speedbar-tag-hierarchy-method is set to nil by
 	      speedbar-insert-texinfo-list as well as
 	      speedbar-fetch-dynamic-texinfo.  This is needed in order to
 	      have the texinfo nodes displayed in correct order.
 
-2000-07-04  Eric M. Ludlam  <eric@siege-engine.com>
+2000-07-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el: From Richard Y. Kim on version 1.4
 	speedbar-tag-hierarchy-method is now set to nil by
@@ -902,46 +1116,46 @@
 	first. I thought this was buffer-local variable already, but it is
 	not. Also added installation instruction.
 
-2000-06-30  Eric M. Ludlam  <eric@siege-engine.com>
+2000-06-30  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-texinfo.el: New file.
 
-2000-06-23  Eric M. Ludlam  <eric@siege-engine.com>
+2000-06-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed terminal mode loading of EDE which used to need a frame.
 	Changed order so SORT is last, which lets it work.
 
-2000-06-20  Eric M. Ludlam  <eric@siege-engine.com>
+2000-06-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-info.el: Fixed up let statements w/ searches.
 
-2000-06-11  Eric M. Ludlam  <eric@siege-engine.com>
+2000-06-11  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added `speedbar-detatch' so we can have multiple speedbars.
 	Fixed `speedbar-trim-words-tag-hierarchy' to work w/ semantic.
 
-2000-06-03  Eric M. Ludlam  <eric@siege-engine.com>
+2000-06-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi:
 	Added bit about universal argument for flushing tag caches.
 
 	* speedbar.el: Integrate changes from Eli about display-graphic-p.
 
-2000-05-17  Eric M. Ludlam  <eric@siege-engine.com>
+2000-05-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed list problem with splicing Enable Image in the menu.
 	Fixed XEmacs invisible text property problems.
 
-2000-05-15  Eric M. Ludlam  <eric@siege-engine.com>
+2000-05-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-recenter): Typo, and fix logic.
 	(speedbar-expand-line): Make arg optional.
 	(speedbar-mode): Avoid a compiler warning.
 
-2000-05-13  Eric M. Ludlam  <eric@siege-engine.com>
+2000-05-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Require 'defimage in a safe way.
 	Added menu item for toggling image use, and for flush & expand.
@@ -951,21 +1165,21 @@
 	Eval-when-compile defimage macro stuff.
 	Use :ascent center for all images.
 
-2000-04-25  Eric M. Ludlam  <eric@siege-engine.com>
+2000-04-25  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Do not use images on terminals.
 
-2000-04-22  Eric M. Ludlam  <eric@siege-engine.com>
+2000-04-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed up documentation with checkdoc.
 
 	* speedbar.el: Added in more images.
 
-2000-04-14  Eric M. Ludlam  <eric@siege-engine.com>
+2000-04-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Make our defimage safe in XEmacs.
 
-2000-04-12  Eric M. Ludlam  <eric@siege-engine.com>
+2000-04-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Hacked out problems with older emacs (19.34 and 20.5)
 
@@ -978,11 +1192,11 @@
 	  All `buttons' inserted are now compared.  Specialized packages can
 	  extend the image list.
 
-2000-04-09  Eric M. Ludlam  <eric@siege-engine.com>
+2000-04-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed up previous depthsize checkin.
 
-2000-03-21  Eric M. Ludlam  <eric@siege-engine.com>
+2000-03-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: update xemacs20p to handle versions > 20
 	Fix some documentation.
@@ -991,17 +1205,17 @@
 	Added support to image button calls.
 	Catch search errors in expand/contract line.
 
-2000-02-17  Eric M. Ludlam  <eric@siege-engine.com>
+2000-02-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi: Fixed typo.
 
-2000-02-09  Eric M. Ludlam  <eric@siege-engine.com>
+2000-02-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	(speedbar-buffer-buttons-engine) Strip the directory name from the
 	buffer file name when putting a token onto the [+] button.
 
-2000-01-25  Eric M. Ludlam  <eric@siege-engine.com>
+2000-01-25  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed doc on speedbar-dynamic-tags-function-list.
 
@@ -1019,7 +1233,7 @@
 	checking all known methods of tagging individually.
 	(speedbar-fetch-dynamic-imenu): Don't bother setting buffer anymore.
 
-1999-11-29  Eric M. Ludlam  <eric@siege-engine.com>
+1999-11-29  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	The tag highlighting face is now the speedbar-highlight-face.
@@ -1032,13 +1246,13 @@
 	Added a hook to speedbar-visiting-tag-hook to force a recenter.
 	Added several new functions to choose from also.
 
-1999-10-20  Eric M. Ludlam  <eric@siege-engine.com>
+1999-10-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Converted hierarchy methods into a hook.
 	Added predefined hooks for visiting-tag-hook.
 	Fixed some documentation.
 
-1999-09-19  Eric M. Ludlam  <eric@siege-engine.com>
+1999-09-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added new keymap reconfigure hook.
 	Added perl .pm to known extensions.
@@ -1047,7 +1261,7 @@
 	Used many of RMS's comments such as passive-voice, and queue->cue.
 	Only modified user chapters, now programmer chapters.
 
-1999-09-15  Eric M. Ludlam  <eric@siege-engine.com>
+1999-09-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi: Fixed spelling, and title.
 
@@ -1058,24 +1272,24 @@
 	* speedbar.texi:
 	Proofread, fixed random stuff, and made work with makinfo 3.12f.
 
-1999-08-20  Eric M. Ludlam  <eric@siege-engine.com>
+1999-08-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.texi: New file.
 
-1999-05-27  Eric M. Ludlam  <eric@siege-engine.com>
+1999-05-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Use the new semantic summerize feature.
 
-1999-05-23  Eric M. Ludlam  <eric@siege-engine.com>
+1999-05-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed center-smartly to not depend on the old formats quite so much.
 
-1999-05-22  Eric M. Ludlam  <eric@siege-engine.com>
+1999-05-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Enabled specialized detail display for bovinated items.
 
-1999-05-18  Eric M. Ludlam  <eric@siege-engine.com>
+1999-05-18  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added power-click support to bovinator.
 
@@ -1083,7 +1297,7 @@
 	Added special case in the hierarcy function for being clear w/ lists.
 	Condition case when bovinating.
 
-1999-05-05  Eric M. Ludlam  <eric@siege-engine.com>
+1999-05-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-use-bovinator-flag): New flag.
 	(speedbar-use-imenu-flag): Change custom tag.
@@ -1092,38 +1306,38 @@
 	(speedbar-tag-file): If a bovine table is available, use it.
 	(speedbar-fetch-dynamic-bovine): New function
 
-1999-04-28  Eric M. Ludlam  <eric@siege-engine.com>
+1999-04-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-file-key-map, speedbar-buffers-key-map):
 	 Added keybinding "=" same as "+" so you don't have to hit shift.
 	 (speedbar-fetch-dynamic-etags): Set buffer to the tmp buffer when
 	 extracting expressions. (Newer XEmacs exposed this.)
 
-1999-03-10  Eric M. Ludlam  <eric@siege-engine.com>
+1999-03-10  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added speedbar-y-or-n-p.  Make use of it in all fns.
 
-1999-03-01  Eric M. Ludlam  <eric@siege-engine.com>
+1999-03-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: New function speedbar-message
 	changed message to speedbar-message where apropriate.
 
 	* rpm.el, sb-rmail.el: changed messge to speedbar-message
 
-1999-02-15  Eric M. Ludlam  <eric@siege-engine.com>
+1999-02-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed tag info function.
 
-1999-01-28  Eric M. Ludlam  <eric@siege-engine.com>
+1999-01-28  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added {} support in speedbar-line-text and speedbar-line-token.
 
-1999-01-25  Eric M. Ludlam  <eric@siege-engine.com>
+1999-01-25  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Updated commentary on specialized modes.
 
-1999-01-21  Eric M. Ludlam  <eric@siege-engine.com>
+1999-01-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-item-info-file-helper): Add optional arg
 	of the file whose info we want to display.
@@ -1132,14 +1346,14 @@
 	(speedbar-line-token) New function.
 	(speedbar-dired) Fix order of directories in -shown-directories.
 
-1999-01-11  Eric M. Ludlam  <eric@siege-engine.com>
+1999-01-11  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Version update
 
 	* speedbar.el (speedbar-line-path): Default return is default-directory
 	(speedbar-buffers-line-path): Return is dir name only.
 
-1999-01-06  Eric M. Ludlam  <eric@siege-engine.com>
+1999-01-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Updated Version & copyright
 	(speedbar-mode-functions-list): New variable.
@@ -1153,27 +1367,27 @@
 	(speedbar-line-path): Converted into a replaceable function.
 	(speedbar-files-line-path, speedbar-buffers-line-path): New functions.
 
-1998-12-19  Eric M. Ludlam  <eric@siege-engine.com>
+1998-12-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed up cfx divination to handle lists from originating frame correctly.
 	Brought over some changes from speedbar.el from emacs 20.3 sources.
 
-1998-12-12  Eric M. Ludlam  <eric@siege-engine.com>
+1998-12-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Rehash attempt for geometries with lists.
 
-1998-11-24  Eric M. Ludlam  <eric@siege-engine.com>
+1998-11-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Update SCCS checks from p. to s. since that is in the spirit of what
 	we want.
 
-1998-11-22  Eric M. Ludlam  <eric@siege-engine.com>
+1998-11-22  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: More sort/bin problem correction when organizing tags.
 
-1998-10-24  Eric M. Ludlam  <eric@siege-engine.com>
+1998-10-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Update version number
 	(speedbar-tag-group-name-minimum-length): New variable.
@@ -1187,7 +1401,7 @@
 	(speedbar-line-path): Permit depth to be optional.  When this is
 	the case, derive it from the cursor location in speedbar.
 
-1998-10-04  Eric M. Ludlam  <eric@siege-engine.com>
+1998-10-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-initial-expansion-list-name):
 	Remove customization since it
@@ -1196,15 +1410,15 @@
 	gets evalled to a number.  Also verify that set-frame-name fn exists
 	before calling it.
 
-1998-09-12  Eric M. Ludlam  <eric@siege-engine.com>
+1998-09-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Do not set frame pos on terminals
 
-1998-08-31  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-31  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Changed version number
 
-1998-08-24  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	When running stealthy functions, make sure the buffer is writeable.
@@ -1214,21 +1428,21 @@
 
 	* speedbar.el: Made the speedbar buffer read only.
 
-1998-08-20  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed a typo
 
-1998-08-19  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Hide lock files.
 	Position frame at startup.
 	Don't update when iconified, or from minibuffer.
 
-1998-08-16  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-16  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Removed scrollbar width from the frame params for emacs.
 
-1998-08-08  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el (speedbar-edit-line, speedbar-buffer-kill-buffer, speedbar-buffer-revert-buffer):
 	Updated buffer finding regex to
@@ -1243,14 +1457,14 @@
 	(speedbar-delete-subblock): Rewrote to be more robust, less clever.
 	(speedbar-timer-fn): Removed short display time for messages.
 
-1998-08-04  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Removed extra code from speedbar-refresh dealing with messages.
 	Added said code to the timer so that minibuffer's aren't overwritten
 	for very long.
 
-1998-08-03  Eric M. Ludlam  <eric@siege-engine.com>
+1998-08-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Removed a paren.
 
@@ -1271,7 +1485,7 @@
 	* sb-info.el: Fixed comment from when I copied from RPM mode.
 	Updated the completions that are retrieved to include more stuff.
 
-1998-07-15  Eric M. Ludlam  <eric@siege-engine.com>
+1998-07-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	When overriding defcustom things, make sure the various symbols do not
@@ -1281,19 +1495,19 @@
 	Added new RCS valid pattern
 	Fixed the "root" pattern for finding a: on the pc.
 
-1998-06-20  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: XEmacs fixes, removal of history to ChangeLog
 
-1998-06-16  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-16  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Small fix for PC dir path.
 
-1998-06-14  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Version number
 
-1998-06-13  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-w3.el: Fixed keymap copy/paste error
 
@@ -1307,27 +1521,27 @@
 
 	* sb-rmail.el: Made the REGEX for finding folders configurable
 
-1998-06-12  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added a `speedbar-item-object-delete' to delete associated object
 	files.  This function will reset scanners.  The byte-compile item will
 	also reset the scanners.
 
-1998-06-11  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-11  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Made speedbar-stealthy-function-list have name tags to match those
 	found in speedbar-initial-expansion-mode-alist.  Thus, the buffers
 	menu won't get tagged by the file functions.
 
-1998-06-09  Eric M. Ludlam  <eric@siege-engine.com>
+1998-06-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Many checkdoc changes from new tests.
 	Track mouse is once again buffer local.
 	Added kill/revert buffer keys to buffer speedbar display.
 
-1998-05-17  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-17  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-w3.el: Added new keymap support.
 
@@ -1343,7 +1557,7 @@
 
 	* speedbar.el: A bunch of XEmacs fixes.
 
-1998-05-16  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-16  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added mega-commentary on speedbar special modes
 
@@ -1353,7 +1567,7 @@
 	Added a generic info finder function so it should work ok for all
 	modes.
 
-1998-05-15  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-info.el: Whatever.
 
@@ -1364,7 +1578,7 @@
 	the mouse.
 	Wrote a mouse motion handler that calls the speedbar info function.
 
-1998-05-13  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-13  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Completely revamped the speedbar keymap.  Each display mode can now
@@ -1375,7 +1589,7 @@
 	temp-buffer-show-function fix, tripple spell check, EFS support,
 	and infodoc support.
 
-1998-05-09  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Version
 
@@ -1387,11 +1601,11 @@
 	Completely re-wrote the display engine to support expandable nodes in a tree
 	hierarchy.  Turned that into a major mode.
 
-1998-05-07  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-07  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-info.el: Added an info major mode for speedbar.
 
-1998-05-06  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added html as a supported extension.
 
@@ -1399,7 +1613,7 @@
 
 	* sb-w3.el: Added T.V.Raman's w3 stuff.
 
-1998-05-05  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Duh
 
@@ -1410,13 +1624,13 @@
 
 	* rpm.el: New file.
 
-1998-05-04  Eric M. Ludlam  <eric@siege-engine.com>
+1998-05-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	`speedbar-add-supported-extension' and `speedbar-add-ignored-path-regexp'
 	are now interactive
 
-1998-04-16  Eric M. Ludlam  <eric@siege-engine.com>
+1998-04-16  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	The path finder and speedbar tagging functions are now compatible with
@@ -1427,7 +1641,7 @@
 
 	* speedbar.el: Fixed compile problem, and some checkdoc fixes.
 
-1998-04-15  Eric M. Ludlam  <eric@siege-engine.com>
+1998-04-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Custom workaround for XEmacs changes.
 
@@ -1438,7 +1652,7 @@
 	symbols.
 	Updated comments.
 
-1998-03-18  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-18  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed up custom for tag-hierarchy-method
 
@@ -1452,7 +1666,7 @@
 	Added special tag list mutating code.  Only takes effect if the lists
 	are really long.
 
-1998-03-12  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed irritating bug in my regex from the fortran change.
@@ -1461,7 +1675,7 @@
 
 	* speedbar.el: Added fortran support.
 
-1998-03-10  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-10  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added override function for `switch-to-buffer' in speedbar.
@@ -1473,13 +1687,13 @@
 
 	* speedbar.el: Added Perl5 support (.pm)
 
-1998-03-09  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-09  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added hide-button-brackets-flag and fixed current file positioning
 	bug.
 
-1998-03-06  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed menu problem left over from the merger with speedbspec
@@ -1506,7 +1720,7 @@
 
 	* speedbar.el: Enabled object tagging in depths > 0
 
-1998-03-05  Eric M. Ludlam  <eric@siege-engine.com>
+1998-03-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	It is now possible to update states of indicators and they correctly
@@ -1524,28 +1738,28 @@
 	indicate when a given object goes out of date, but that is a change
 	for later.
 
-1998-01-07  Eric M. Ludlam  <eric@siege-engine.com>
+1998-01-07  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el, sb-rmail.el, sb-info.el, sb-gud.el: Part of emacs
 
 	* speedbar.el: Moved speedbar-get-focus, and added autoload tag.
 
-1997-12-23  Eric M. Ludlam  <eric@siege-engine.com>
+1997-12-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: fixed button-3 menu for emacs 20.
 
-1997-12-14  Eric M. Ludlam  <eric@siege-engine.com>
+1997-12-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Simple documentation changes. XEmacs double click stuff.
 
-1997-12-12  Eric M. Ludlam  <eric@siege-engine.com>
+1997-12-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed up lots of XEmacs specific stuff surrounding frames.
 	Removed emacs menubar.  Added menu to button 3.
 	Now use repeating timer instead of restarting it myself.
 
-1997-11-21  Eric M. Ludlam  <eric@siege-engine.com>
+1997-11-21  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Few last hacks to make it work in XEmacs, and a checkdoc pass.
@@ -1554,7 +1768,7 @@
 	Added some comments, and merged a patch from Hrvoje Niksic for XEmacs
 	fixes
 
-1997-11-12  Eric M. Ludlam  <eric@siege-engine.com>
+1997-11-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added comments.
 
@@ -1563,14 +1777,14 @@
 	You can now adjust height in `speedbar-frame-parameters'
 	XEmacs fix for use of `local-variable-p'
 
-1997-11-05  Eric M. Ludlam  <eric@siege-engine.com>
+1997-11-05  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed more problems for Emacs 20 so speedbar loads correctly.
 	Updated some documentation strings.
 	Added customization menu item, and customized some more variables.
 
-1997-11-03  Eric M. Ludlam  <eric@siege-engine.com>
+1997-11-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed bad problem w/ ignored paths
 	Removed condition-case from main timer fcn
@@ -1581,11 +1795,11 @@
 
 	* sb-gud.el: New file.
 
-1997-11-01  Eric M. Ludlam  <eric@siege-engine.com>
+1997-11-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* sb-rmail.el, sb-info.el, sb-w3.el: New file.
 
-1997-10-10  Eric M. Ludlam  <eric@siege-engine.com>
+1997-10-10  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added custom support.  We loose the great face generator for older emacsen
@@ -1593,11 +1807,11 @@
 	Added double-click mouse-1 to do the same thing as middle click.
 	XEmacs pointershape cutout
 
-1997-09-12  Eric M. Ludlam  <eric@siege-engine.com>
+1997-09-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Emacs 20 char= support
 
-1997-08-15  Eric M. Ludlam  <eric@siege-engine.com>
+1997-08-15  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed problem when going going to a file in an open subdirectory
@@ -1610,7 +1824,7 @@
 	Fixed if statement around imenu use to bebased on imenu, not xemacs.
 	Added extra levels of finding in etags/TeX
 
-1997-08-02  Eric M. Ludlam  <eric@siege-engine.com>
+1997-08-02  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added speedbar-smart-directory-expand-flag which lets the user control
@@ -1622,11 +1836,11 @@
 	  w/ mouse events.
 	Added `speedbar-sort-tags' toggle to the menubar.
 
-1997-06-27  Eric M. Ludlam  <eric@siege-engine.com>
+1997-06-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: xemacs feature around ange-ftp
 
-1997-06-14  Eric M. Ludlam  <eric@siege-engine.com>
+1997-06-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added advice from ptype:
 	  post-command-idle-hook for old emacsen
@@ -1634,84 +1848,84 @@
 	added hooks for VC types and scanner resetting
 	added revert hook to reset scanners which might affect VC displays
 
-1997-06-06  Eric M. Ludlam  <eric@siege-engine.com>
+1997-06-06  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Renamed speedbar-do-updates to speedbar-update-flag and fixed checkdoc stuff
 
-1997-06-04  Eric M. Ludlam  <eric@siege-engine.com>
+1997-06-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed a couple doc-strings
 
-1997-06-03  Eric M. Ludlam  <eric@siege-engine.com>
+1997-06-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added select-frame during quit.
 	Spell-checked all the doc-strings.
 
-1997-05-29  Eric M. Ludlam  <eric@siege-engine.com>
+1997-05-29  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added java to etags supported extensions
 
-1997-05-26  Eric M. Ludlam  <eric@siege-engine.com>
+1997-05-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added a few doc changes based on new checkdoc checks
 
-1997-05-14  Eric M. Ludlam  <eric@siege-engine.com>
+1997-05-14  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed use of easymenu w/ toggles
 
 	* speedbar.el: Added some comments.  Made menu creation more flexible.
 
-1997-05-01  Eric M. Ludlam  <eric@siege-engine.com>
+1997-05-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Made item info and edit more robust
 
-1997-04-29  Eric M. Ludlam  <eric@siege-engine.com>
+1997-04-29  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added new mode-specific contents control and convenience functions
 
-1997-04-26  Eric M. Ludlam  <eric@siege-engine.com>
+1997-04-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added todo item, and fixed more documentation strings
 
-1997-04-04  Eric M. Ludlam  <eric@siege-engine.com>
+1997-04-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Version update
 
 	* speedbar.el: checkdoc autofixes.
 	byte compiler warnings
 
-1997-04-01  Eric M. Ludlam  <eric@siege-engine.com>
+1997-04-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: fixed comments based on checkdoc.
 
-1997-03-30  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-30  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Updated all doc strings to conform to standards.  Checked with checkdoc.
 
-1997-03-27  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Gobs of doc-string fixes based on checkdoc.
 
-1997-03-20  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-20  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed for people who run MBFs (Minibuffer frames) where
 	default-minibuffer-frame was being set incorrectly.
 
-1997-03-19  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Comment & code management (Moving things around)
 
 	* speedbar.el: XEmacs bugfixes & new window title.
 
-1997-03-03  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-03  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Made one small xemacs change dealing with eval-when-compile.
 
-1997-03-01  Eric M. Ludlam  <eric@siege-engine.com>
+1997-03-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Updated comments & doc.  Added power-click to the file list generator.
@@ -1729,27 +1943,27 @@
 	Quitting does not delete speedbar buffer.  Buffer name starts with a space.
 	Moved some stuff around.
 
-1997-02-27  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Removed leftover messages
 
-1997-02-26  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: List of directories never to enter now allowed.
 	Fixed cursor not moving to line with selected file bug.
 
-1997-02-12  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-12  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed text-cache.  It is now enable to handle switch-backs into open
 	subdirectories.   Added a new function to clear the current selected
 	file.
 
-1997-02-10  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-10  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Doc updates.  Stopped using wholenump (breaks xemacs)
 
-1997-02-08  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	New UP directory keybinding.  Rebound g to what was once r.  New doc
@@ -1759,7 +1973,7 @@
 	Copy/rename/delete use new refresh, and position cursor in a good
 	spot.
 
-1997-02-07  Eric M. Ludlam  <eric@siege-engine.com>
+1997-02-07  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed line-number-mode check in mode-line creator
 	Fixed extention-list-to-regexp for when no non-extension files available
@@ -1773,13 +1987,13 @@
 	Fixed up speedbar-position-cursor-on-line to be more robust.
 	Added directory-button-trim-method for ways of trimming the directory button.
 
-1997-01-30  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-30  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Added smarts to byte-compile, and fixed background color guesser which
 	died on XEmacs.
 
-1997-01-25  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-25  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed the kill-buffer hook
 
@@ -1793,7 +2007,7 @@
 	byte-compile, and load.  Also added new keystroke to get info about a
 	file in the speedbar buffer.
 
-1997-01-23  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-23  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed documentation strings to conform to standards
 	Added condition-case around the timer so it can reset itself.
@@ -1801,13 +2015,13 @@
 	within doesn't mutate any running applications.
 	Added Checks for ange-ftp directories to turn off the vc thingie.
 
-1997-01-19  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-19  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	The auto-refresher failed in info buffers in XEmacs.  Added smarts so
 	it would never fail in either emacsen.
 
-1997-01-18  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-18  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Fixed another vc error.  All places where update-current-file was once
@@ -1830,11 +2044,11 @@
 	Setup so that if editing a file not in speedbar frame, speedbar will
 	refresh the cache (which is obviously out of date...)
 
-1997-01-08  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-08  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Added comment about AUC-TEX
 
-1997-01-04  Eric M. Ludlam  <eric@siege-engine.com>
+1997-01-04  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed compile trouble on XEmacs relating to imenu.
 	Tried to add special help in other frame but failed.
@@ -1844,7 +2058,7 @@
 	selecting bug.  Added list of extensions that speedbar can tag.  Fixed
 	list closing code.
 
-1996-10-30  Eric M. Ludlam  <eric@siege-engine.com>
+1996-10-30  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed up comment
 
@@ -1856,16 +2070,16 @@
 	Fixed speedbar-frame-mode so that no argument will toggle it's
 	existence.
 
-1996-10-26  Eric M. Ludlam  <eric@siege-engine.com>
+1996-10-26  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el:
 	Changed comments and doc strings, and several small bugs.
 
-1996-10-24  Eric M. Ludlam  <eric@siege-engine.com>
+1996-10-24  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Made major revisions listed under 0.3 in comments.
 
-1996-10-01  Eric M. Ludlam  <eric@siege-engine.com>
+1996-10-01  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Fixed some comments, and changed a color value.
 
@@ -1875,7 +2089,7 @@
 	Added new stuff: imenu use, directory stuff upgrade.
 	See docs in file.
 
-1996-09-27  Eric M. Ludlam  <eric@siege-engine.com>
+1996-09-27  Eric M. Ludlam  <zappo@gnu.org>
 
 	* speedbar.el: Moved a definition
 

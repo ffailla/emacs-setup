@@ -1,12 +1,13 @@
 ;;; wisent-java-tags.el --- Java LALR parser for Emacs
 
-;; Copyright (C) 2001, 2002 David Ponce
+;; Copyright (C) 2009 Eric M. Ludlam
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006 David Ponce
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 15 Dec 2001
 ;; Keywords: syntax
-;; X-RCS: $Id: wisent-java-tags.el,v 1.30 2004/04/29 10:10:53 ponced Exp $
+;; X-RCS: $Id: wisent-java-tags.el,v 1.34 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -22,8 +23,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -40,8 +41,7 @@
   (require 'semantic-util)
   (require 'semantic-ctxt)
   (require 'semantic-imenu)
-  (require 'senator)
-  (require 'document))
+  (require 'senator))
 
 ;;;;
 ;;;; Simple parser error reporting function
@@ -86,6 +86,9 @@ This function override `get-local-variables'."
 ;;;; Semantic integration of the Java LALR parser
 ;;;;
 
+;; In semantic-imenu.el, not part of Emacs.
+(defvar semantic-imenu-summary-function)
+
 ;;;###autoload
 (defun wisent-java-default-setup ()
   "Hook run to setup Semantic in `java-mode'.
@@ -96,15 +99,12 @@ Use the alternate LALR(1) parser."
    semantic-lex-number-expression semantic-java-number-regexp
    semantic-lex-analyzer 'wisent-java-tags-lexer
    ;; Parsing
-   semantic-tag-expand-function 'wisent-java-expand-tag
+   semantic-tag-expand-function 'semantic-java-expand-tag
    ;; Environment
    semantic-imenu-summary-function 'semantic-format-tag-prototype
    imenu-create-index-function 'semantic-create-imenu-index
    semantic-type-relation-separator-character '(".")
    semantic-command-separation-character ";"
-   document-comment-start "/**"
-   document-comment-line-prefix " *"
-   document-comment-end " */"
    ;; speedbar and imenu buckets name
    semantic-symbol->name-assoc-list-for-type-parts
    ;; in type parts
@@ -122,32 +122,8 @@ Use the alternate LALR(1) parser."
   ;; Setup javadoc stuff
   (semantic-java-doc-setup))
 
-(defun wisent-java-expand-tag (tag)
-  "Expand TAG into a list of equivalent tags, or nil.
-Expand multiple variable declarations in the same statement, that is
-tags of class `variable' whose name is equal to a list of elements of
-the form (NAME START . END).  NAME is a variable name.  START and END
-are the bounds in the declaration, related to this variable NAME."
-  (let (elts elt clone start end xpand)
-    (when (and (eq 'variable (semantic-tag-class tag))
-               (consp (setq elts (semantic-tag-name tag))))
-      ;; There are multiple names in the same variable declaration.
-      (while elts
-        ;; For each name element, clone the initial tag and give it
-        ;; the name of the element.
-        (setq elt   (car elts)
-              elts  (cdr elts)
-              clone (semantic-tag-clone tag (car elt))
-              start (if elts  (cadr elt) (semantic-tag-start tag))
-              end   (if xpand (cddr elt) (semantic-tag-end   tag))
-              xpand (cons clone xpand))
-        ;; Set the bounds of the cloned tag with those of the name
-        ;; element.
-        (semantic-tag-set-bounds clone start end))
-      xpand)))
-
 ;;;###autoload
-(add-hook 'java-mode-hook #'wisent-java-default-setup)
+(add-hook 'java-mode-hook 'wisent-java-default-setup)
 
 (provide 'wisent-java-tags)
 

@@ -1,10 +1,10 @@
 ;;; semantic-ctxt.el --- Context calculations for Semantic tools.
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-ctxt.el,v 1.36 2004/07/15 20:34:50 zappo Exp $
+;; X-RCS: $Id: semantic-ctxt.el,v 1.58 2010/03/15 13:40:54 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -37,6 +37,7 @@
 
 ;;; Code:
 ;;
+;;;###autoload
 (defvar semantic-command-separation-character
  ";"
   "String which indicates the end of a command.
@@ -49,9 +50,11 @@ Used for identifying the end of a single command.")
 Used for identifying arguments to functions.")
 (make-variable-buffer-local 'semantic-function-argument-separation-character)
 
-;;; Local variable parsing.
+;;; Local Contexts
 ;;
-(define-overload semantic-up-context (&optional point bounds-type)
+;; These context are nested blocks of code, such as code in an
+;; if clause
+(define-overloadable-function semantic-up-context (&optional point bounds-type)
   "Move point up one context from POINT.
 Return non-nil if there are no more context levels.
 Overloaded functions using `up-context' take no parameters.
@@ -79,13 +82,13 @@ Works with languages that use parenthetical grouping."
 	nil)
     (error t)))
 
-(define-overload semantic-beginning-of-context (&optional point)
+(define-overloadable-function semantic-beginning-of-context (&optional point)
   "Move POINT to the beginning of the current context.
 Return non-nil if there is no upper context.
 The default behavior uses `semantic-up-context'.")
 
 (defun semantic-beginning-of-context-default (&optional point)
-  "Move POINT to the beginning of the current context via parenthisis.
+  "Move POINT to the beginning of the current context via parenthesis.
 Return non-nil if there is no upper context."
   (if point (goto-char point))
   (if (semantic-up-context)
@@ -93,21 +96,35 @@ Return non-nil if there is no upper context."
     (forward-char 1)
     nil))
 
-(define-overload semantic-end-of-context (&optional point)
+(define-overloadable-function semantic-end-of-context (&optional point)
   "Move POINT to the end of the current context.
 Return non-nil if there is no upper context.
 Be default, this uses `semantic-up-context', and assumes parenthetical
 block delimiters.")
 
 (defun semantic-end-of-context-default (&optional point)
-  "Move POINT to the end of the current context via parenthisis.
+  "Move POINT to the end of the current context via parenthesis.
 Return non-nil if there is no upper context."
   (if point (goto-char point))
-  (if (semantic-up-context)
-      t
-    ;; Go over the list, and back over the end parenthisis.
-    (forward-sexp 1)
-    (forward-char -1)
+  (let ((start (point)))
+    (if (semantic-up-context)
+	t
+      ;; Go over the list, and back over the end parenthesis.
+      (condition-case nil
+	  (progn
+	    (forward-sexp 1)
+	    (forward-char -1))
+	(error
+	 ;; If an error occurs, get the current tag from the cache,
+	 ;; and just go to the end of that.  Make sure we end up at least
+	 ;; where start was so parse-region type calls work.
+	 (if (semantic-current-tag)
+	     (progn
+	       (goto-char (semantic-tag-end (semantic-current-tag)))
+	       (when (< (point) start)
+		 (goto-char start)))
+	   (goto-char start))
+	 t)))
     nil))
 
 (defun semantic-narrow-to-context ()
@@ -134,7 +151,10 @@ Return non-nil if there is no upper context."
 	    (def-edebug-spec semantic-with-buffer-narrowed-to-context
 	      (def-body))))
 
-(define-overload semantic-get-local-variables (&optional point)
+;;; Local Variables
+;;
+;;
+(define-overloadable-function semantic-get-local-variables (&optional point)
   "Get the local variables based on POINT's context.
 Local variables are returned in Semantic tag format.
 This can be overriden with `get-local-variables'."
@@ -156,26 +176,61 @@ Uses the bovinator with the special top-symbol `bovine-inner-scope'
 to collect tags, such as local variables or prototypes."
   ;; This assumes a bovine parser.  Make sure we don't do
   ;; anything in that case.
-  (when (and semantic--parse-table (not (eq semantic--parse-table t)))
-    (let ((vars nil)
-	  ;; We want nothing to do with funny syntaxing while doing this.
-	  (semantic-unmatched-syntax-hook nil))
-      (while (not (semantic-up-context (point) 'function))
-	(save-excursion
-	  (forward-char 1)
-	  (setq vars
-		;; Note to self: This is specific to bovine parsers.
-		;; We need a better way to configure this generically.
-		(append (semantic-parse-region
-			 (point)
-			 (save-excursion (semantic-end-of-context) (point))
-			 'bovine-inner-scope
-			 nil
-			 t)
-			vars))))
-      vars)))
+  (when (and semantic--parse-table (not (eq semantic--parse-table t))
+	     (not (semantic-parse-tree-unparseable-p)))
+    (let ((vars (semantic-get-cache-data 'get-local-variables)))
+      (if vars
+	  (progn
+	    ;;(message "Found cached vars.")
+	    vars)
+	(let ((vars2 nil)
+	      ;; We want nothing to do with funny syntaxing while doing this.
+	      (semantic-unmatched-syntax-hook nil)
+	      (start (point))
+	      (firstusefulstart nil)
+	      )
+	  (while (not (semantic-up-context (point) 'function))
+	    (when (not vars)
+	      (setq firstusefulstart (point)))
+	    (save-excursion
+	      (forward-char 1)
+	      (setq vars
+		    ;; Note to self: semantic-parse-region returns cooked
+		    ;; but unlinked tags.  File information is lost here
+		    ;; and is added next.
+		    (append (semantic-parse-region
+			     (point)
+			     (save-excursion (semantic-end-of-context) (point))
+			     'bovine-inner-scope
+			     nil
+			     t)
+			    vars))))
+	  ;; Modify the tags in place.
+	  (setq vars2 vars)
+	  (while vars2
+	    (semantic--tag-put-property (car vars2) :filename (buffer-file-name))
+	    (setq vars2 (cdr vars2)))
+	  ;; Hash our value into the first context that produced useful results.
+	  (when (and vars firstusefulstart)
+	    (let ((end (save-excursion
+			 (goto-char firstusefulstart)
+			 (save-excursion
+			   (unless (semantic-end-of-context)
+			     (point))))))
+	      ;;(message "Caching values %d->%d." firstusefulstart end)
+	      (semantic-cache-data-to-buffer
+	       (current-buffer) firstusefulstart
+	       (or end
+		   ;; If the end-of-context fails,
+		   ;; just use our cursor starting
+		   ;; position.
+		   start)
+	       vars 'get-local-variables 'exit-cache-zone))
+	    )
+	  ;; Return our list.
+	  vars)))))
 
-(define-overload semantic-get-local-arguments (&optional point)
+(define-overloadable-function semantic-get-local-arguments (&optional point)
   "Get arguments (variables) from the current context at POINT.
 Parameters are available if the point is in a function or method.
 Return a list of tags unlinked from the originating buffer.
@@ -196,9 +251,11 @@ tags."
                           ((semantic-tag-p arg)
                            ;; Return a copy of tag without overlay.
                            ;; The overlay is preserved.
-                           (semantic-tag-copy arg))
+                           (semantic-tag-copy arg nil t))
                           ((stringp arg)
-                           (semantic-tag-new-variable arg nil nil))
+                           (semantic--tag-put-property
+			    (semantic-tag-new-variable arg nil nil)
+			    :filename (buffer-file-name)))
                           (t
                            (error "Unknown parameter element %S" arg)))
                          tags)))
@@ -211,7 +268,7 @@ Parameters are available if the point is in a function or method."
     (if (and tag (semantic-tag-of-class-p tag 'function))
 	(semantic-tag-function-arguments tag))))
 
-(define-overload semantic-get-all-local-variables (&optional point)
+(define-overloadable-function semantic-get-all-local-variables (&optional point)
   "Get all local variables for this context, and parent contexts.
 Local variables are returned in Semantic tag format.
 Be default, this gets local variables, and local arguments.
@@ -227,8 +284,8 @@ That is a cons (LOCAL-ARGUMENTS . LOCAL-VARIABLES) where:
   (save-excursion
     (if point (goto-char point))
     (let ((case-fold-search semantic-case-fold))
-      (cons (semantic-get-local-arguments)
-	    (semantic-get-local-variables)))))
+      (append (semantic-get-local-arguments)
+	      (semantic-get-local-variables)))))
 
 ;;; Local context parsing
 ;;
@@ -243,12 +300,12 @@ That is a cons (LOCAL-ARGUMENTS . LOCAL-VARIABLES) where:
 ;; argument     - The index to the argument the cursor is on.
 ;;
 ;;
-(define-overload semantic-end-of-command ()
+(define-overloadable-function semantic-end-of-command ()
   "Move to the end of the current command.
 Be default, uses `semantic-command-separation-character'.")
 
 (defun semantic-end-of-command-default ()
-  "Move to the beginning of the current command.
+  "Move to the end of the current command.
 Depends on `semantic-command-separation-character' to find the
 beginning and end of a command."
   (semantic-with-buffer-narrowed-to-context
@@ -262,7 +319,7 @@ beginning and end of a command."
 	  ;; command, and we are incomplete.
 	  (goto-char (point-max)))))))
 
-(define-overload semantic-beginning-of-command ()
+(define-overloadable-function semantic-beginning-of-command ()
   "Move to the beginning of the current command.
 Be default, uses `semantic-command-separation-character'.")
 
@@ -309,64 +366,123 @@ beginning and end of a command."
 	      (def-body))))
 
 
-(define-overload semantic-ctxt-current-symbol (&optional point)
+(define-overloadable-function semantic-ctxt-current-symbol (&optional point)
   "Return the current symbol the cursor is on at POINT in a list.
-This will include a list of type/field names when applicable.")
+The symbol includes all logical parts of a complex reference.
+For example, in C the statement:
+  this.that().entry
+
+Would be object `this' calling method `that' which returns some structure
+whose field `entry' is being reference.  In this case, this function
+would return the list:
+  ( \"this\" \"that\" \"entry\" )")
 
 (defun semantic-ctxt-current-symbol-default (&optional point)
   "Return the current symbol the cursor is on at POINT in a list.
 This will include a list of type/field names when applicable.
 Depends on `semantic-type-relation-separator-character'."
-  (if point (goto-char point))
-  (let* ((fieldsep1 (mapconcat (lambda (a) (regexp-quote a))
-			       semantic-type-relation-separator-character
-			       "\\|"))
-	 (fieldsep (concat "\\(" fieldsep1 "\\)\\(\\w\\|\\s_\\)"))
-	 (case-fold-search semantic-case-fold)
-	 (symlist nil)
-	 end)
-    (with-syntax-table semantic-lex-syntax-table    
-      (save-excursion
-	(if (looking-at "\\w\\|\\s_")
-	    (forward-sexp 1)
-	  ;; Not on a sym, are we at a separator char with no field
-	  ;; specified yet?
-	  (when (or (looking-at fieldsep1)
-		    (save-excursion
-		      (and (condition-case nil
-			       (progn (forward-sexp -1)
-				      (forward-sexp 1)
-				      t)
-			     (error nil))
-			   (looking-at fieldsep1))))
-	    (setq symlist (list ""))
-	    (forward-sexp -1)
-	    (forward-sexp 1)))
-	(setq end (point))
-	(condition-case nil
-	    (while (save-excursion
-		     (forward-char -1)
-		     (looking-at "\\w\\|\\s_"))
-	      ;; We have a symbol.. Do symbol things
-	      (forward-sexp -1)
-	      (setq symlist (cons (buffer-substring-no-properties (point) end)
-				  symlist))
-	      ;; Skip the next syntactic expression backwards, then go forwards.
-	      (let ((cp (point)))
-		(forward-sexp -1)
-		(forward-sexp 1)
-		;; If we end up at the same place we started, we are at the
-		;; beginning of a buffer, or narrowed to a command and
-		;; have to stop.
-		(if (<= cp (point)) (error nil)))
-	      (if (looking-at fieldsep)
-		  (setq end (point))
-		(error nil))
-	      )
-	  (error nil)))
-      symlist)))
+  (save-excursion
+    (if point (goto-char point))
+    (let* ((fieldsep1 (mapconcat (lambda (a) (regexp-quote a))
+				 semantic-type-relation-separator-character
+				 "\\|"))
+	   ;; NOTE: The [ \n] expression below should used \\s-, but that
+	   ;; doesn't work in C since \n means end-of-comment, and isn't
+	   ;; really whitespace.
+	   (fieldsep (concat "[ \t\n\r]*\\(" fieldsep1 "\\)[ \t\n\r]*\\(\\w\\|\\s_\\)"))
+	   (case-fold-search semantic-case-fold)
+	   (symlist nil)
+	   end)
+      (with-syntax-table semantic-lex-syntax-table
+	(save-excursion
+	  (cond ((looking-at "\\w\\|\\s_")
+		 ;; In the middle of a symbol, move to the end.
+		 (forward-sexp 1))
+		((looking-at fieldsep1)
+		 ;; We are in a find spot.. do nothing.
+		 nil
+		 )
+		((save-excursion
+		   (and (condition-case nil
+			    (progn (forward-sexp -1)
+				   (forward-sexp 1)
+				   t)
+			  (error nil))
+			(looking-at fieldsep1)))
+		 (setq symlist (list ""))
+		 (forward-sexp -1)
+		 ;; Skip array expressions.
+		 (while (looking-at "\\s(") (forward-sexp -1))
+		 (forward-sexp 1))
+		)
+	  ;; Set our end point.
+	  (setq end (point))
 
-(define-overload semantic-ctxt-current-assignment (&optional point)
+	  ;; Now that we have gotten started, lets do the rest.
+	  (condition-case nil
+	      (while (save-excursion
+		       (forward-char -1)
+		       (looking-at "\\w\\|\\s_"))
+		;; We have a symbol.. Do symbol things
+		(forward-sexp -1)
+		(setq symlist (cons (buffer-substring-no-properties (point) end)
+				    symlist))
+		;; Skip the next syntactic expression backwards, then go forwards.
+		(let ((cp (point)))
+		  (forward-sexp -1)
+		  (forward-sexp 1)
+		  ;; If we end up at the same place we started, we are at the
+		  ;; beginning of a buffer, or narrowed to a command and
+		  ;; have to stop.
+		  (if (<= cp (point)) (error nil)))
+		(if (looking-at fieldsep)
+		    (progn
+		      (forward-sexp -1)
+		      ;; Skip array expressions.
+		      (while (and (looking-at "\\s(") (not (bobp)))
+			(forward-sexp -1))
+		      (forward-sexp 1)
+		      (setq end (point)))
+		  (error nil))
+		)
+	    (error nil)))
+	symlist))))
+
+
+(define-overloadable-function semantic-ctxt-current-symbol-and-bounds (&optional point)
+  "Return the current symbol and bounds the cursor is on at POINT.
+The symbol should be the same as returned by `semantic-ctxt-current-symbol'.
+Return (PREFIX ENDSYM BOUNDS).")
+
+(defun semantic-ctxt-current-symbol-and-bounds-default (&optional point)
+  "Return the current symbol and bounds the cursor is on at POINT.
+Uses `semantic-ctxt-current-symbol' to calculate the symbol.
+Return (PREFIX ENDSYM BOUNDS)."
+  (save-excursion
+    (when point (goto-char (point)))
+    (let* ((prefix (semantic-ctxt-current-symbol))
+	   (endsym (car (reverse prefix)))
+	   ;; @todo - Can we get this data direct from ctxt-current-symbol?
+	   (bounds (save-excursion
+		     (cond ((string= endsym "")
+			    (cons (point) (point))
+			    )
+			   ((and prefix (looking-at endsym))
+			    (cons (point) (progn
+					    (condition-case nil
+						(forward-sexp 1)
+					      (error nil))
+					    (point))))
+			   (prefix
+			    (condition-case nil
+				(cons (progn (forward-sexp -1) (point))
+				      (progn (forward-sexp 1) (point)))
+			      (error nil)))
+			   (t nil))))
+	   )
+      (list prefix endsym bounds))))
+
+(define-overloadable-function semantic-ctxt-current-assignment (&optional point)
   "Return the current assignment near the cursor at POINT.
 Return a list as per `semantic-ctxt-current-symbol'.
 Return nil if there is nothing relevant.")
@@ -376,7 +492,7 @@ Return nil if there is nothing relevant.")
 By default, assume that \"=\" indicates an assignment."
   (if point (goto-char point))
   (let ((case-fold-search semantic-case-fold))
-    (with-syntax-table semantic-lex-syntax-table    
+    (with-syntax-table semantic-lex-syntax-table
       (condition-case nil
 	  (semantic-with-buffer-narrowed-to-command
 	    (save-excursion
@@ -389,7 +505,7 @@ By default, assume that \"=\" indicates an assignment."
 	      (semantic-ctxt-current-symbol)))
 	(error nil)))))
 
-(define-overload semantic-ctxt-current-function (&optional point)
+(define-overloadable-function semantic-ctxt-current-function (&optional point)
   "Return the current function call the cursor is in at POINT.
 The function returned is the one accepting the arguments that
 the cursor is currently in.  It will not return function symbol if the
@@ -397,7 +513,7 @@ cursor is on the text representing that function.")
 
 (defun semantic-ctxt-current-function-default (&optional point)
   "Return the current function call the cursor is in at POINT.
-The call will be identifed for C like langauges with the form
+The call will be identified for C like languages with the form
  NAME ( args ... )"
   (if point (goto-char point))
   (let ((case-fold-search semantic-case-fold))
@@ -408,11 +524,11 @@ The call will be identifed for C like langauges with the form
 	  (semantic-ctxt-current-symbol))))
     ))
 
-(define-overload semantic-ctxt-current-argument (&optional point)
+(define-overloadable-function semantic-ctxt-current-argument (&optional point)
   "Return the index of the argument position the cursor is on at POINT.")
 
 (defun semantic-ctxt-current-argument-default (&optional point)
-  "Return the index of the argument the cursor is on.
+  "Return the index of the argument the cursor is on at POINT.
 Depends on `semantic-function-argument-separation-character'."
   (if point (goto-char point))
   (let ((case-fold-search semantic-case-fold))
@@ -439,7 +555,7 @@ for details on the return value."
       (semantic-ctxt-current-function)
       (semantic-ctxt-current-assignment)))
 
-(define-overload semantic-ctxt-current-class-list (&optional point)
+(define-overloadable-function semantic-ctxt-current-class-list (&optional point)
   "Return a list of tag classes that are allowed at POINT.
 If POINT is nil, the current buffer location is used.
 For example, in Emacs Lisp, the symbol after a ( is most likely
@@ -453,20 +569,33 @@ Assume a functional typed language.  Uses very simple rules."
     (if point (goto-char point))
 
     (let ((tag (semantic-current-tag)))
-      (when tag
-	(cond ((semantic-tag-of-class-p tag 'function)
-	       '(function variable))
-	      ((or (semantic-tag-of-class-p tag 'type)
-		   (semantic-tag-of-class-p tag 'variable))
-	       '(type))
-	      (t nil))))))
+      (if tag
+	  (cond ((semantic-tag-of-class-p tag 'function)
+		 '(function variable type))
+		((or (semantic-tag-of-class-p tag 'type)
+		     (semantic-tag-of-class-p tag 'variable))
+		 '(type))
+		(t nil))
+	'(type)
+	))))
 
+(define-overloadable-function semantic-ctxt-current-mode (&optional point)
+  "Return the major mode active at POINT.
+POINT defaults to the value of point in current buffer.
+You should override this function in multiple mode buffers to
+determine which major mode apply at point.")
+
+(defun semantic-ctxt-current-mode-default (&optional point)
+  "Return the major mode active at POINT.
+POINT defaults to the value of point in current buffer.
+This default implementation returns the current major mode."
+  major-mode)
 
 ;;; Scoped Types
 ;;
 ;; Scoped types are types that the current code would have access to.
 ;; The come from the global namespace or from special commands such as "using"
-(define-overload semantic-ctxt-scoped-types (&optional point)
+(define-overloadable-function semantic-ctxt-scoped-types (&optional point)
   "Return a list of type names currently in scope at POINT.
 The return value can be a mixed list of either strings (names of
 types that are in scope) or actual tags (type declared locally
@@ -475,13 +604,19 @@ that may or may not have a name.)")
 (defun semantic-ctxt-scoped-types-default (&optional point)
   "Return a list of scoped types by name for the current context at POINT.
 This is very different for various languages, and does nothing unless
-overriden."
-  (if point (goto-char point))
-  (let ((case-fold-search semantic-case-fold))
-    ;; We need to look at TYPES within the bounds of locally parse arguments.
-    ;; C needs to find using statements and the like too.  Bleh.
-    nil
-    ))
+overridden."
+  nil)
+
+(define-overloadable-function semantic-ctxt-imported-packages (&optional point)
+  "Return a list of package tags or names which are being imported at POINT.
+The return value is a list of strings which are package names
+that are implied in code.  Thus a C++ symbol:
+  foo::bar();
+where there is a statement such as:
+  using baz;
+means that the first symbol might be:
+  baz::foo::bar();"
+  nil)
 
 (provide 'semantic-ctxt)
 

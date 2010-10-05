@@ -1,12 +1,12 @@
 ;;; senator.el --- SEmantic NAvigaTOR
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004 by David Ponce
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 by David Ponce
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 10 Nov 2000
 ;; Keywords: syntax
-;; X-RCS: $Id: senator.el,v 1.100 2004/06/19 15:00:27 zappo Exp $
+;; X-RCS: $Id: senator.el,v 1.150 2010/06/06 15:46:32 zappo Exp $
 
 ;; This file is not part of Emacs
 
@@ -22,8 +22,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -66,6 +66,8 @@
 ;;    C-c , C-y       `senator-yank-tag'
 ;;    C-c , C-w       `senator-kill-tag'
 ;;    C-c , M-w       `senator-copy-tag'
+;;    C-c , r         `senator-copy-tag-to-register'
+;;    C-c , t         `senator-transpose-tags-up'
 ;;
 ;; You can customize the `senator-step-at-tag-classes' to navigate (and
 ;; search) only between tags of a particular class.  (Such as
@@ -96,6 +98,7 @@
 (require 'semantic-imenu)
 (eval-when-compile
   (require 'semanticdb)
+  (require 'semanticdb-find)
   (require 'cl)
   )
 
@@ -191,6 +194,14 @@ langage behaviour."
   "Parse the current buffer and return the tags where to navigate."
   (semantic-fetch-tags))
 
+(defun senator-force-refresh ()
+  "Force a full refresh of the current buffer's tags.
+Throws away all the old tags, and recreates the tag database for
+this buffer."
+  (interactive)
+  (semantic-clear-toplevel-cache)
+  (senator-parse))
+
 (defsubst senator-current-tag ()
   "Return the current tag in the current buffer.
 Raise an error is there is no tag here."
@@ -242,7 +253,21 @@ Return nil otherwise."
 
 (defun senator-previous-tag-or-parent (pos)
   "Return the tag before POS or one of its parent where to step."
-  (let ((tag (semantic-find-tag-by-overlay-prev pos)))
+  (let (ol tag)
+    (while (and pos (> pos (point-min)) (not tag))
+      (setq pos (semantic-overlay-previous-change pos))
+      (when pos
+        ;; Get overlays at position
+        (setq ol (semantic-overlays-at pos))
+        ;; find the overlay that belongs to semantic
+        ;; and STARTS or ENDS at the found position.
+        (while (and ol (not tag))
+          (setq tag (semantic-overlay-get (car ol) 'semantic))
+          (unless (and tag (semantic-tag-p tag)
+                       (or (= (semantic-tag-start tag) pos)
+                           (= (semantic-tag-end   tag) pos)))
+            (setq tag nil
+                  ol (cdr ol))))))
     (or (senator-step-at-parent tag) tag)))
 
 (defun senator-full-tag-name (tag parent)
@@ -430,11 +455,24 @@ type context exists at point."
 (defun senator-find-tag-for-completion (prefix)
   "Find all tags with a name starting with PREFIX.
 Uses `semanticdb' when available."
-  (if (and (featurep 'semanticdb) (semanticdb-minor-mode-p))
-      ;; semanticdb version returns a list of (DB-TABLE . TAG-LIST)
-      (semanticdb-deep-find-tags-for-completion prefix)
-    ;; semantic version returns a TAG-LIST
-    (semantic-deep-find-tags-for-completion prefix (current-buffer))))
+  (let ((tagsa nil))
+    (when (and (featurep 'semantic-analyze))
+      (let ((ctxt (semantic-analyze-current-context)))
+        (when ctxt
+          (condition-case nil
+              (setq tagsa (semantic-analyze-possible-completions
+                           ctxt))
+            (error nil)))))
+
+    (if tagsa
+        tagsa
+      ;; If the analyzer fails, then go into boring completion
+      (if (and (featurep 'semanticdb) (semanticdb-minor-mode-p))
+	  (semanticdb-fast-strip-find-results
+	   ;; semanticdb version returns a list of (DB-TABLE . TAG-LIST)
+	   (semanticdb-deep-find-tags-for-completion prefix))
+	;; semantic version returns a TAG-LIST
+	(semantic-deep-find-tags-for-completion prefix (current-buffer))))))
 
 ;;; Senator stream searching functions: no more supported.
 ;;
@@ -449,28 +487,47 @@ Uses `semanticdb' when available."
 ;;;;
 
 (defun senator-search-tag-name (tag)
-  "Search the TAG name in TAG bounds.
-Set point to the end of the name, and return point.  To get the
-beginning of the name use (match-beginning 0)."
+  "Search for TAG name in current buffer.
+Limit the search to TAG bounds.
+If found, set point to the end of the name, and return point.  The
+beginning of the name is at (match-beginning 0).
+Return nil if not found, that is if TAG name doesn't come from the
+source."
   (let ((name (semantic-tag-name tag)))
     (setq name (if (string-match "\\`\\([^[]+\\)[[]" name)
                    (match-string 1 name)
                  name))
     (goto-char (semantic-tag-start tag))
-    (re-search-forward (concat
-                        ;; the tag name is at the beginning of a
-                        ;; word or after a whitespace or a punctuation
-                        "\\(\\<\\|\\s-+\\|\\s.\\)"
-                        (regexp-quote name))
-                       (semantic-tag-end tag))
-    (goto-char (match-beginning 0))
-    (search-forward name)))
+    (when (re-search-forward (concat
+                              ;; The tag name is expected to be
+                              ;; between word delimiters, whitespaces,
+                              ;; or punctuations.
+                              "\\(\\<\\|\\s-+\\|\\s.\\)"
+                              (regexp-quote name)
+                              "\\(\\>\\|\\s-+\\|\\s.\\)")
+                             (semantic-tag-end tag)
+                             t)
+      (goto-char (match-beginning 0))
+      (search-forward name))))
 
-(defcustom senator-search-tag-filter nil
-  "*Function that filter searched tags.
-It is passed a tag and can return nil to exclude it from search."
+(defcustom senator-search-ignore-tag-classes
+  '(code block)
+  "*List of ignored tag classes.
+Tags of those classes are excluded from search."
   :group 'senator
-  :type 'function)
+  :type '(repeat (symbol :tag "class")))
+
+(defun senator-search-default-tag-filter (tag)
+  "Default function that filters searched tags.
+Ignore tags of classes in `senator-search-ignore-tag-classes'"
+  (not (memq (semantic-tag-class tag)
+             senator-search-ignore-tag-classes)))
+
+(defvar senator-search-tag-filter-functions
+  '(senator-search-default-tag-filter)
+  "List of functions to be called to filter searched tags.
+Each function is passed a tag.  If one of them returns nil, the tag is
+excluded from the search.")
 
 (defun senator-search (searcher text &optional bound noerror count)
   "Use the SEARCHER function to search from point for TEXT in a tag name.
@@ -492,10 +549,10 @@ TEXT, BOUND, NOERROR, and COUNT arguments are interpreted."
           (if (= sstart send)
               (setq found t)
             (and (setq tag (semantic-current-tag))
-                 (or (null senator-search-tag-filter)
-                     (funcall senator-search-tag-filter tag))
-                 (setq tend   (senator-search-tag-name tag)
-                       tstart (match-beginning 0)
+                 (run-hook-with-args-until-failure
+                  'senator-search-tag-filter-functions tag)
+                 (setq tend   (senator-search-tag-name tag))
+                 (setq tstart (match-beginning 0)
                        found  (and (>= sstart tstart)
                                    (<= send tend)
                                    (zerop (setq count (1- count))))))
@@ -716,9 +773,13 @@ Of the form (BUFFER STARTPOS INDEX REGEX COMPLIST...)")
 
 (defsubst senator-current-symbol-start ()
   "Return position of start of the current symbol under point or nil."
-  (condition-case nil
-      (save-excursion (forward-sexp -1) (point))
-    (error nil)))
+  (let* ((sb (semantic-ctxt-current-symbol-and-bounds (point)))
+         (bounds (nth 2 sb)))
+    (car bounds)))
+
+;;  (condition-case nil
+;;      (save-excursion (forward-sexp -1) (point))
+;;    (error nil)))
 
 ;;;###autoload
 (defun senator-complete-symbol (&optional cycle-once)
@@ -739,20 +800,17 @@ of completions once, doing nothing where there are no more matches."
                  (save-excursion
                    (goto-char symstart)
                    (looking-at (nth 3 senator-last-completion-stats))))
-            
+
             (setq complst (nthcdr 4 senator-last-completion-stats))
-          
+
           (setq regex (regexp-quote (buffer-substring symstart (point)))
-                complst (let ((found (senator-find-tag-for-completion regex)))
-                          (if (and found (semantic-tag-p (car found)))
-                              found
-                            (apply #'append (mapcar #'cdr found))))
+                complst (senator-find-tag-for-completion regex)
                 senator-last-completion-stats (append (list (current-buffer)
                                                             symstart
                                                             0
                                                             regex)
                                                       complst))))
-    ;; Do the completion if apropriate.
+    ;; Do the completion if appropriate.
     (if complst
         (let ((ret   t)
               (index (nth 2 senator-last-completion-stats))
@@ -821,15 +879,10 @@ choosen from the completion menu."
 That is a pair (MENU-ITEM-TEXT . TAG-ARRAY).  TAG-ARRAY is an
 array of one element containing TAG.  Can return nil to discard a
 menu item."
-  (if (semantic-tag-p tag)
-      (cons (funcall (if (fboundp senator-completion-menu-summary-function)
-                         senator-completion-menu-summary-function
-                       #'semantic-format-tag-prototype) tag)
-            (vector tag))
-    (cons (semanticdb-printable-name (car tag))
-          (delq nil
-                (mapcar #'senator-completion-menu-item
-                        (cdr tag))))))
+  (cons (funcall (if (fboundp senator-completion-menu-summary-function)
+                     senator-completion-menu-summary-function
+                   #'semantic-format-tag-prototype) tag)
+        (vector tag)))
 
 (defun senator-completion-menu-window-offsets (&optional window)
   "Return offsets of WINDOW relative to WINDOW's frame.
@@ -911,8 +964,8 @@ use `imenu--mouse-menu' to handle the popup menu."
   (interactive)
   (let ((symstart (senator-current-symbol-start))
         symbol regexp complst
-	;; Turn off tag jumping for this menu.
-	(imenu-default-goto-function (lambda (name pos &optional rest) pos)))
+        ;; Turn off tag jumping for this menu.
+        (imenu-default-goto-function (lambda (name pos &optional rest) pos)))
     (if symstart
         (setq symbol  (buffer-substring-no-properties symstart (point))
               regexp  (regexp-quote symbol)
@@ -925,7 +978,7 @@ use `imenu--mouse-menu' to handle the popup menu."
                                complst)))
           title item)
       (cond ;; Here index is a menu structure like:
-       
+
        ;; -1- (("menu-item1" . [tag1]) ...)
        ((vectorp (cdr (car index)))
         ;; There are more than one item, setup the popup title.
@@ -933,7 +986,7 @@ use `imenu--mouse-menu' to handle the popup menu."
             (setq title (format "%S completion" symbol))
           ;; Only one item , no need to popup the menu.
           (setq item (car index))))
-       
+
        ;; -2- (("menu-title1" ("menu-item1" . [tag1]) ...) ...)
        (t
         ;; There are sub-menus.
@@ -1052,7 +1105,7 @@ REGEXP says which ring to use."
                         search-ring-yank-pointer search-ring)
                   (if (> (length search-ring) search-ring-max)
                       (setcdr (nthcdr (1- search-ring-max) search-ring) nil)))))))
-    
+
     )
 
 (defvar senator-last-search-type nil
@@ -1085,7 +1138,7 @@ REGEXP says which ring to use."
     (error "No previous search"))))
 
 (defun senator-nonincremental-search-forward (string)
-  "Search for STRING  nonincrementally."
+  "Search for STRING nonincrementally."
   (interactive "sSemantic search for string: ")
   (setq senator-last-search-type 'string)
   (if (equal string "")
@@ -1120,10 +1173,12 @@ REGEXP says which ring to use."
     (isearch-update-ring string t)
     (senator-re-search-backward string)))
 
+(defvar senator--search-filter nil)
+
 (defun senator-search-set-tag-class-filter (&optional classes)
   "In current buffer, limit search scope to tag CLASSES.
-CLASSES is a list of tag class symbols or nil.
-If nil restore the global filter option `senator-search-tag-filter'."
+CLASSES is a list of tag class symbols or nil.  If nil only global
+filters in `senator-search-tag-filter-functions' remain active."
   (interactive "sClasses: ")
   (setq classes
         (cond
@@ -1136,14 +1191,21 @@ If nil restore the global filter option `senator-search-tag-filter'."
          (t
           (signal 'wrong-type-argument (list classes)))
          ))
+  ;; Clear previous filter.
+  (remove-hook 'senator-search-tag-filter-functions
+               senator--search-filter t)
+  (kill-local-variable 'senator--search-filter)
   (if classes
       (let ((tag   (make-symbol "tag"))
             (names (mapconcat 'symbol-name classes "', `")))
-        (set (make-local-variable 'senator-search-tag-filter)
+        (set (make-local-variable 'senator--search-filter)
              `(lambda (,tag)
                 (memq (semantic-tag-class ,tag) ',classes)))
+        (semantic-make-local-hook
+         'senator-search-tag-filter-functions)
+        (add-hook 'senator-search-tag-filter-functions
+                  senator--search-filter nil t)
         (message "Limit search to `%s' tags" names))
-    (kill-local-variable 'senator-search-tag-filter)
     (message "Default search filter restored")))
 
 ;;;;
@@ -1182,20 +1244,22 @@ If nil restore the global filter option `senator-search-tag-filter'."
 
 (defun senator-set-foreground (color &optional tag)
   "Set the foreground COLOR of the current TAG."
-  ;; This was copied from facemenu
   (interactive (list (facemenu-read-color "Foreground color: ")))
   (let ((face (intern (concat "fg:" color))))
-    (or (facemenu-get-face face)
-        (error "Unknown color: %s" color))
+    (when (not (facep face))
+      (make-face face)
+;;      (set-face-attribute face nil :foreground color)
+      )
     (senator-set-face face)))
 
 (defun senator-set-background (color &optional tag)
   "Set the background COLOR of the current TAG."
-  ;; This was copied from facemenu
   (interactive (list (facemenu-read-color "Background color: ")))
   (let ((face (intern (concat "bg:" color))))
-    (or (facemenu-get-face face)
-        (error "Unknown color: %s" color))
+    (when (not (facep face))
+      (make-face face)
+      ;;(set-face-attribute face nil :background color)
+      )
     (senator-set-face face)))
 
 (defun senator-clear-tag (&optional tag)
@@ -1207,26 +1271,159 @@ If nil restore the global filter option `senator-search-tag-filter'."
     (semantic-set-tag-face       tag nil)))
 (semantic-alias-obsolete 'senator-clear-token 'senator-clear-tag)
 
+;;; Folding
+;;
+;; Use new folding state.  It might be wise to extend the idea
+;; of folding for hiding all but this, or show all children, etc.
+
+(defun senator-fold-tag (&optional tag)
+  "Fold the current TAG."
+  (interactive)
+  (semantic-set-tag-folded (or tag (semantic-current-tag)) t))
+
+(defun senator-unfold-tag (&optional tag)
+  "Fold the current TAG."
+  (interactive)
+  (semantic-set-tag-folded (or tag (semantic-current-tag)) nil))
+
+(defun senator-fold-tag-toggle (&optional tag)
+  "Fold the current TAG."
+  (interactive)
+  (let ((tag (or tag (semantic-current-tag))))
+    (if (semantic-tag-folded-p tag)
+        (senator-unfold-tag tag)
+      (senator-fold-tag tag))))
+
+;;; Pulsing
+;;
+;; Useful for debugging parsing state.
+;;
+(defun senator-pulse-tag (&optional tag)
+  "Pulse the current TAG."
+  (interactive)
+  (senator-force-refresh)
+  (let ((tag (semantic-current-tag)))
+    (when tag
+      (message "%s" (semantic-format-tag-summarize tag))
+      (pulse-momentary-highlight-overlay (semantic-tag-overlay tag)))
+    ))
+
+(defun senator-adebug-tag (&optional tag)
+  "Pulse the current TAG."
+  (interactive)
+  (senator-force-refresh)
+  (let ((tag (semantic-current-tag))
+        (w (selected-window)))
+    (when tag
+      (message "%s" (semantic-format-tag-summarize tag))
+      (data-debug-new-buffer "*Senator Tag ADEBUG*")
+      (data-debug-insert-tag tag "* " "")
+      (forward-line -1)
+      (data-debug-insert-tag-parts-from-point (point))
+      (select-window w t)
+      (pulse-momentary-highlight-overlay (semantic-tag-overlay tag))
+      )
+    ))
+
+;;;;
+;;;;
+;;;;
+(defun senator-go-to-up-reference (&optional tag)
+  "Move up one reference from the current TAG.
+A \"reference\" could be any interesting feature of TAG.
+In C++, a function may have a 'parent' which is non-local.
+If that parent which is only a reference in the function tag
+is found, we can jump to it.
+Some tags such as includes have other reference features."
+  (interactive)
+  (let ((result (semantic-up-reference (or tag (semantic-current-tag)))))
+    (if (not result)
+        (error "No up reference found")
+      (push-mark)
+      (cond
+       ;; A tag
+       ((semantic-tag-p result)
+	(semantic-go-to-tag result)
+	(switch-to-buffer (current-buffer))
+	(semantic-momentary-highlight-tag result))
+       ;; Buffers
+       ((bufferp result)
+	(switch-to-buffer result)
+	(pulse-momentary-highlight-one-line (point)))
+       ;; Files
+       ((and (stringp result) (file-exists-p result))
+	(find-file result)
+	(pulse-momentary-highlight-one-line (point)))
+       (t
+	(error "Unknown result type from `semantic-up-reference'"))))))
+
+;; @TODO - move this to some analyzer / refs tool
+(define-overloadable-function semantic-up-reference (tag)
+  "Return a tag that is referredto by TAG.
+A \"reference\" could be any interesting feature of TAG.
+In C++, a function may have a 'parent' which is non-local.
+If that parent which is only a reference in the function tag
+is found, we can jump to it.
+Some tags such as includes have other reference features.")
+
+(defun semantic-up-reference-default (tag)
+  "Return a tag that is referred to by TAG.
+Makes C/C++ language like assumptions."
+  (cond ((semantic-tag-faux-p tag)
+         ;; Faux tags should have a real tag in some other location.
+         (let ((options (semantic-tag-external-class tag)))
+           ;; I should do something a little better than
+           ;; this.  Oy!
+           (car options)
+           ))
+
+	;; Include always point to another file.
+        ((eq (semantic-tag-class tag) 'include)
+	 (let ((file (semantic-dependency-tag-file tag)))
+	   (cond
+	    ((or (not file) (not (file-exists-p file)))
+	     (error "Could not location include %s"
+		    (semantic-tag-name tag)))
+	    ((get-file-buffer file)
+	     (get-file-buffer file))
+	    ((stringp file)
+	     file)
+	    )))
+
+	;; Is there a parent of the function to jump to?
+        ((and (semantic-tag-of-class-p tag 'function)
+              (semantic-tag-function-parent tag))
+         (let* ((scope (semantic-calculate-scope (point))))
+	   ;; @todo - it would be cool to ask the user which one if
+	   ;; more than one.
+	   (car (oref scope parents))
+	   ))
+
+	;; Is there a non-prototype version of the tag to jump to?
+        ((semantic-tag-get-attribute tag :prototype-flag)
+	 (let* ((sar (semantic-analyze-tag-references tag)))
+	   (car (semantic-analyze-refs-impl sar t)))
+	 )
+
+	;; If this is a datatype, and we have superclasses
+	((and (semantic-tag-of-class-p tag 'type)
+	      (semantic-tag-type-superclasses tag))
+	 (let ((scope (semantic-calculate-scope (point)))
+	       (parents (semantic-tag-type-superclasses tag)))
+	   (semantic-analyze-find-tag (car parents) 'type scope)))
+
+	;; Get the data type, and try to find that.
+        ((semantic-tag-type tag)
+	 (let ((scope (semantic-calculate-scope (point))))
+	   (semantic-analyze-tag-type tag scope))
+	 )
+        (t nil)))
+
 ;;;;
 ;;;; Misc. menu stuff.
 ;;;;
 
-(defun senator-menu-item (item)
-  "Build an XEmacs compatible menu item from vector ITEM.
-That is remove the unsupported :help stuff."
-  (if (featurep 'xemacs)
-      (let ((n (length item))
-            (i 0)
-            slot l)
-        (while (< i n)
-          (setq slot (aref item i))
-          (if (and (keywordp slot)
-                   (eq slot :help))
-              (setq i (1+ i))
-            (setq l (cons slot l)))
-          (setq i (1+ i)))
-        (apply #'vector (nreverse l)))
-    item))
+(defalias 'senator-menu-item 'semantic-menu-item)
 
 ;;;;
 ;;;; The dynamic sub-menu of Semantic minor modes.
@@ -1320,51 +1517,51 @@ Valid keywords include:
   ;; Turn spec into a list of specs if it is not so already.
   (if (and spec (not (consp (car spec)))) (setq spec (list spec)))
   (let ((menulist nil)
-	(item nil))
+        )
     (while spec
       (let* ((sym (car (car spec)))
-	     (pl (cdr (car spec)))
-	     (name (car-safe (cdr-safe (member :name pl))))
-	     (style (car-safe (cdr-safe (member :style pl)))))
-	(if (not style)
-	    (setq style
-		  (cond
-		   ((get sym 'custom-group)
-		    :group)
-		   ((facep sym)
-		    :face)
-		   ((boundp sym)
-		    :variable))))
-	(if (not name)
-	    (setq name (symbol-name sym)))
-	(setq menulist
-	      (cons
-	       (cond
-		((eq style :group)
-		 (senator-menu-item
-		  (vector (concat "Customize Group " name)
-			  `(lambda (ARG) (interactive "p")
-			     (customize-group (quote ,sym)))
-			  :help (format "Customize Group %s" name)))
-		 )
-		((eq style :variable)
-		 (senator-menu-item
-		  (vector (concat "Customize" name)
-			  `(lambda (ARG) (interactive "p")
-			     (customize-variable (quote ,sym)))
-			  :help (format "Customize Variable %s" name)))
-		 )
-		((eq style :face)
-		 (senator-menu-item
-		  (vector (concat "Customize " name)
-			  `(lambda (ARG) (interactive "p")
-			     (customize-face (quote ,sym)))
-			  :help (format "Customize Face %s" name)))
-		 )
-		((eq style :toggle)
-		 ))
-	       menulist))
-	)
+             (pl (cdr (car spec)))
+             (name (car-safe (cdr-safe (member :name pl))))
+             (style (car-safe (cdr-safe (member :style pl)))))
+        (if (not style)
+            (setq style
+                  (cond
+                   ((get sym 'custom-group)
+                    :group)
+                   ((facep sym)
+                    :face)
+                   ((boundp sym)
+                    :variable))))
+        (if (not name)
+            (setq name (symbol-name sym)))
+        (setq menulist
+              (cons
+               (cond
+                ((eq style :group)
+                 (senator-menu-item
+                  (vector (concat "Customize Group " name)
+                          `(lambda (ARG) (interactive "p")
+                             (customize-group (quote ,sym)))
+                          :help (format "Customize Group %s" name)))
+                 )
+                ((eq style :variable)
+                 (senator-menu-item
+                  (vector (concat "Customize " name)
+                          `(lambda (ARG) (interactive "p")
+                             (customize-variable (quote ,sym)))
+                          :help (format "Customize Variable %s" name)))
+                 )
+                ((eq style :face)
+                 (senator-menu-item
+                  (vector (concat "Customize " name)
+                          `(lambda (ARG) (interactive "p")
+                             (customize-face (quote ,sym)))
+                          :help (format "Customize Face %s" name)))
+                 )
+                ((eq style :toggle)
+                 ))
+               menulist))
+        )
       (setq spec (cdr spec)))
     menulist))
 
@@ -1388,11 +1585,11 @@ what this menu looks like."
   (let* ((entry (assoc name senator-registered-mode-entries))
          (local-item  (senator-register-command-menu local nil))
          (global-item (senator-register-command-menu global t))
-	 (custom-item (senator-register-custom-menu custom))
-	 (entry-construct (append (list local-item global-item)
-				  custom-item))
-	 )
-    
+         (custom-item (senator-register-custom-menu custom))
+         (entry-construct (append (list local-item global-item)
+                                  custom-item))
+         )
+
     (if (not (or local-item global-item))
         (setq senator-registered-mode-entries
               (delq entry senator-registered-mode-entries))
@@ -1439,18 +1636,18 @@ The sub-menu displayed in the Senator/Modes menu looks like this:
 The menu item \"In this buffer\" toggles the minor mode locally.
 The menu item \"Globally\" toggles the minor mode globally."
   (let ((mode (nth 1  entry))
-	(global (nth 2 entry))
-	(customs (nthcdr 3 entry)))
+        (global (nth 2 entry))
+        (customs (nthcdr 3 entry)))
     (delq nil
-	  (append
-	   (list (car entry)
-		 (senator-build-command-menu-item
-		  senator-mode-menu-local-toggle-label mode)
-		 (senator-build-command-menu-item
-		  senator-mode-menu-global-toggle-label global))
-	   (if (and (symbolp customs) (fboundp customs))
-	       (funcall customs)
-	     customs)))))
+          (append
+           (list (car entry)
+                 (senator-build-command-menu-item
+                  senator-mode-menu-local-toggle-label mode)
+                 (senator-build-command-menu-item
+                  senator-mode-menu-global-toggle-label global))
+           (if (and (symbolp customs) (fboundp customs))
+               (funcall customs)
+             customs)))))
 
 (defun senator-build-modes-menu (&rest ignore)
   "Build and return the \"Modes\" menu.
@@ -1540,6 +1737,7 @@ minor mode entry."
    )
  '((semantic-idle-scheduler-idle-time)
    (semantic-idle-scheduler-max-buffer-size)
+   (semantic-idle-scheduler-verbose-flag)
    )
  )
 
@@ -1552,6 +1750,19 @@ minor mode entry."
    :help "Show tag summaries in idle time in all buffers."
    :save global-semantic-idle-summary-mode
    )
+ '((semantic-idle-summary-function)
+   )
+ )
+
+(senator-register-mode-menu-entry
+ "Idle Symbol Highlight"
+ '(semantic-idle-local-symbol-highlight-mode
+   :help "Highlight symbols matching symbol under point in idle time."
+   )
+ '(global-semantic-idle-local-symbol-highlight-mode
+   :help "Highlight symbols matching symbol under point in idle time in all buffers."
+   :save global-semantic-idle-local-symbol-highlight-mode
+   )
  )
 
 (senator-register-mode-menu-entry
@@ -1562,6 +1773,8 @@ minor mode entry."
  '(global-semantic-idle-completions-mode
    :help "Show completion tips in idle time in all buffers."
    :save global-semantic-idle-completions-mode
+   )
+ '((semantic-complete-inline-analyzer-displayor-class)
    )
  )
 
@@ -1577,6 +1790,28 @@ minor mode entry."
  )
 
 (senator-register-mode-menu-entry
+ "Idle Breadcrumbs Display"
+ '(semantic-idle-breadcrumbs-mode
+   :help "Display breadcrumbs for the tag under point and its parents."
+   )
+ '(global-semantic-idle-breadcrumbs-mode
+   :help "Automatically enable sticky function mode in all Semantic buffers."
+   :save global-semantic-idle-breadcrumbs-mode
+   )
+ )
+
+(senator-register-mode-menu-entry
+ "Highlight Func"
+ '(semantic-highlight-func-mode
+   :help "Cause function declaration the cursor is in be highlighted."
+   )
+ '(global-semantic-highlight-func-mode
+   :help "Automatically enable highlight function mode in all Semantic buffers."
+   :save global-semantic-highlight-func-mode
+   )
+ )
+
+(senator-register-mode-menu-entry
  "Tag Decoration"
  '(semantic-decoration-mode
    :help "Decorate Tags."
@@ -1585,8 +1820,16 @@ minor mode entry."
    :help "Automatically enable decoration mode in all Semantic buffers."
    :save global-semantic-decoration-mode
    )
- 
- )
+  )
+
+(senator-register-mode-menu-entry
+ "MRU Bookmark"
+ nil
+ '(global-semantic-mru-bookmark-mode
+   :help "Automatically enable MRU bookmark tracking at a tag level."
+   :save global-semantic-mru-bookmark-mode
+   )
+  )
 
 
 ;;;;
@@ -1654,20 +1897,38 @@ This is a buffer local variable.")
     (define-key km "f"    'senator-search-set-tag-class-filter)
     (define-key km "i"    'senator-isearch-toggle-semantic-mode)
     (define-key km "j"    'semantic-complete-jump-local) ;senator-jump)
+    (define-key km "m"    'semantic-complete-jump-local-members)
     (define-key km "J"    'semantic-complete-jump)
+    (define-key km "g"    'semantic-symref-symbol) ; g for "grep" like behavior.
+    (define-key km "G"    'semantic-symref)
     (define-key km "p"    'senator-previous-tag)
     (define-key km "n"    'senator-next-tag)
+    (define-key km "u"    'senator-go-to-up-reference)
     (define-key km "\t"   'senator-complete-symbol)
     (define-key km " "    'senator-completion-menu-popup)
     (define-key km "\C-w" 'senator-kill-tag)
     (define-key km "\M-w" 'senator-copy-tag)
     (define-key km "\C-y" 'senator-yank-tag)
+    (define-key km "r"    'senator-copy-tag-to-register)
+    (define-key km "t"    'senator-transpose-tags-up)
+    (define-key km "-"    'senator-fold-tag)
+    (define-key km "+"    'senator-unfold-tag)
+    (define-key km "?"    'senator-pulse-tag)
+    (define-key km "/"    'senator-adebug-tag)
+
+    (define-key km ","    'senator-force-refresh)
+
     km)
   "Default key bindings in senator minor mode.")
 
 (defvar senator-menu-bar
   (list
    "Senator"
+   (senator-menu-item
+    ["Force Tag Refresh"
+     senator-force-refresh
+     :active t
+     :help "Force a full reparse of the current buffer."])
    (list
     "Navigate"
     (senator-menu-item
@@ -1683,16 +1944,28 @@ This is a buffer local variable.")
       :help "Go to the previous tag found"
       ])
     (senator-menu-item
+     ["Up Reference"
+      senator-go-to-up-reference
+      :active t
+      :help "Navigate up one reference by tag."
+      ])
+    (senator-menu-item
      ["Jump in this file..."
       semantic-complete-jump-local
       :active t
       :help "Jump to a semantic symbol"
       ])
     (senator-menu-item
-     ["Jump to any tag..."
-      semantic-complete-jump-local
+     ["Jump to tag local members ..."
+      semantic-complete-jump-local-members
       :active t
-      :help "Jump to a semantic symbol"
+      :help "Jump to a semantic symbol that is part of a local datatype."
+      ])
+    (senator-menu-item
+     ["Jump to any tag..."
+      semantic-complete-jump
+      :active t
+      :help "Jump to any semantic symbol in this project"
       ])
     (senator-menu-item
      ["Narrow to tag"
@@ -1762,19 +2035,56 @@ This is a buffer local variable.")
       ])
     )
    (list
+    "Tag Copy/Paste"
+    (senator-menu-item
+     [ "Copy Tag"
+       senator-copy-tag
+       :active (semantic-current-tag)
+       :help "Copy the current tag to the tag ring"
+       ])
+    (senator-menu-item
+     [ "Kill Tag"
+       senator-kill-tag
+       :active (semantic-current-tag)
+       :help "Kill tag text to the kill ring, and copy the tag to the tag ring"
+       ])
+    (senator-menu-item
+     [ "Yank Tag"
+       senator-yank-tag
+       :active (not (ring-empty-p senator-tag-ring))
+       :help "Yank a tag from the tag ring, inserting a summary/prototype"
+       ])
+    (senator-menu-item
+     [ "Copy Tag to Register"
+       senator-copy-tag-to-register
+       :active (semantic-current-tag)
+       :help "Copy the current tag to a register"
+       ])
+    (senator-menu-item
+     [ "Transpose Tag Up"
+       senator-transpose-tags-up
+       :active (semantic-current-tag)
+       :help "Transpose the current tag up"
+       ])
+    (senator-menu-item
+     [ "Transpose Tag Down"
+       senator-transpose-tags-down
+       :active (semantic-current-tag)
+       :help "Transpose the current tag down"
+       ])
+
+    )
+   (list
     "Tag Properties"
-;;;    (senator-menu-item
-;;;     [ "Hide Tag"
-;;;       senator-make-invisible
-;;;       :active t
-;;;       :help "Make the current tag invisible"
-;;;       ])
-;;;    (senator-menu-item
-;;;     [ "Show Tag"
-;;;       senator-make-visible
-;;;       :active t
-;;;       :help "Make the current tag invisible"
-;;;       ])
+    (senator-menu-item
+     [ "Fold Tag"
+       senator-fold-tag-toggle
+       :active (semantic-current-tag)
+       :style toggle
+       :selected (let ((tag (semantic-current-tag)))
+                   (and tag (semantic-tag-folded-p tag)))
+       :help "Fold the current tag to one line"
+       ])
     (senator-menu-item
      [ "Read Only"
        senator-toggle-read-only
@@ -1821,41 +2131,21 @@ This is a buffer local variable.")
        :help "Remove all special face properties on the current tag "
        ] )
     )
-   (list
-    "Tag Copy/Paste"
-    (senator-menu-item
-     [ "Copy Tag"
-       senator-copy-tag
-       :active (semantic-current-tag)
-       :help "Copy the current tag to the tag ring"
-       ])
-    (senator-menu-item
-     [ "Kill Tag"
-       senator-kill-tag
-       :active (semantic-current-tag)
-       :help "Kill tag text to the kill ring, and copy the tag to the tag ring"
-       ])
-    (senator-menu-item
-     [ "Yank Tag"
-       senator-yank-tag
-       :active (not (ring-empty-p senator-tag-ring))
-       :help "Yank a tag from the tag ring, inserting a summary/prototype"
-       ])
-    (senator-menu-item
-     [ "Copy Tag to Register"
-       senator-copy-tag-to-register
-       :active (semantic-current-tag)
-       :help "Copy the current tag to a register"
-       ])
-    )
+   (if (or (featurep 'xemacs) (> emacs-major-version 20))
+       (list "Tag Decorations" :filter 'semantic-build-decoration-mode-menu)
+     ;; The :filter feature seems broken in GNU Emacs versions before
+     ;; 21.1.  So dont delay the menu creation.  This also means that
+     ;; new registered decoration entries will not be added "on the
+     ;; fly" to the menu :-(
+     (cons "Tag Decorations" (semantic-build-decoration-mode-menu)))
    "--"
    (list
     "Analyze"
     (senator-menu-item
-     [ "Speedbar Class Browser"
-       semantic-cb-speedbar-mode
+     [ "Inline Smart completion"
+       semantic-complete-analyze-inline
        :active t
-       :help "Start speedbar in Class Broswer mode showing inheritance"
+       :help "Complete the symbol in the current buffer."
        ])
     (senator-menu-item
      [ "Speedbar Analyzer Mode"
@@ -1874,6 +2164,45 @@ This is a buffer local variable.")
        semantic-analyze-possible-completions
        :active t
        :help "Show a dump of the semantic analyzer's guess at possible completions"
+       ])
+    (senator-menu-item
+     [ "Analyzer Debug Assitant"
+       semantic-analyze-debug-assist
+       :active t
+       :help "Debug why the analyzer may not be working for you."
+       ])
+   (senator-menu-item
+    [ "Summarize includes current buffer"
+      semantic-decoration-all-include-summary
+     :active t
+     :help "Show a summary of what Semantic has done with your includes for this buffer." ])
+   )
+   (list
+    "Find References"
+    (senator-menu-item
+     ["Find This Tag"
+      semantic-symref
+      :active (semantic-current-tag)
+      :help "Find uses of the tag the cursor is in."])
+    (senator-menu-item
+     ["Find This Symbol..."
+      semantic-symref-symbol
+      :active t
+      :help "Find uses of any arbitrary symbol."])
+    )
+   (list
+    "UML"
+    (senator-menu-item
+     [ "Create new UML Graph."
+       cogre
+       :active t
+       :help "Create a new UML graph using COGRE."
+       ])
+    (senator-menu-item
+     [ "Autogenerate UML Graph for Class"
+       cogre-uml-quick-class
+       :active t
+       :help "Autogenerate a small UML graph from a class in your code."
        ])
     )
    (list
@@ -1895,6 +2224,12 @@ This is a buffer local variable.")
        semantic-chart-database-size
        :active (and (featurep 'semanticdb) (semanticdb-minor-mode-p))
        :help "Choose the files with the most tags, and chart them by volume"
+       ])
+    (senator-menu-item
+     [ "Chart Analyzer Overhead"
+       semantic-chart-analyzer
+       :active t
+       :help "Calculate the overhead of running the analyzer, and chart it out."
        ])
     )
    (if (or (featurep 'xemacs) (> emacs-major-version 20))
@@ -2128,7 +2463,7 @@ minor mode is enabled.
           (not senator-minor-mode)))
   (senator-minor-mode-setup)
   (run-hooks 'senator-minor-mode-hook)
-  (if (interactive-p)
+  (if (cedet-called-interactively-p)
       (message "Senator minor mode %sabled"
                (if senator-minor-mode "en" "dis")))
   (senator-mode-line-update)
@@ -2146,14 +2481,14 @@ minor mode is enabled.
 (and (not (featurep 'xemacs))
      (> emacs-major-version 20)
      (progn
-       
+
        ;; Add Senator to the the minor mode menu in the mode line
        (define-key mode-line-mode-menu [senator-minor-mode]
          `(menu-item "Senator" senator-minor-mode
                      :button  (:toggle . senator-minor-mode)
                      :visible (and (featurep 'semantic)
                                    (semantic-active-p))))
-       
+
        ))
 
 ;;;###autoload
@@ -2174,6 +2509,7 @@ If ARG is nil, then toggle."
   "Move backward to the beginning of a defun.
 Use semantic tags to navigate.
 ARG is the number of tags to navigate (not yet implemented)."
+  (senator-parse)
   (let* ((senator-highlight-found nil)
          ;; Step at beginning of next tag with class specified in
          ;; `senator-step-at-tag-classes'.
@@ -2189,6 +2525,7 @@ ARG is the number of tags to navigate (not yet implemented)."
   "Move forward to next end of defun.
 Use semantic tags to navigate.
 ARG is the number of tags to navigate (not yet implemented)."
+  (senator-parse)
   (let* ((senator-highlight-found nil)
          ;; Step at end of next tag with class specified in
          ;; `senator-step-at-tag-classes'.
@@ -2207,6 +2544,7 @@ ARG is the number of tags to navigate (not yet implemented)."
 The defun visible is the one that contains point or follows point.
 Use semantic tags to navigate."
   (interactive)
+  (senator-parse)
   (save-excursion
     (widen)
     (senator-end-of-defun)
@@ -2232,14 +2570,14 @@ Use semantic tags to navigate."
 (defadvice beginning-of-defun (around senator activate)
   "Move backward to the beginning of a defun.
 If semantic tags are available, use them to navigate."
-  (if (and senator-minor-mode (interactive-p))
+  (if (and senator-minor-mode (cedet-called-interactively-p))
       (senator-beginning-of-defun (ad-get-arg 0))
     ad-do-it))
 
 (defadvice end-of-defun (around senator activate)
   "Move forward to next end of defun.
 If semantic tags are available, use them to navigate."
-  (if (and senator-minor-mode (interactive-p))
+  (if (and senator-minor-mode (cedet-called-interactively-p))
       (senator-end-of-defun (ad-get-arg 0))
     ad-do-it))
 
@@ -2247,7 +2585,7 @@ If semantic tags are available, use them to navigate."
   "Make text outside current defun invisible.
 The defun visible is the one that contains point or follows point.
 If semantic tags are available, use them to navigate."
-  (if (and senator-minor-mode (interactive-p))
+  (if (and senator-minor-mode (cedet-called-interactively-p))
       (senator-narrow-to-defun)
     ad-do-it))
 
@@ -2255,7 +2593,7 @@ If semantic tags are available, use them to navigate."
   "Put mark at end of this defun, point at beginning.
 The defun marked is the one that contains point or follows point.
 If semantic tags are available, use them to navigate."
-  (if (and senator-minor-mode (interactive-p))
+  (if (and senator-minor-mode (cedet-called-interactively-p))
       (senator-mark-defun)
     ad-do-it))
 
@@ -2263,13 +2601,13 @@ If semantic tags are available, use them to navigate."
   "Put mark at end of this defun, point at beginning.
 The defun marked is the one that contains point or follows point.
 If semantic tags are available, use them to navigate."
-  (if (and senator-minor-mode (interactive-p))
+  (if (and senator-minor-mode (cedet-called-interactively-p))
       (senator-mark-defun)
     ad-do-it))
 
 (defvar senator-add-log-tags '(function variable type)
   "When advising `add-log-current-defun', tag classes used.
-Semantic tags that are of these classses will be used to find the name
+Semantic tags that are of these classes will be used to find the name
 used by add log.")
 (semantic-varalias-obsolete 'senator-add-log-tokens
                             'senator-add-log-tags)
@@ -2277,14 +2615,15 @@ used by add log.")
 (defadvice add-log-current-defun (around senator activate)
   "Return name of function definition point is in, or nil."
   (if senator-minor-mode
-      (let ((cd (semantic-find-tag-by-overlay))
+      (let ((tag (semantic-current-tag))
             (name nil))
-        (while (and cd (not name))
-          (if (member (semantic-tag-class (car cd)) senator-add-log-tags)
-              (setq name (semantic-tag-name (car cd))))
-          (setq cd (cdr cd)))
-        (if name
-            (setq ad-return-value name)
+        (if (and tag (memq (semantic-tag-class tag)
+                           senator-add-log-tags))
+            (progn
+              (setq name
+                    (semantic-format-tag-canonical-name
+                     tag (semantic-current-tag-parent)))
+              (setq ad-return-value name))
           ad-do-it))
     ad-do-it))
 
@@ -2302,26 +2641,6 @@ used by add log.")
 (defvar senator-tag-ring (make-ring 20)
   "Ring of tags for use with cut and paste.")
 
-(defun semantic-insert-foreign-tag-default (tag tagfile)
-  "Insert TAG from a foreign buffer into the current buffer.
-This is the default behavior for `semantic-insert-foreign-tag'.
-Assumes the current buffer is a language file, and attempts to insert
-a prototype/function call.
-Argument TAGFILE is the file from wence TAG came."
-  ;; Long term goal:
-  ;; Have a mechanism for a tempo-like template insert for the given
-  ;; tag.
-  (insert (semantic-format-tag-prototype tag)))
-
-(define-overload semantic-insert-foreign-tag (tag tagfile)
-  "Insert TAG from a foreign buffer into the current buffer.
-TAG will have originated from TAGFILE.
-This function is overridable with the symbol `insert-foreign-tag'."
-  (if (or (not tag) (not (semantic-tag-p tag)))
-      (signal 'wrong-type-argument (list tag 'semantic-tag-p)))
-  (:override)
-  (message (semantic-format-tag-summarize tag)))
-
 (make-obsolete-overload 'semantic-insert-foreign-token
                         'semantic-insert-foreign-tag)
 
@@ -2332,10 +2651,15 @@ This function is overridable with the symbol `insert-foreign-tag'."
   "Take the current tag, and place it in the tag ring."
   (interactive)
   (senator-parse)
-  (let ((ct (senator-current-tag)))
-    (ring-insert senator-tag-ring (cons ct (buffer-file-name)))
-    (message (semantic-format-tag-summarize ct))
-    ct))
+  (let ((ft (semantic-obtain-foreign-tag)))
+    (when ft
+      (ring-insert senator-tag-ring ft)
+      (kill-ring-save (semantic-tag-start ft) (semantic-tag-end ft))
+      (when (cedet-called-interactively-p)
+        (message "Use C-y to yank text.  \
+Use `senator-yank-tag' for prototype insert."))
+      )
+    ft))
 (semantic-alias-obsolete 'senator-copy-token 'senator-copy-tag)
 
 (defun senator-kill-tag ()
@@ -2345,17 +2669,25 @@ the kill ring.  Retrieve that text with \\[yank]."
   (interactive)
   (let ((ct (senator-copy-tag))) ;; this handles the reparse for us.
     (kill-region (semantic-tag-start ct)
-                 (semantic-tag-end ct))))
+                 (semantic-tag-end ct))
+    (when (cedet-called-interactively-p)
+      (message "Use C-y to yank text.  \
+Use `senator-yank-tag' for prototype insert."))
+    ))
 (semantic-alias-obsolete 'senator-kill-token 'senator-kill-tag)
 
 (defun senator-yank-tag ()
   "Yank a tag from the tag ring.
-The form the tag takes is differnet depending on where it is being
+The form the tag takes is different depending on where it is being
 yanked to."
   (interactive)
   (or (ring-empty-p senator-tag-ring)
-      (let ((tag (ring-ref senator-tag-ring 0)))
-        (semantic-insert-foreign-tag (car tag) (cdr tag)))))
+      (let ((ft (ring-ref senator-tag-ring 0)))
+          (semantic-foreign-tag-check ft)
+          (semantic-insert-foreign-tag ft)
+          (when (cedet-called-interactively-p)
+            (message "Use C-y to recover the yank the text of %s."
+                     (semantic-tag-name ft))))))
 (semantic-alias-obsolete 'senator-yank-token 'senator-yank-tag)
 
 (defun senator-copy-tag-to-register (register &optional kill-flag)
@@ -2363,11 +2695,13 @@ yanked to."
 Optional argument KILL-FLAG will delete the text of the tag to the
 kill ring."
   (interactive "cTag to register: \nP")
-  (let ((ct (senator-current-tag)))
-    (set-register register (cons ct (buffer-file-name)))
-    (if kill-flag
-        (kill-region (semantic-tag-start ct)
-                     (semantic-tag-end ct)))))
+  (senator-parse)
+  (let ((ft (semantic-obtain-foreign-tag)))
+    (when ft
+      (set-register register ft)
+      (if kill-flag
+          (kill-region (semantic-tag-start ft)
+                       (semantic-tag-end ft))))))
 (semantic-alias-obsolete 'senator-copy-token-to-register
                          'senator-copy-tag-to-register)
 
@@ -2375,48 +2709,48 @@ kill ring."
   "Insert contents of register REGISTER as a tag.
 If senator is not active, use the original mechanism."
   (let ((val (get-register (ad-get-arg 0))))
-    (if (and senator-minor-mode (interactive-p)
-             (listp val) (semantic-tag-p (car val)))
-        (semantic-insert-foreign-tag (car val) (cdr val))
+    (if (and senator-minor-mode (cedet-called-interactively-p)
+             (semantic-foreign-tag-p val))
+        (semantic-insert-foreign-tag val)
       ad-do-it)))
 
 (defadvice jump-to-register (around senator activate)
   "Insert contents of register REGISTER as a tag.
 If senator is not active, use the original mechanism."
   (let ((val (get-register (ad-get-arg 0))))
-    (if (and senator-minor-mode (interactive-p)
-             (listp val) (semantic-tag-p (car val)))
+    (if (and senator-minor-mode (cedet-called-interactively-p)
+             (semantic-foreign-tag-p val))
         (progn
-          (find-file (cdr val))
-          (goto-char (semantic-tag-start (car val))))
+          (switch-to-buffer (semantic-tag-buffer val))
+          (goto-char (semantic-tag-start val)))
       ad-do-it)))
 
 (defun senator-transpose-tags-up ()
-  "Transpose the current tag, and the preceeding tag."
+  "Transpose the current tag, and the preceding tag."
   (interactive)
   (senator-parse)
   (let* ((current-tag (semantic-current-tag))
-	 (prev-tag (save-excursion
-		     (goto-char (semantic-tag-start current-tag))
-		     (semantic-find-tag-by-overlay-prev)))
-	 (ct-parent (semantic-find-tag-parent-by-overlay current-tag))
-	 (pt-parent (semantic-find-tag-parent-by-overlay prev-tag)))
+         (prev-tag (save-excursion
+                     (goto-char (semantic-tag-start current-tag))
+                     (semantic-find-tag-by-overlay-prev)))
+         (ct-parent (semantic-find-tag-parent-by-overlay current-tag))
+         (pt-parent (semantic-find-tag-parent-by-overlay prev-tag)))
     (if (not (eq ct-parent pt-parent))
-	(error "Cannot transpose tags"))
+        (error "Cannot transpose tags"))
     (let ((txt (buffer-substring (semantic-tag-start current-tag)
-				 (semantic-tag-end current-tag)))
-	  (line (count-lines (semantic-tag-start current-tag)
-			     (point)))
-	  (insert-point nil)
-	  )
+                                 (semantic-tag-end current-tag)))
+          (line (count-lines (semantic-tag-start current-tag)
+                             (point)))
+          (insert-point nil)
+          )
       (delete-region (semantic-tag-start current-tag)
-		     (semantic-tag-end current-tag))
+                     (semantic-tag-end current-tag))
       (delete-blank-lines)
       (goto-char (semantic-tag-start prev-tag))
       (setq insert-point (point))
       (insert txt)
       (if (/= (current-column) 0)
-	  (insert "\n"))
+          (insert "\n"))
       (insert "\n")
       (goto-char insert-point)
       (forward-line line)
@@ -2427,11 +2761,11 @@ If senator is not active, use the original mechanism."
   (interactive)
   (senator-parse)
   (let* ((current-tag (semantic-current-tag))
-	 (next-tag (save-excursion
-		     (goto-char (semantic-tag-end current-tag))
-		     (semantic-find-tag-by-overlay-next)))
-	 (end-pt (point-marker))
-	 )
+         (next-tag (save-excursion
+                     (goto-char (semantic-tag-end current-tag))
+                     (semantic-find-tag-by-overlay-next)))
+         (end-pt (point-marker))
+         )
     (goto-char (semantic-tag-start next-tag))
     (forward-char 1)
     (senator-transpose-tags-up)
@@ -2484,6 +2818,9 @@ Use Semantic, or the semantic database to look up possible
 completions.  The argument OLD has to be nil the first call of this
 function.  It returns t if a unique, possibly partial, completion is
 found, nil otherwise."
+
+  ;;@TODO - Can I support smart completion in here?
+
   (if (semantic-active-p)
       (let (symstart)
         ;; If the hippie says so, start over.
@@ -2494,24 +2831,24 @@ found, nil otherwise."
                   (setq senator-last-completion-stats nil))))
         ;; do completion with senator's mechanism.
         (when (or old symstart)
-	  ;; This bit will turn off parsing on lexical errors.
-	  (semantic-lex-catch-errors senator-hippie-expand
-	    (semantic-fetch-tags))
-	  ;; Do the completion
-	  (let ((ret (senator-complete-symbol t)))
-	    (cond (ret
-		   ;; Found a new completion, update the end marker.
-		   (set-marker he-string-end (point))
-		   ;; Update the tried table so other hippie expand
-		   ;; try functions can see whether an expansion has
-		   ;; already been tried.
-		   (setq he-tried-table (cons ret he-tried-table)))
-		  ;; No more completion
-		  (old
-		   ;; Reset the initial completed string for other
-		   ;; hippie-expand try functions.
-		   (he-reset-string)))
-	    ret)))))
+          ;; This bit will turn off parsing on lexical errors.
+          (semantic-lex-catch-errors senator-hippie-expand
+            (semantic-fetch-tags))
+          ;; Do the completion
+          (let ((ret (senator-complete-symbol t)))
+            (cond (ret
+                   ;; Found a new completion, update the end marker.
+                   (set-marker he-string-end (point))
+                   ;; Update the tried table so other hippie expand
+                   ;; try functions can see whether an expansion has
+                   ;; already been tried.
+                   (setq he-tried-table (cons ret he-tried-table)))
+                  ;; No more completion
+                  (old
+                   ;; Reset the initial completed string for other
+                   ;; hippie-expand try functions.
+                   (he-reset-string)))
+            ret)))))
 
 ;;;;
 ;;;; Using semantic search in isearch mode
@@ -2521,7 +2858,7 @@ found, nil otherwise."
 (cond
  ( ;; GNU Emacs 21.0 lazy highlighting
   (fboundp 'isearch-lazy-highlight-cleanup)
-  
+
   ;; Provide this function used by senator
   (defun senator-lazy-highlight-update ()
     "Force lazy highlight update."
@@ -2529,12 +2866,12 @@ found, nil otherwise."
     (set 'isearch-lazy-highlight-last-string nil)
     (setq isearch-adjusted t)
     (isearch-update))
-  
+
   ) ;; End of GNU Emacs 21 lazy highlighting
- 
+
  ( ;; XEmacs 21.4 lazy highlighting
   (fboundp 'isearch-highlight-all-cleanup)
-  
+
   ;; Provide this function used by senator
   (defun senator-lazy-highlight-update ()
     "Force lazy highlight update."
@@ -2542,12 +2879,12 @@ found, nil otherwise."
     (set 'isearch-highlight-last-string nil)
     (setq isearch-adjusted t)
     (isearch-update))
-  
+
   ) ;; End of XEmacs 21.4 lazy highlighting
- 
+
  ( ;; GNU Emacs 20 lazy highlighting via ishl
   (fboundp 'ishl-cleanup)
-  
+
   ;; Provide this function used by senator
   (defun senator-lazy-highlight-update ()
     "Force lazy highlight update."
@@ -2555,14 +2892,14 @@ found, nil otherwise."
     (set 'ishl-last-string nil)
     (setq isearch-adjusted t)
     (isearch-update))
-  
+
   ) ;; End of GNU Emacs 20 lazy highlighting
- 
+
  (t ;; No lazy highlighting
-  
+
   ;; Ignore this function used by senator
   (defalias 'senator-lazy-highlight-update 'ignore)
-  
+
   ))
 
 (defmacro senator-define-search-advice (searcher)
@@ -2646,16 +2983,36 @@ Use a senator search function when semantic isearch mode is enabled."
   [(control ?,)]
   'senator-isearch-toggle-semantic-mode)
 
+(defvar senator-old-isearch-search-fun nil
+  "Hold previous value of `isearch-search-fun-function'.")
+
 (defun senator-isearch-mode-hook ()
   "Isearch mode hook to setup semantic searching."
   (or senator-minor-mode
       (setq senator-isearch-semantic-mode nil))
   (when (boundp 'isearch-search-fun-function)
     (if (and isearch-mode senator-isearch-semantic-mode)
-        (set (make-local-variable 'isearch-search-fun-function)
-             'senator-isearch-search-fun)
-      (kill-local-variable 'isearch-search-fun-function)))
+        (progn
+          ;; When `senator-isearch-semantic-mode' is on save the
+          ;; previous `isearch-search-fun-function' and install the
+          ;; senator one.
+          (when (and (local-variable-p 'isearch-search-fun-function)
+                     (not (local-variable-p 'senator-old-isearch-search-fun)))
+            (set (make-local-variable 'senator-old-isearch-search-fun)
+                 isearch-search-fun-function))
+          (set (make-local-variable 'isearch-search-fun-function)
+               'senator-isearch-search-fun))
+      ;; When `senator-isearch-semantic-mode' is off restore the
+      ;; previous `isearch-search-fun-function'.
+      (when (eq isearch-search-fun-function 'senator-isearch-search-fun)
+        (if (local-variable-p 'senator-old-isearch-search-fun)
+            (progn
+              (set (make-local-variable 'isearch-search-fun-function)
+                   senator-old-isearch-search-fun)
+              (kill-local-variable 'senator-old-isearch-search-fun))
+          (kill-local-variable 'isearch-search-fun-function)))))
   (senator-mode-line-update))
+
 
 (add-hook 'isearch-mode-hook     'senator-isearch-mode-hook)
 (add-hook 'isearch-mode-end-hook 'senator-isearch-mode-hook)

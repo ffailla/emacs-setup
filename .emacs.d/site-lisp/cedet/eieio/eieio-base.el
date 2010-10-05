@@ -1,10 +1,10 @@
 ;;; eieio-base.el --- Base classes for EIEIO.
 
 ;;;
-;; Copyright (C) 2000, 2001, 2002, 2004 Eric M. Ludlam
+;; Copyright (C) 2000, 2001, 2002, 2004, 2005, 2007, 2008, 2009 Eric M. Ludlam
 ;;
 ;; Author: <zappo@gnu.org>
-;; RCS: $Id: eieio-base.el,v 1.18 2004/07/13 14:58:28 zappo Exp $
+;; RCS: $Id: eieio-base.el,v 1.29 2009/10/10 15:10:00 davenar Exp $
 ;; Keywords: OO, lisp
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -18,12 +18,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's author (see below) or write to:
-;;
-;;              The Free Software Foundation, Inc.
-;;              675 Mass Ave.
-;;              Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;; Please send bug reports, etc. to zappo@gnu.org
 
@@ -60,7 +57,10 @@ not been set, use values from the parent."
   "If a slot OBJECT in this CLASS is unbound, try to inherit, or throw a signal.
 SLOT-NAME, is the offending slot.  FN is the function signalling the error."
   (if (slot-boundp object 'parent-instance)
+      ;; It may not look like it, but this line recurses back into this
+      ;; method if the parent instance's slot is unbound.
       (eieio-oref (oref object parent-instance) slot-name)
+    ;; Throw the regular signal.
     (call-next-method)))
 
 (defmethod clone ((obj eieio-instance-inheritor) &rest params)
@@ -76,7 +76,7 @@ All slots are unbound, except those initialized with PARAMS."
     (if (not passname)
 	(save-match-data
 	  (if (string-match "-\\([0-9]+\\)" nm)
-	      (setq num (1+ (string-to-int (match-string 1 nm)))
+	      (setq num (1+ (string-to-number (match-string 1 nm)))
 		    nm (substring nm 0 (match-beginning 0))))
 	  (aset nobj object-name (concat nm "-" (int-to-string num))))
       (aset nobj object-name (car params)))
@@ -84,6 +84,21 @@ All slots are unbound, except those initialized with PARAMS."
     (if params (shared-initialize nobj (if passname (cdr params) params)))
     (oset nobj parent-instance obj)
     nobj))
+
+(defmethod eieio-instance-inheritor-slot-boundp ((object eieio-instance-inheritor)
+						slot)
+  "Non-nil if the instance inheritor OBJECT's SLOT is bound.
+See `slot-boundp' for for details on binding slots.
+The instance inheritor uses unbound slots as a way cascading cloned
+slot values, so testing for a slot being bound requires extra steps
+for this kind of object."
+  (if (slot-boundp object slot)
+      ;; If it is regularly bound, return t.
+      t
+    (if (slot-boundp object 'parent-instance)
+	(eieio-instance-inheritor-slot-boundp (oref object parent-instance)
+					      slot)
+      nil)))
 
 
 ;;; eieio-instance-tracker
@@ -104,9 +119,9 @@ a variable symbol used to store a list of all instances."
   :abstract t)
 
 (defmethod initialize-instance :AFTER ((this eieio-instance-tracker)
-				       &rest fields)
+				       &rest slots)
   "Make sure THIS is in our master list of this class.
-Optional argument FIELDS are the initialization arguments."
+Optional argument SLOTS are the initialization arguments."
   ;; Theoretically, this is never called twice for a given instance.
   (let ((sym (oref this tracking-symbol)))
     (if (not (memq this (symbol-value sym)))
@@ -118,10 +133,10 @@ Optional argument FIELDS are the initialization arguments."
        (delq this (symbol-value (oref this tracking-symbol)))))
 
 ;; In retrospect, this is a silly function.
-(defun eieio-instance-tracker-find (key field list-symbol)
-  "Find KEY as an element of FIELD in the objects in LIST-SYMBOL.
+(defun eieio-instance-tracker-find (key slot list-symbol)
+  "Find KEY as an element of SLOT in the objects in LIST-SYMBOL.
 Returns the first match."
-  (object-assoc key field (symbol-value list-symbol)))
+  (object-assoc key slot (symbol-value list-symbol)))
 
 ;;; eieio-singleton
 ;;
@@ -140,9 +155,9 @@ Multiple calls to `make-instance' will return this object."))
 A singleton is a class which will only ever have one instace."
   :abstract t)
 
-(defmethod constructor :STATIC ((class eieio-singleton) name &rest fields)
+(defmethod constructor :STATIC ((class eieio-singleton) name &rest slots)
   "Constructor for singleton CLASS.
-NAME and FIELDS initialize the new object.
+NAME and SLOTS initialize the new object.
 This constructor guarantees that no matter how many you request,
 only one object ever exists."
   ;; NOTE TO SELF: In next version, make `slot-boundp' support classes
@@ -184,7 +199,13 @@ Enables auto-choosing nice file names based on name.")
 		     :initform ";; EIEIO PERSISTENT OBJECT"
 		     :documentation
 		     "Header line for the save file.
-This is used with the `object-write' method."))
+This is used with the `object-write' method.")
+   (do-backups :type boolean
+	       :allocation :class
+	       :initform t
+	       :documentation
+	       "Saving this object should make backup files.
+Setting to nil will mean no backups are made."))
   "This special class enables persistence through save files
 Use the `object-save' method to write this object to disk.  The save
 format is Emacs Lisp code which calls the constructor for the saved
@@ -206,22 +227,26 @@ a file.  Optional argument NAME specifies a default file name."
   (oref this file))
 
 (defun eieio-persistent-read (filename)
-  "Read a persistent object from FILENAME."
-  (save-excursion
-    (let ((ret nil))
-      (set-buffer (get-buffer-create " *tmp eieio read*"))
-      (unwind-protect
-	  (progn
-	    (erase-buffer)
-	    (insert-file filename)
+  "Read a persistent object from FILENAME, and return it."
+  (let ((ret nil)
+	(buffstr nil))
+    (unwind-protect
+	(progn
+	  (save-excursion
+	    (set-buffer (get-buffer-create " *tmp eieio read*"))
+	    (insert-file-contents filename nil nil nil t)
 	    (goto-char (point-min))
-	    (setq ret (read (current-buffer)))
-	    (if (not (child-of-class-p (car ret) 'eieio-persistent))
-		(error "Corrupt object on disk"))
-	    (setq ret (eval ret))
-	    (oset ret file filename))
-	(kill-buffer " *tmp eieio read*"))
-      ret)))
+	    (setq buffstr (buffer-string)))
+	  ;; Do the read in the buffer the read was initialized from
+	  ;; so that any initialize-instance calls that depend on
+	  ;; the current buffer will work.
+	  (setq ret (read buffstr))
+	  (if (not (child-of-class-p (car ret) 'eieio-persistent))
+	      (error "Corrupt object on disk"))
+	  (setq ret (eval ret))
+	  (oset ret file filename))
+      (kill-buffer " *tmp eieio read*"))
+    ret))
 
 (defmethod object-write ((this eieio-persistent) &optional comment)
   "Write persistent object THIS out to the current stream.
@@ -230,7 +255,6 @@ Optional argument COMMENT is a header line comment."
 
 (defmethod eieio-persistent-path-relative ((this eieio-persistent) file)
   "For object THIS, make absolute file name FILE relative."
-  ;; Woah!  Look at `file-relative-name' as a solution.
   (file-relative-name (expand-file-name file)
 		      (file-name-directory (oref this file))))
 
@@ -251,7 +275,20 @@ instance."
 			(eieio-persistent-path-relative this file)
 		      (file-name-nondirectory cfn)))
 	      (object-write this (oref this file-header-line)))
-	    (write-file cfn nil))
+	    (let ((backup-inhibited (not (oref this do-backups)))
+		  (cs (car (find-coding-systems-region
+			    (point-min) (point-max)))))
+	      (unless (eq cs 'undecided)
+		(setq buffer-file-coding-system cs))
+	      ;; Old way - write file.  Leaves message behind.
+	      ;;(write-file cfn nil)
+	      
+	      ;; New way - Avoid the vast quantities of error checking
+	      ;; just so I can get at the special flags that disable
+	      ;; displaying random messages.
+	      (write-region (point-min) (point-max)
+			    cfn nil 1)
+	      ))
 	;; Restore :file, and kill the tmp buffer
 	(oset this file cfn)
 	(setq buffer-file-name nil)
@@ -276,7 +313,7 @@ access to it."
 (defmethod slot-missing ((obj eieio-named)
 			 slot-name operation &optional new-value)
   "Called when a on-existant slot is accessed.
-For variable `eieio-named', provide an imaginary `object-nam' slot.
+For variable `eieio-named', provide an imaginary `object-name' slot.
 Argument OBJ is the Named object.
 Argument SLOT-NAME is the slot that was attempted to be accessed.
 OPERATION is the type of access, such as `oref' or `oset'.

@@ -1,8 +1,8 @@
 ;;; semantic-fw.el --- Framework for Semantic
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Eric M. Ludlam
 
-;; X-CVS: $Id: semantic-fw.el,v 1.44 2004/07/29 02:31:22 zappo Exp $
+;; X-CVS: $Id: semantic-fw.el,v 1.85 2010/05/04 23:25:34 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -18,8 +18,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -38,25 +38,45 @@
 ;;
 (if (featurep 'xemacs)
     (progn
-      (defalias 'semantic-overlay-live-p          'extent-live-p)
-      (defalias 'semantic-make-overlay            'make-extent)
+      (defalias 'semantic-buffer-local-value 'symbol-value-in-buffer)
+      (defalias 'semantic-overlay-live-p
+        (lambda (o)
+          (and (extent-live-p o)
+               (not (extent-detached-p o))
+               (bufferp (extent-buffer o)))))
+      (defalias 'semantic-make-overlay
+	(lambda (beg end &optional buffer &rest rest)
+	  "Xemacs `make-extent', supporting the front/rear advance options."
+	  (let ((ol (make-extent beg end buffer)))
+	    (when rest
+	      (set-extent-property ol 'start-open (car rest))
+	      (setq rest (cdr rest)))
+	    (when rest
+	      (set-extent-property ol 'end-open (car rest)))
+	    ol)))
       (defalias 'semantic-overlay-put             'set-extent-property)
       (defalias 'semantic-overlay-get             'extent-property)
       (defalias 'semantic-overlay-properties      'extent-properties)
       (defalias 'semantic-overlay-move            'set-extent-endpoints)
       (defalias 'semantic-overlay-delete          'delete-extent)
       (defalias 'semantic-overlays-at
-        (lambda (pos) (extent-list nil pos pos)))
+        (lambda (pos)
+	  (condition-case nil
+	      (extent-list nil pos pos)
+	    (error nil))
+	  ))
       (defalias 'semantic-overlays-in
         (lambda (beg end) (extent-list nil beg end)))
       (defalias 'semantic-overlay-buffer          'extent-buffer)
       (defalias 'semantic-overlay-start           'extent-start-position)
       (defalias 'semantic-overlay-end             'extent-end-position)
+      (defalias 'semantic-overlay-size            'extent-length)
       (defalias 'semantic-overlay-next-change     'next-extent-change)
       (defalias 'semantic-overlay-previous-change 'previous-extent-change)
       (defalias 'semantic-overlay-lists
         (lambda () (list (extent-list))))
       (defalias 'semantic-overlay-p               'extentp)
+      (defalias 'semantic-event-window        'event-window)
       (defun semantic-read-event ()
         (let ((event (next-command-event)))
           (if (key-press-event-p event)
@@ -65,7 +85,13 @@
                     (keyboard-quit)
                   c)))
           event))
+      (defun semantic-popup-menu (menu)
+	"Blockinig version of `popup-menu'"
+	(popup-menu menu)
+	;; Wait...
+	(while (popup-up-p) (dispatch-event (next-event))))
       )
+  ;; Emacs Bindings
   (defalias 'semantic-overlay-live-p          'overlay-buffer)
   (defalias 'semantic-make-overlay            'make-overlay)
   (defalias 'semantic-overlay-put             'overlay-put)
@@ -78,11 +104,23 @@
   (defalias 'semantic-overlay-buffer          'overlay-buffer)
   (defalias 'semantic-overlay-start           'overlay-start)
   (defalias 'semantic-overlay-end             'overlay-end)
+  (defalias 'semantic-overlay-size            'overlay-size)
   (defalias 'semantic-overlay-next-change     'next-overlay-change)
   (defalias 'semantic-overlay-previous-change 'previous-overlay-change)
   (defalias 'semantic-overlay-lists           'overlay-lists)
   (defalias 'semantic-overlay-p               'overlayp)
   (defalias 'semantic-read-event              'read-event)
+  (defalias 'semantic-popup-menu              'popup-menu)
+  (defun semantic-event-window (event)
+    "Extract the window from EVENT."
+    (car (car (cdr event))))
+
+  (if (> emacs-major-version 21)
+      (defalias 'semantic-buffer-local-value 'buffer-local-value)
+
+    (defun semantic-buffer-local-value (sym &optional buf)
+      "Get the value of SYM from buffer local variable in BUF."
+      (cdr (assoc sym (buffer-local-variables buf)))))
   )
 
 (if (and (not (featurep 'xemacs))
@@ -95,6 +133,17 @@
     (defalias 'semantic-mode-line-update 'redraw-modeline)
   (defalias 'semantic-mode-line-update 'force-mode-line-update))
 
+;; Since Emacs 22 major mode functions should use `run-mode-hooks' to
+;; run major mode hooks.
+(defalias 'semantic-run-mode-hooks
+  (if (fboundp 'run-mode-hooks)
+      'run-mode-hooks
+    'run-hooks))
+
+;; Fancy compat useage now handled in cedet-compat
+(defalias 'semantic-subst-char-in-string 'subst-char-in-string)
+
+
 (defun semantic-delete-overlay-maybe (overlay)
   "Delete OVERLAY if it is a semantic token overlay."
   (if (semantic-overlay-get overlay 'semantic)
@@ -105,6 +154,28 @@
     (if (fboundp 'byte-compile-warn)
 	'byte-compile-warn
       'message)))
+
+(if (not (fboundp 'string-to-number))
+    (defalias 'string-to-number 'string-to-int))
+
+;;; Menu Item compatibility
+;;
+(defun semantic-menu-item (item)
+  "Build an XEmacs compatible menu item from vector ITEM.
+That is remove the unsupported :help stuff."
+  (if (featurep 'xemacs)
+      (let ((n (length item))
+            (i 0)
+            slot l)
+        (while (< i n)
+          (setq slot (aref item i))
+          (if (and (keywordp slot)
+                   (eq slot :help))
+              (setq i (1+ i))
+            (setq l (cons slot l)))
+          (setq i (1+ i)))
+        (apply #'vector (nreverse l)))
+    item))
 
 ;;; Positional Data Cache
 ;;
@@ -179,12 +250,17 @@ Remove self from `post-command-hook' if it is empty."
   "Test the data cache."
   (interactive)
   (let ((data '(a b c)))
-    (semantic-cache-data-to-buffer (current-buffer) (point) (+ (point) 5)
-				   data 'moose 'exit-cache-zone)
-    (if (equal (semantic-get-cache-data 'moose) data)
-	(message "Successfully retrieved cached data.")
-      (message "Failed to retrieve cached data."))
-    ))
+    (save-excursion
+      (set-buffer (get-buffer-create " *semantic-test-data-cache*"))
+      (erase-buffer)
+      (insert "The Moose is Loose")
+      (goto-char (point-min))
+      (semantic-cache-data-to-buffer (current-buffer) (point) (+ (point) 5)
+				     data 'moose 'exit-cache-zone)
+      (if (equal (semantic-get-cache-data 'moose) data)
+	  (message "Successfully retrieved cached data.")
+	(error "Failed to retrieve cached data"))
+      )))
 
 ;;; Obsoleting various functions & variables
 ;;
@@ -195,29 +271,33 @@ Remove self from `post-command-hook' if it is empty."
 	(intern (substring sym-name (match-end 0)))
       name)))
 
-(defun semantic-alias-obsolete (oldfnalias newfn)
+(defun semantic-alias-obsolete (oldfnalias newfn &optional when)
   "Make OLDFNALIAS an alias for NEWFN.
 Mark OLDFNALIAS as obsolete, such that the byte compiler
 will throw a warning when it encounters this symbol."
   (defalias oldfnalias newfn)
-  (make-obsolete oldfnalias newfn)
+  (make-obsolete oldfnalias newfn when)
   (when (and (function-overload-p newfn)
              (not (overload-obsoleted-by newfn))
              ;; Only throw this warning when byte compiling things.
              (boundp 'byte-compile-current-file)
-             byte-compile-current-file)
-    (make-obsolete-overload oldfnalias newfn)
+             byte-compile-current-file
+	     (not (string-match "cedet" byte-compile-current-file))
+	     )
+    (make-obsolete-overload oldfnalias newfn when)
     (semantic-compile-warn
-     "`%s' obsoletes overload `%s'" newfn
+     "%s: `%s' obsoletes overload `%s'"
+     byte-compile-current-file
+     newfn
      (semantic-overload-symbol-from-function oldfnalias))
     ))
 
-(defun semantic-varalias-obsolete (oldvaralias newvar)
+(defun semantic-varalias-obsolete (oldvaralias newvar &optional when)
   "Make OLDVARALIAS an alias for variable NEWVAR.
 Mark OLDVARALIAS as obsolete, such that the byte compiler
 will throw a warning when it encounters this symbol."
-  (make-obsolete-variable oldvaralias newvar)
-  (condition-case err
+  (make-obsolete-variable oldvaralias newvar when)
+  (condition-case nil
       (defvaralias oldvaralias newvar)
     (error
      ;; Only throw this warning when byte compiling things.
@@ -232,6 +312,7 @@ will throw a warning when it encounters this symbol."
 ;;
 ;; Load semantic-loaddefs after compatibility code, to allow to use it
 ;; in autoloads without infinite recursive load problems.
+(require 'eieio)
 (load "semantic-loaddefs" nil t)
 
 ;;; Help debugging
@@ -246,11 +327,14 @@ debug them.
 Avoid using a large BODY since it is duplicated."
   ;;(declare (debug t) (indent 1))
   `(if debug-on-error
+       ;;(let ((inhibit-quit nil)) ,@body)
+       ;; Note to self: Doing the above screws up the wisent parser.
        (progn ,@body)
      (condition-case err
 	 (progn ,@body)
        (error
-        (message ,format (error-message-string err))
+        (message ,format (format "%S - %s" (current-buffer)
+                                 (error-message-string err)))
         nil))))
 (put 'semantic-safe 'lisp-indent-function 1)
 
@@ -322,7 +406,8 @@ If FORMS completes, then the return value is the same as `progn'."
 FROM is an indication of where this function is called from as a value
 to pass to `throw'.  It is recommended to use the name of the function
 calling this one."
-  `(when (and semantic-current-input-throw-symbol (input-pending-p))
+  `(when (and semantic-current-input-throw-symbol
+              (or (input-pending-p) (accept-process-output)))
      (throw semantic-current-input-throw-symbol ,from)))
 
 (defun semantic-test-throw-on-input ()
@@ -333,10 +418,66 @@ calling this one."
 	   (semantic-exit-on-input 'testing
 	     (let ((inhibit-quit nil)
 		   (message-log-max nil))
-	       (while (sit-for 0)
-		 (message "Looping ...")
+	       (while t
+		 (message "Looping ... press a key to test")
 		 (semantic-throw-on-input 'test-inner-loop))
-	       'exit))))
+	       'exit)))
+  (when (input-pending-p)
+    (if (fboundp 'read-event)
+	(read-event)
+      (read-char)))
+  )
+
+;;; Special versions of Find File
+;;
+(defun semantic-find-file-noselect (file &optional nowarn rawfile wildcards)
+  "Call `find-file-noselect' with various features turned off.
+Use this when referencing a file that will be soon deleted.
+FILE, NOWARN, RAWFILE, and WILDCARDS are passed into `find-file-noselect'"
+  (let* ((recentf-exclude '( (lambda (f) t) ))
+	 ;; This is a brave statement.  Don't waste time loading in
+	 ;; lots of modes.  Especially decoration mode can waste a lot
+	 ;; of time for a buffer we intend to kill.
+	 (semantic-init-hook nil)
+	 ;; This disables the part of EDE that asks questions
+	 (ede-auto-add-method 'never)
+	 ;; Ask font-lock to not colorize these buffers, nor to
+	 ;; whine about it either.
+	 (font-lock-maximum-size 0)
+	 (font-lock-verbose nil)
+	 ;; Disable revision control
+	 (vc-handled-backends nil)
+	 ;; Don't prompt to insert a template if we visit an empty file
+	 (auto-insert nil)
+	 ;; We don't want emacs to query about unsafe local variables
+	 (enable-local-variables
+	  (if (featurep 'xemacs)
+	      ;; XEmacs only has nil as an option?
+	      nil
+	    ;; Emacs 23 has the spiffy :safe option, nil otherwise.
+	    (if (inversion-check-version emacs-version nil '(full 22 0))
+		nil
+	      :safe)))
+	 ;; ... or eval variables
+	 (enable-local-eval nil)
+	 )
+    (save-match-data
+      (if (featurep 'xemacs)
+	  (find-file-noselect file nowarn rawfile)
+	(find-file-noselect file nowarn rawfile wildcards)))
+    ))
+
+;;; Database restriction settings
+;;
+(defmacro semanticdb-without-unloaded-file-searches (forms)
+  "Execute FORMS with `unloaded' removed from the current throttle."
+  `(let ((semanticdb-find-default-throttle
+	  (if (featurep 'semanticdb-find)
+	      (remq 'unloaded semanticdb-find-default-throttle)
+	    nil)))
+     ,forms))
+(put 'semanticdb-without-unloaded-file-searches 'lisp-indent-function 1)
+
 
 ;;; Editor goodies ;-)
 ;;
@@ -352,6 +493,9 @@ calling this one."
 		 "define-lex-analyzer"
 		 "define-lex-block-analyzer"
 		 "define-lex-regex-analyzer"
+		 "define-lex-spp-macro-declaration-analyzer"
+		 "define-lex-spp-macro-undeclaration-analyzer"
+		 "define-lex-spp-include-analyzer"
 		 "define-lex-simple-regex-analyzer"
 		 "define-lex-keyword-type-analyzer"
 		 "define-lex-sexp-type-analyzer"
@@ -366,6 +510,7 @@ calling this one."
 		 "semantic-alias-obsolete"
 		 "semantic-varalias-obsolete"
 		 "semantic-make-obsolete-overload"
+		 "defcustom-mode-local-semantic-dependency-system-include-path"
 		 ))
            (kf (if vf (regexp-opt vf t) ""))
            ;; Regexp depths
@@ -406,8 +551,32 @@ calling this one."
  #'(lambda ()
 
      (def-edebug-spec semantic-exit-on-input
-       (symbolp def-body)
+       (quote def-body)
        )
+
+     ))
+
+;;; Interfacing with data-debug
+;;
+(eval-after-load "data-debug"
+  '(progn
+;;; Augment data-debug
+     ;;
+     ;; A tag
+     (data-debug-add-specialized-thing #'semantic-tag-p
+				       #'data-debug-insert-tag)
+     ;; A taglist
+     (data-debug-add-specialized-thing (lambda (thing) (and (listp thing) (semantic-tag-p (car thing))))
+				       #'data-debug-insert-tag-list-button)
+     ;; Find results
+     (data-debug-add-specialized-thing #'semanticdb-find-results-p
+				       #'data-debug-insert-find-results-button)
+     ;; Find results elements.
+     (data-debug-add-specialized-thing (lambda (thing) 
+					 (and (listp thing)
+					      (semanticdb-abstract-table-child-p (car thing))
+					      (semantic-tag-p (cdr thing))))
+				       #'data-debug-insert-db-and-tag-button)
 
      ))
 

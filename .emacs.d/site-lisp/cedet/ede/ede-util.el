@@ -1,10 +1,10 @@
 ;;; ede-util.el --- EDE utilities
 
-;;;  Copyright (C) 2000  Eric M. Ludlam
+;;;  Copyright (C) 2000, 2005  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
-;; RCS: $Id: ede-util.el,v 1.2 2000/11/18 14:10:32 zappo Exp $
+;; RCS: $Id: ede-util.el,v 1.5 2010/03/15 13:40:54 xscript Exp $
 
 ;; This software is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
-;; Utilities that may not require project specific help, and oporate
+;; Utilities that may not require project specific help, and operate
 ;; on generic EDE structures.  Provide user level commands for activities
 ;; not directly related to source code organization or makefile generation.
 
@@ -41,9 +41,11 @@ Argument NEWVERSION is the version number to use in the current project."
 		       (read-string (format "Update Version (was %s): " v)
 				  v nil v))))
   (let ((ede-object (ede-toplevel)))
-    (oset ede-object :version newversion)
-    (project-update-version ede-object)
-    (ede-update-version-in-source ede-object newversion)))
+    ;; Don't update anything if there was no change.
+    (unless (string= (oref ede-object :version) newversion)
+      (oset ede-object :version newversion)
+      (project-update-version ede-object)
+      (ede-update-version-in-source ede-object newversion))))
 
 (defmethod project-update-version ((ot ede-project))
   "The :version of the project OT has been updated.
@@ -63,9 +65,8 @@ their sources to VERSION."
 	   (oref this versionsource))
       (let ((vs (oref this versionsource)))
 	(while vs
-	  (save-excursion
-	    (set-buffer (find-file-noselect
-			 (ede-expand-filename this (car vs))))
+	  (with-current-buffer (find-file-noselect
+                            (ede-expand-filename this (car vs)))
 	    (goto-char (point-min))
 	    (let ((case-fold-search t))
 	      (if (re-search-forward "version:\\s-*\\([^ \t\n]+\\)" nil t)

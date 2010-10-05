@@ -1,10 +1,10 @@
 ;;; ede-proj-%NAME%.el --- EDE Generic Project ...
 
-;;;  Copyright (C) 1999, 2000, 2001  Eric M. Ludlam
+;;;  Copyright (C) 1999, 2000, 2001, 2008, 2009, 2010  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
-;; RCS: $Id: ede-proj-skel.el,v 1.11 2001/04/27 00:21:50 zappo Exp $
+;; RCS: $Id: ede-proj-skel.el,v 1.15 2010/06/12 00:36:28 zappo Exp $
 
 ;; This software is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -31,7 +31,7 @@
 ;;
 ;; If a function is commented out, then you probably don't need to
 ;; override it.  If it is not commented out, you probably need it, but
-;; there is no requirement that you impelement it.
+;; there is no requirement that you implement it.
 
 (require 'ede-proj)
 
@@ -44,8 +44,8 @@
   (;; Use these two items to modify the target specificy menu.
    ;;(menu :initform nil)
    ;;(keybindings :initform nil)
-   (sourcetype :initform (ede-source-%NAME%))   
-   ;;(availablecompilers :initform (ede-%NAME%-compiler))
+   (sourcetype :initform '(ede-source-%NAME%))   
+   ;;(availablecompilers :initform '(ede-%NAME%-compiler))
    ;; Add your specialized fields here
    )
   "Class for ....")
@@ -208,6 +208,10 @@
 ;; If you don't support debugging, don't forget to also remove
 ;; any specialized keybindings and menu items in the class definition.
 (defmethod project-debug-target ((obj ede-proj-target-%NAME%))
+  "Run the current target OBJ in an debugger."
+  (%do-stuff%))
+
+(defmethod project-run-target ((obj ede-proj-target-%NAME%))
   "Run the current target OBJ in an debugger."
   (%do-stuff%))
 

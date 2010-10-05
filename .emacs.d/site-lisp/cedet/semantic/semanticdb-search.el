@@ -1,10 +1,10 @@
 ;;; semanticdb-search.el --- Searching through semantic databases.
 
-;;; Copyright (C) 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: tags
-;; X-RCS: $Id: semanticdb-search.el,v 1.13 2004/03/19 23:45:32 zappo Exp $
+;; X-RCS: $Id: semanticdb-search.el,v 1.18 2009/08/31 01:46:03 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,10 +20,12 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;; 
 ;;; Commentary:
+;;
+;; NOTE: THESE APIs ARE OBSOLETE:
 ;;
 ;; Databases of various forms can all be searched.  These routines
 ;; cover many common forms of searching.
@@ -54,25 +56,6 @@
 
 ;;; Code:
 ;;
-;;; Classes:
-(defclass semanticdb-search-results-table (semanticdb-abstract-table)
-  (
-   )
-  "Table used for search results when there is no file or table association.
-Examples include search results from external sources such as from
-Emacs' own symbol table, or from external libraries.")
-
-(defmethod semanticdb-refresh-table ((obj semanticdb-search-results-table))
-  "If the tag list associated with OBJ is loaded, refresh it.
-This will call `semantic-fetch-tags' if that file is in memory."
-  nil)
-
-(defmethod semanticdb-printable-name ((table semanticdb-search-results-table))
-  "Return a string which is a short and logical printable name for TABLE.
-A search result may not have a file assocated with it, so we need to
-provide a reasonable identification."
-  (concat "System: " (object-name-string table))
-  )
 
 ;;; Utils
 ;;
@@ -81,7 +64,8 @@ provide a reasonable identification."
 					result-finding-function
 					ignore-system
 					find-file-on-match)
-  "Collect results across RESULT-IN-DATABASES for RESULT-FINDING-FUNCTION.
+  "OBSOLETE:
+Collect results across RESULT-IN-DATABASES for RESULT-FINDING-FUNCTION.
 If RESULT-IN-DATABASES is nil, search a range of associated databases
 calculated by `semanticdb-current-database-list'.
 RESULT-IN-DATABASES is a list of variable `semanticdb-project-database'
@@ -131,7 +115,8 @@ should be capable of doing so."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-token
   (token &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all occurances of nonterminals with token TOKEN in databases.
+  "OBSOLETE:
+Find all occurances of nonterminals with token TOKEN in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES, DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -148,7 +133,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-name
   (name &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all occurances of nonterminals with name NAME in databases.
+  "OBSOLETE:
+Find all occurances of nonterminals with name NAME in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES, DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN) ...)."
@@ -165,7 +151,8 @@ Return a list ((DB-TABLE . TOKEN) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-name-regexp
   (regex &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all occurances of nonterminals with name matching REGEX in databases.
+  "OBSOLETE:
+Find all occurances of nonterminals with name matching REGEX in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -183,7 +170,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-type
   (type &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all nonterminals with a type of TYPE in databases.
+  "OBSOLETE:
+Find all nonterminals with a type of TYPE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -201,7 +189,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-property
   (property value &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all nonterminals with a PROPERTY equal to VALUE in databases.
+  "OBSOLETE:
+Find all nonterminals with a PROPERTY equal to VALUE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -218,7 +207,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-extra-spec
   (spec &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all nonterminals with a SPEC in databases.
+  "OBSOLETE:
+Find all nonterminals with a SPEC in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -235,7 +225,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-extra-spec-value
   (spec value &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all nonterminals with a SPEC equal to VALUE in databases.
+  "OBSOLETE:
+Find all nonterminals with a SPEC equal to VALUE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -253,7 +244,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;
 (defun semanticdb-find-nonterminal-external-children-of-type
   (type &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all nonterminals which are child elements of TYPE.
+  "OBSOLETE:
+Find all nonterminals which are child elements of TYPE.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -271,7 +263,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;;###autoload
 (defun semanticdb-find-nonterminal-by-function
   (function &optional databases search-parts search-includes diff-mode find-file-match ignore-system)
-  "Find all occurances of nonterminals which match FUNCTION.
+  "OBSOLETE:
+Find all occurances of nonterminals which match FUNCTION.
 Search in all DATABASES.  If DATABASES is nil, search a range of
 associated databases calculated `semanticdb-current-database-list' and
 DATABASES is a list of variable `semanticdb-project-database' objects.
@@ -298,7 +291,8 @@ Return a list ((DB-TABLE . TOKEN-OR-TOKEN-LIST) ...)."
 ;; mechanism.
 (defmethod semanticdb-find-nonterminal-by-token-method
   ((database semanticdb-project-database) token search-parts search-includes diff-mode find-file-match)
-  "In DB, find all occurances of nonterminals with token TOKEN in databases.
+  "OBSOLETE:
+In DB, find all occurances of nonterminals with token TOKEN in databases.
 See `semanticdb-find-nonterminal-by-function-method' for details on,
 SEARCH-PARTS, SEARCH-INCLUDES, DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -310,7 +304,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-name-method
   ((database semanticdb-project-database) name search-parts search-includes diff-mode find-file-match)
-  "Find all occurances of nonterminals with name NAME in databases.
+  "OBSOLETE:
+Find all occurances of nonterminals with name NAME in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES, DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN) ...)."
@@ -322,7 +317,8 @@ Return a list ((DB-TABLE . TOKEN) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-name-regexp-method
   ((database semanticdb-project-database) regex search-parts search-includes diff-mode find-file-match)
-  "Find all occurances of nonterminals with name matching REGEX in databases.
+  "OBSOLETE:
+Find all occurances of nonterminals with name matching REGEX in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -334,7 +330,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-type-method
   ((database semanticdb-project-database) type search-parts search-includes diff-mode find-file-match)
-  "Find all nonterminals with a type of TYPE in databases.
+  "OBSOLETE:
+Find all nonterminals with a type of TYPE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -346,7 +343,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-property-method
   ((database semanticdb-project-database) property value search-parts search-includes diff-mode find-file-match)
-  "Find all nonterminals with a PROPERTY equal to VALUE in databases.
+  "OBSOLETE:
+Find all nonterminals with a PROPERTY equal to VALUE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -358,7 +356,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-extra-spec-method
   ((database semanticdb-project-database) spec search-parts search-includes diff-mode find-file-match)
-  "Find all nonterminals with a SPEC in databases.
+  "OBSOLETE:
+Find all nonterminals with a SPEC in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -370,7 +369,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 
 (defmethod semanticdb-find-nonterminal-by-extra-spec-value-method
   ((database semanticdb-project-database) spec value search-parts search-includes diff-mode find-file-match)
-  "Find all nonterminals with a SPEC equal to VALUE in databases.
+  "OBSOLETE:
+Find all nonterminals with a SPEC equal to VALUE in databases.
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, and FIND-FILE-MATCH.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -384,7 +384,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 ;;
 (defmethod semanticdb-find-nonterminal-external-children-of-type-method
   ((database semanticdb-project-database) type search-parts search-includes diff-mode find-file-match)
-  "Find all nonterminals which are child elements of TYPE
+  "OBSOLETE:
+Find all nonterminals which are child elements of TYPE
 See `semanticdb-find-nonterminal-by-function' for details on DATABASES,
 SEARCH-PARTS, SEARCH-INCLUDES DIFF-MODE, FIND-FILE-MATCH and IGNORE-SYSTEM.
 Return a list ((DB-TABLE . TOKEN-LIST) ...)."
@@ -404,7 +405,8 @@ Return a list ((DB-TABLE . TOKEN-LIST) ...)."
 (defmethod semanticdb-find-nonterminal-by-function-method
   ((database semanticdb-project-database)
    function &optional search-parts search-includes diff-mode find-file-match)
-  "In DATABASE, find all occurances of nonterminals which match FUNCTION.
+  "OBSOLETE:
+In DATABASE, find all occurances of nonterminals which match FUNCTION.
 When SEARCH-PARTS is non-nil the search will include children of tags.
 When SEARCH-INCLUDES is non-nil, the search will include dependency files.
 When DIFF-MODE is non-nil, search databases which are of a different mode.

@@ -5,7 +5,7 @@
 ;; Maintainer: Eric M. Ludlam <eludlam@mathworks.com>
 ;; Keywords: lisp
 ;;
-;; Copyright (C) 2003, 2004 Eric M. Ludlam
+;; Copyright (C) 2003, 2004, 2005, 2009 Eric M. Ludlam
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,13 +18,19 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;;; Commentary:
 ;;
 ;;  This package uses the compile package, and the linemark package to
 ;; highlight all lines showing errors.
+
+;;; Notes:
+;;
+;; Thanks to Markus Gritsch for adding support for grep-buffers, where
+;; no file is associated with a buffer.  (Similar work in linemark.el)
 
 (require 'linemark)
 
@@ -128,26 +134,41 @@ Works on grep, compile, or other type mode."
 	   compilation-error-list))
 	)
     (while marks
-      (let ((errmark (nth 0 (car marks)))
-	    (file (nth 1 (car marks)))
-	    (line (nth 2 (car marks)))
-	    (face nil)
-	    (case-fold-search t)
-	    (entry nil)
-	    (txt nil)
-	    )
-	(setq file (concat (car (cdr file))
-			   (car file)))
+      (let (errmark
+            file
+            line
+            (face nil)
+            (case-fold-search t)
+            (txt nil)
+            )
 
-	;; Sometimes the above doesn't work.  Use this version.
-	;; Originally suggested by: Markus Gritsch
-	(if (not (file-exists-p file))
-	    (setq file (car (nth 1 (car marks)))))
+        (setq errmark (car (car marks)))
+        (if (listp (cdr (car marks)))
+            (progn ; So a list containing filename, linenumber, ... like (grep) provides is used.
+              (setq file (nth 1 (car marks)))
+              (setq line (nth 2 (car marks)))
+
+              (setq file (concat (car (cdr file))
+                                 (car file)))
+
+              ;; In case file contains an absolute path, the above doesn't work, at least not on Win32.  Use this version.
+              ;; Originally suggested by: Markus Gritsch
+              (if (not (file-exists-p file))
+                  (setq file (car (nth 1 (car marks))))))
+
+          (progn ; Otherwise we assume that we have a marker, which works also on buffers which have no file associated.
+            (setq file (buffer-name (marker-buffer (cdr (car marks)))))
+
+            (setq line (save-excursion
+                         (set-buffer (marker-buffer (cdr (car marks))))
+                         (save-excursion
+                           (goto-char (cdr (car marks)))
+                           (count-lines 1 (1+ (point))))))))
 
 	;; We've got the goods, lets add in an entry.
 	;; If we can't find the file, skip it.  It'll be
 	;; found eventually.
-	(when (file-exists-p file)
+	(when (or (file-exists-p file) (bufferp (marker-buffer (cdr (car marks)))))
 
 	  (condition-case nil
 	      (save-excursion
@@ -161,7 +182,7 @@ Works on grep, compile, or other type mode."
 			      ((re-search-forward "warning" (point-at-eol) t)
 			       'linemark-caution-face)
 			      (t
-			       'linemark-funny-face)))))
+			       'linemark-go-face)))))
 	    (error nil))
 
 	  (condition-case nil
@@ -180,15 +201,14 @@ Works on grep, compile, or other type mode."
 		  ))
 	    (error nil))
 
-	  (setq entry
-		(linemark-add-entry
-		 lmcompile-error-group
-		 :filename file
-		 :line line
-		 :errormarker errmark
-		 :face face
-		 :errmsg txt
-		 ))
+	  (linemark-add-entry
+	   lmcompile-error-group
+	   :filename file
+	   :line line
+	   :errormarker errmark
+	   :face face
+	   :errmsg txt
+	   )
 
 	  ))
       (setq marks (cdr marks)))))

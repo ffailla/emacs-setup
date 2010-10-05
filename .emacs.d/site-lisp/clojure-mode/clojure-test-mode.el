@@ -135,8 +135,9 @@
 
 (defun clojure-test-load-reporting ()
   "Redefine the test-is report function to store results in metadata."
-  (clojure-test-eval-sync
-   "(require 'clojure.test) (ns clojure.test)
+  (when (compare-strings "clojure" 0 7 (slime-connection-name) 0 7)
+    (clojure-test-eval-sync
+     "(require 'clojure.test) (ns clojure.test)
 
     (defonce old-report report)
     (defn report [event]
@@ -153,7 +154,7 @@
                                                    ((file-position 3) 1)
                                                    (:line event)))])))
      (binding [*test-out* *out*]
-       (old-report event)))"))
+       (old-report event)))")))
 
 (defun clojure-test-get-results (result)
   (clojure-test-eval
@@ -230,8 +231,12 @@ Retuns the problem overlay if such a position is found, otherwise nil."
 (defun clojure-test-implementation-for (namespace)
   (let* ((namespace (clojure-underscores-for-hyphens namespace))
          (segments (split-string namespace "\\."))
-         (before (subseq segments 0 clojure-test-ns-segment-position))
-         (after (subseq segments (1+ clojure-test-ns-segment-position)))
+         (test-position
+          (if (> 0 clojure-test-ns-segment-position)
+              (1- (+ (length segments) clojure-test-ns-segment-position))
+            clojure-test-ns-segment-position))
+         (before (subseq segments 0 test-position))
+         (after (subseq segments (1+ test-position)))
          (impl-segments (append before after)))
     (mapconcat 'identity impl-segments "/")))
 

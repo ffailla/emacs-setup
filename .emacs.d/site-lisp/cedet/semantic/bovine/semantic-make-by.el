@@ -1,9 +1,9 @@
 ;;; semantic-make-by.el --- Generated parser support file
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2008 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:46-0400
+;; Created: 2010-08-22 20:55:25-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file make.by.
-
-;;; History:
-;;
 
 ;;; Code:
 
@@ -62,11 +59,11 @@
 (defconst semantic-make-by--token-table
   (semantic-lex-make-type-table
    '(("punctuation"
-      (BACKSLASH . "\\b[\\]\\b")
-      (DOLLAR . "\\b[$]\\b")
-      (EQUAL . "\\b[=]\\b")
-      (PLUS . "\\b[+]\\b")
-      (COLON . "\\b[:]\\b")))
+      (BACKSLASH . "\\`[\\]\\'")
+      (DOLLAR . "\\`[$]\\'")
+      (EQUAL . "\\`[=]\\'")
+      (PLUS . "\\`[+]\\'")
+      (COLON . "\\`[:]\\'")))
    'nil)
   "Table of lexical tokens.")
 
@@ -77,10 +74,31 @@
      ) ;; end bovine-toplevel
 
     (Makefile
-     (variable)
-     (rule)
-     (conditional)
-     (include)
+     (bol
+      newline
+      ,(semantic-lambda
+	(list nil))
+      )
+     (bol
+      variable
+      ,(semantic-lambda
+	(nth 1 vals))
+      )
+     (bol
+      rule
+      ,(semantic-lambda
+	(nth 1 vals))
+      )
+     (bol
+      conditional
+      ,(semantic-lambda
+	(nth 1 vals))
+      )
+     (bol
+      include
+      ,(semantic-lambda
+	(nth 1 vals))
+      )
      (whitespace
       ,(semantic-lambda
 	(list nil))
@@ -164,35 +182,35 @@
 
     (conditional
      (IF
-      whitespace
+      some-whitespace
       symbol
       newline
       ,(semantic-lambda
 	(list nil))
       )
      (IFDEF
-      whitespace
+      some-whitespace
       symbol
       newline
       ,(semantic-lambda
 	(list nil))
       )
      (IFNDEF
-      whitespace
+      some-whitespace
       symbol
       newline
       ,(semantic-lambda
 	(list nil))
       )
      (IFEQ
-      whitespace
+      some-whitespace
       expression
       newline
       ,(semantic-lambda
 	(list nil))
       )
      (IFNEQ
-      whitespace
+      some-whitespace
       expression
       newline
       ,(semantic-lambda
@@ -216,7 +234,7 @@
 
     (include
      (INCLUDE
-      whitespace
+      some-whitespace
       element-list
       ,(semantic-lambda
 	(semantic-tag-new-include
@@ -226,32 +244,32 @@
 
     (equals
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda)
       )
      (punctuation
-      "\\b[+]\\b"
+      "\\`[+]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda)
       )
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda)
       )
      ) ;; end equals
 
     (colons
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       ,(semantic-lambda)
       )
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       ,(semantic-lambda)
       )
      ) ;; end colons
@@ -266,7 +284,7 @@
 
     (elements
      (element
-      whitespace
+      some-whitespace
       elements
       ,(semantic-lambda
 	(nth 0 vals)
@@ -310,7 +328,7 @@
 
     (varref
      (punctuation
-      "\\b[$]\\b"
+      "\\`[$]\\'"
       semantic-list
       ,(semantic-lambda
 	(list
@@ -321,7 +339,8 @@
      ) ;; end varref
 
     (commands
-     (shell-command
+     (bol
+      shell-command
       newline
       commands
       ,(semantic-lambda
@@ -335,13 +354,25 @@
      ) ;; end commands
 
     (opt-whitespace
-     (whitespace
+     (some-whitespace
       ,(semantic-lambda
 	(list nil))
       )
      ( ;;EMPTY
       )
      ) ;; end opt-whitespace
+
+    (some-whitespace
+     (whitespace
+      some-whitespace
+      ,(semantic-lambda
+	(list nil))
+      )
+     (whitespace
+      ,(semantic-lambda
+	(list nil))
+      )
+     ) ;; end some-whitespace
     )
   "Parser table.")
 

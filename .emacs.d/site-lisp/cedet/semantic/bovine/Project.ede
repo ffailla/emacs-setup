@@ -1,6 +1,6 @@
-;; Object ede-proj-project
+;; Object semantic/bovine
 ;; EDE project file.
-(ede-proj-project "ede-proj-project"
+(ede-proj-project "semantic/bovine"
   :name "bovinator"
   :file "Project.ede"
   :targets (list 
@@ -23,7 +23,9 @@
    (ede-proj-target-elisp "languages"
     :name "languages"
     :path ""
-    :source '("semantic-c.el" "semantic-el.el" "semantic-make.el" "semantic-scm.el" "semantic-java.el" "erlang-edoc.el" "semantic-erlang.el")
+    :source '("semantic-c.el" "semantic-el.el" "semantic-make.el" "semantic-scm.el" "semantic-java.el" "semantic-erlang.el" "semantic-gcc.el")
+    :compiler 'ede-emacs-preload-compiler
+    :pre-load-packages '("cedet-compat")
     )
    )
   )

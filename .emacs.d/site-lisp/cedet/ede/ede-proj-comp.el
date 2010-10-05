@@ -1,10 +1,10 @@
 ;;; ede-proj-comp.el --- EDE Generic Project compiler/rule driver
 
-;;;  Copyright (C) 1999, 2000, 2001, 2004  Eric M. Ludlam
+;;;  Copyright (C) 1999, 2000, 2001, 2004, 2005, 2007, 2009, 2010  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
-;; RCS: $Id: ede-proj-comp.el,v 1.7 2004/03/27 02:58:21 zappo Exp $
+;; RCS: $Id: ede-proj-comp.el,v 1.15 2010/03/25 15:07:50 xscript Exp $
 
 ;; This software is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -31,7 +31,7 @@
 ;; source code.  Users can also define new compiler types whenever they
 ;; some customized behavior.
 ;;
-;; The `ede-makefile-rule' class lets users add customized rules into thier
+;; The `ede-makefile-rule' class lets users add customized rules into their
 ;; objects, and also lets different compilers add chaining rules to their
 ;; behaviors.
 ;;
@@ -44,6 +44,7 @@
 ;; To write a method that inserts a variable or rule for a compiler
 ;; based object, wrap the body of your call in `ede-compiler-only-once'
 
+(eval-when-compile (require 'cl))
 (require 'ede)				;source object
 (require 'autoconf-edit)
 
@@ -82,7 +83,7 @@ For example, yacc/lex files need additional chain rules, or inferences.")
 	    :documentation
 	    "The commands used to execute this compiler.
 The object which uses this compiler will place these commands after
-it's rule definition.")
+its rule definition.")
    (autoconf :initarg :autoconf
 	     :initform nil
 	     :type list
@@ -169,7 +170,7 @@ Adds this rule to a .PHONY list."))
 
 (defvar ede-current-build-list nil
   "List of EDE compilers that have already inserted parts of themselves.
-This is used when creating a Makefile to prevend duplicate variables and
+This is used when creating a Makefile to prevent duplicate variables and
 rules from being created.")
 
 (defmethod initialize-instance :AFTER ((this ede-compiler) &rest fields)
@@ -214,6 +215,7 @@ This will prevent rules from creating duplicate variables or rules."
 	    (def-edebug-spec ede-compiler-only-once (form def-body))
 	    (def-edebug-spec ede-linker-begin-unique def-body)
 	    (def-edebug-spec ede-linker-only-once (form def-body))
+	    (def-edebug-spec ede-pmake-insert-variable-shared (form def-body))
 	    ))
 
 ;;; Querys
@@ -242,8 +244,8 @@ This will prevent rules from creating duplicate variables or rules."
 	     ((consp obj)
 	      (autoconf-insert-new-macro (car obj) (cdr obj)))
 	     (t (error "Autoconf directives must be a string, or cons cell")))
-     ))
-  (oref this autoconf))
+     )
+   (oref this autoconf)))
 
 (defmethod ede-proj-flush-autoconf ((this ede-compilation-program))
   "Flush the configure file (current buffer) to accomodate THIS."
@@ -251,16 +253,16 @@ This will prevent rules from creating duplicate variables or rules."
 
 (defmethod ede-proj-makefile-insert-variables ((this ede-compilation-program))
   "Insert variables needed by the compiler THIS."
-  (if (slot-boundp this 'variables)
+  (require 'ede-pmake)
+  (if (eieio-instance-inheritor-slot-boundp this 'variables)
       (with-slots (variables) this
 	(mapcar
 	 (lambda (var)
-	   (insert (car var) "=")
-	  (let ((cd (cdr var)))
-	    (if (listp cd)
-		(mapc (lambda (c) (insert " " c)) cd)
-	      (insert cd)))
-	  (insert "\n"))
+	   (ede-pmake-insert-variable-once (car var)
+	     (let ((cd (cdr var)))
+	       (if (listp cd)
+		   (mapc (lambda (c) (insert " " c)) cd)
+		 (insert cd)))))
 	 variables))))
 
 (defmethod ede-compiler-intermediate-objects-p ((this ede-compiler))
@@ -317,7 +319,7 @@ The object creating makefile rules must call this method for the
 compiler it decides to use after inserting in the rule."
   (when (slot-boundp this 'commands)
     (with-slots (commands) this
-      (mapcar
+      (mapc
        (lambda (obj) (insert "\t"
 			     (cond ((stringp obj)
 				    obj)

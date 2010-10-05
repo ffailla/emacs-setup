@@ -1,10 +1,10 @@
 ;;; semantic-doc.el --- Routines for documentation strings
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2005, 2008, 2009, 2010 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-doc.el,v 1.4 2004/04/28 15:36:40 ponced Exp $
+;; X-RCS: $Id: semantic-doc.el,v 1.17 2010/05/02 12:50:42 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,12 +20,12 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
-;; It is good practice to write documenation for your functions and
+;; It is good practice to write documentation for your functions and
 ;; variables.  These core routines deal with these documentation
 ;; comments or strings.  They can exist either as a tag property
 ;; (:documentation) or as a comment just before the symbol, or after
@@ -36,7 +36,7 @@
 ;;; Code:
 
 ;;;###autoload
-(define-overload semantic-documentation-for-tag (&optional tag nosnarf)
+(define-overloadable-function semantic-documentation-for-tag (&optional tag nosnarf)
   "Find documentation from TAG and return it as a clean string.
 TAG might have DOCUMENTATION set in it already.  If not, there may be
 some documentation in a comment preceding TAG's definition which we
@@ -44,31 +44,49 @@ can look for.  When appropriate, this can be overridden by a language specific
 enhancement.
 Optional argument NOSNARF means to only return the lexical analyzer token for it.
 If nosnarf if 'lex, then only return the lex token."
-  (if (not tag)
-      (setq tag (car (semantic-find-tag-by-overlay nil))))
-  (:override
-   ;; No override.  Try something simple to find documentation nearby
-   (save-excursion
-     (set-buffer (semantic-tag-buffer tag))
-     (semantic-go-to-tag tag)
-     (or
-      ;; Is there doc in the tag???
-      (if (semantic-tag-docstring tag)
-          (if (stringp (semantic-tag-docstring tag))
-              (semantic-tag-docstring tag)
-            (goto-char (semantic-tag-docstring tag))
-            (semantic-doc-snarf-comment-for-tag nosnarf)))
-      ;; Check just before the definition.
-      (save-excursion
-        (re-search-backward comment-start-skip nil t)
-        (if (not (semantic-brute-find-tag-by-position
-                  (point) (current-buffer) t))
-            ;; We found a comment that doesn't belong to the body
-            ;; of a function.
-            (semantic-doc-snarf-comment-for-tag nosnarf)))
-      ;;  Lets look for comments either after the definition, but before code:
-      ;; Not sure yet.  Fill in something clever later....
-      nil))))
+  (if (not tag) (setq tag (semantic-current-tag)))
+  (save-excursion
+    (when (semantic-tag-with-position-p tag)
+      (set-buffer (semantic-tag-buffer tag)))
+    (:override
+     ;; No override.  Try something simple to find documentation nearby
+     (save-excursion
+       (semantic-go-to-tag tag)
+       (let ((doctmp (semantic-tag-docstring tag (current-buffer))))
+	 (or
+	  ;; Is there doc in the tag???
+	  doctmp
+	  ;; Check just before the definition.
+	  (when (semantic-tag-with-position-p tag)
+	    (semantic-documentation-comment-preceeding-tag tag nosnarf))
+	  ;;  Lets look for comments either after the definition, but before code:
+	  ;; Not sure yet.  Fill in something clever later....
+	  nil))))))
+
+;; FIXME this is not how you spell "preceding".
+;;;###autoload
+(defun semantic-documentation-comment-preceeding-tag (&optional tag nosnarf)
+  "Find a comment preceding TAG.
+If TAG is nil.  use the tag under point.
+Searches the space between TAG and the preceding tag for a comment,
+and converts the comment into clean documentation.
+Optional argument NOSNARF with a value of 'lex means to return
+just the lexical token and not the string."
+  (if (not tag) (setq tag (semantic-current-tag)))
+  (save-excursion
+    ;; Find this tag.
+    (semantic-go-to-tag tag)
+    (let* ((starttag (semantic-find-tag-by-overlay-prev
+		      (semantic-tag-start tag)))
+	   (start (if starttag
+		      (semantic-tag-end starttag)
+		    (point-min))))
+      (when (and comment-start-skip
+		 (re-search-backward comment-start-skip start t))
+	;; We found a comment that doesn't belong to the body
+	;; of a function.
+	(semantic-doc-snarf-comment-for-tag nosnarf)))
+    ))
 
 (make-obsolete-overload 'semantic-find-documentation
                         'semantic-documentation-for-tag)
@@ -96,7 +114,9 @@ If NOSNARF is 'lex, then return the lex token."
 	    (setq ct (concat (substring ct 0 (match-beginning 0))
 			     (substring ct (match-end 0)))))
 	  ;; End of a block comment.
-	  (if (and block-comment-end (string-match block-comment-end ct))
+	  (if (and (boundp 'block-comment-end)
+		   block-comment-end
+		   (string-match block-comment-end ct))
 	      (setq ct (concat (substring ct 0 (match-beginning 0))
 			       (substring ct (match-end 0)))))
 	  ;; In case it's a real string, STRIPIT.

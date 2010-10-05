@@ -1,10 +1,10 @@
 ;;; picture-hack.el --- Updates to picture mode
 
-;;; Copyright (C) 2001 Eric M. Ludlam
+;;; Copyright (C) 2001, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: picture
-;; X-RCS: $Id: picture-hack.el,v 1.6 2001/12/05 01:44:54 zappo Exp $
+;; X-RCS: $Id: picture-hack.el,v 1.14 2009/03/31 09:28:02 zappo Exp $
 
 ;; Semantic is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -74,26 +74,62 @@
     :type 'character
     :group 'picture))
 
-;;; Changes to exsiting functions
-;;
-(defun picture-insert-rectangle (rectangle &optional insertp)
+(unless (boundp 'picture-rectangle-ctl)
+  (defcustom picture-rectangle-ctl   ?+
+    "*Character `picture-draw-rectangle' uses for top left corners."
+    :type 'character
+    :group 'picture))
+
+(unless (boundp 'picture-rectangle-ctr)
+  (defcustom picture-rectangle-ctr ?+
+    "*Character `picture-draw-rectangle' uses for top right corners."
+    :type 'character
+    :group 'picture)
+  )
+
+(unless (boundp 'picture-rectangle-cbr)
+  (defcustom picture-rectangle-cbr ?+
+    "*Character `picture-draw-rectangle' uses for bottom right corners."
+    :type 'character
+    :group 'picture)
+  )
+
+(unless (boundp 'picture-rectangle-cbl)
+  (defcustom picture-rectangle-cbl ?+
+    "*Character `picture-draw-rectangle' uses for bottom left corners."
+    :type 'character
+    :group 'picture)
+  )
+
+;;;###autoload
+(defun cogre-picture-insert-rectangle (rectangle)
   "Overlay RECTANGLE with upper left corner at point.
-Optional argument INSERTP, if non-nil causes RECTANGLE to be inserted.
 Leaves the region surrounding the rectangle."
   (let ((indent-tabs-mode nil))
-    (if (not insertp)
-	(save-excursion
-	  (delete-rectangle (point)
-			    (progn
-			      (picture-forward-column
-			       (length (car rectangle)))
-			      (picture-move-down (1- (length rectangle)))
-			      (point)))))
-    ;; This line is different from the one in Emacs 21, and enables
-    ;; the mark to only be pushed if it is interactivly called.
-    (if (interactive-p) (push-mark))
-    (insert-rectangle rectangle)))
 
+    ;; The below is pulled from 'insert-rectangle, and removes the
+    ;; setting of the mark.
+    (let ((lines rectangle)
+	  (insertcolumn (current-column))
+	  (first t))
+      (while lines
+	(or first
+	    (progn
+	      (forward-line 1)
+	      (or (bolp) (insert ?\n))
+	      (move-to-column insertcolumn t)))
+	(setq first nil)
+
+	;; Clear the old text.
+	(if (> (- (point-at-eol) (point)) (length (car lines)))
+	    (delete-char (length (car lines)))
+	  (delete-char (- (point-at-eol) (point))))
+
+	(insert (car lines))
+	(setq lines (cdr lines)))) ))
+
+;;; Changes to exsiting functions
+;;
 (if (condition-case nil
 	(and (clear-rectangle 0 0 t)
 	     nil)
@@ -147,6 +183,21 @@ Apply TEXTPROPERTIES to the character inserted."
 				textproperties))
 	)
       (picture-move))))
+
+(defun picture-mouse-set-point (event)
+  "Move point to the position clicked on, making whitespace if necessary.
+Location is determined from EVENT.
+Different from the default in that it handles hscrolling."
+  (interactive "e")
+  (let* ((pos (posn-col-row (event-start event)))
+	 (hs (window-hscroll))
+	 (x (+ (car pos) hs))
+	 (y (cdr pos))
+	 (current-row (count-lines (window-start) (line-beginning-position))))
+    (unless (equal x (current-column))
+      (picture-forward-column (- x (current-column))))
+    (unless (equal y current-row)
+      (picture-move-down (- y current-row)))))
 
 ;;; New functions
 ;;
@@ -208,13 +259,27 @@ The line is drawn in a rectilinear fashion."
 	  (if (/= y1 y2)
 	      (progn
 		(picture-set-motion ydir 0)
-		(apply 'picture-insert picture-rectangle-ctl 1
-		       textproperties)
+		(apply 'picture-insert
+		       (if (< x1 x2)
+			   (if (< y1 y2)
+			       picture-rectangle-ctr
+			     picture-rectangle-cbr)
+			 (if (< y1 y2)
+			     picture-rectangle-ctl
+			   picture-rectangle-cbl))
+		       1 textproperties)
 		(apply 'picture-insert picture-rectangle-v (1- (abs (- y1 y2)))
 		       textproperties)
 		(picture-set-motion 0 xdir)
-		(apply 'picture-insert picture-rectangle-ctl 1
-		       textproperties)
+		(apply 'picture-insert
+		       (if (< x1 x2)
+			   (if (< y1 y2)
+			       picture-rectangle-cbl
+			     picture-rectangle-ctl)
+			 (if (< y1 y2)
+			     picture-rectangle-cbr
+			   picture-rectangle-ctr))
+		       1 textproperties)
 		;;(setq halfway (1- halfway))
 		)
 	    (apply 'picture-insert picture-rectangle-h 1
@@ -232,13 +297,29 @@ The line is drawn in a rectilinear fashion."
       (if (/= x1 x2)
 	  (progn
 	    (picture-set-motion 0 xdir)
-	    (apply 'picture-insert picture-rectangle-ctl 1
-		   textproperties)
+	    (apply 'picture-insert
+		   (if (< y1 y2)
+		       (if (< x1 x2)
+			   picture-rectangle-cbl
+			 picture-rectangle-cbr
+			 )
+		     (if (< x1 x2)
+			 picture-rectangle-ctl
+		       picture-rectangle-ctr
+		       ))
+		   1 textproperties)
 	    (apply 'picture-insert picture-rectangle-h (1- (abs (- x1 x2)))
 		   textproperties)
 	    (picture-set-motion ydir 0)
-	    (apply 'picture-insert picture-rectangle-ctl 1
-		   textproperties)
+	    (apply 'picture-insert
+		   (if (< y1 y2)
+		       (if (< x1 x2)
+			   picture-rectangle-ctr
+			 picture-rectangle-ctl)
+		     (if (< x1 x2)
+			 picture-rectangle-cbr
+		       picture-rectangle-cbl))
+		   1 textproperties)
 	    ;(setq halfway (1- halfway))
 	    )
 	(apply 'picture-insert picture-rectangle-v 1

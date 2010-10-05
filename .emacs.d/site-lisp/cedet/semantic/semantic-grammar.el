@@ -1,12 +1,12 @@
 ;;; semantic-grammar.el --- Major mode framework for Semantic grammars
 ;;
-;; Copyright (C) 2002, 2003, 2004 David Ponce
+;; Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010 David Ponce
 ;;
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 15 Aug 2002
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-grammar.el,v 1.64 2004/07/20 17:58:03 zappo Exp $
+;; X-RCS: $Id: semantic-grammar.el,v 1.80 2010/08/19 23:28:10 zappo Exp $
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -22,8 +22,8 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -34,14 +34,15 @@
 
 ;;; Code:
 (require 'semantic-wisent)
-(require 'sformat)
 (require 'font-lock)
 (require 'pp)
 
 (eval-when-compile
+  (require 'senator)
   (require 'semantic-edit)
   (require 'semantic-find)
-  (require 'semantic-format))
+  (require 'semantic-format)
+  (require 'semantic-idle))
 
 ;;;;
 ;;;; Set up lexer
@@ -140,7 +141,7 @@ ARGS are ASSOC's key value list."
 ;;;;
 
 (defvar-mode-local semantic-grammar-mode
-  senator-add-log-tokens '(nonterminal put token keyword)
+  senator-add-log-tags '(nonterminal put token keyword)
   "List of nonterminal tags used with add-log.")
 
 (define-mode-local-override semantic-tag-components
@@ -370,7 +371,7 @@ properties where to add new properties."
 
 (defun semantic-grammar-token-%put-properties (tokens)
   "For types found in TOKENS, return properties set by %put statements."
-  (let (found type props)
+  (let (found props)
     (dolist (put (semantic-find-tags-by-class 'put (current-buffer)))
       (dolist (type (cons (semantic-tag-name put)
                           (semantic-tag-get-attribute put :rest)))
@@ -434,7 +435,7 @@ Also load the specified macro libraries."
       ',keywords
       ',(semantic-grammar-keyword-properties keywords))))
 
-(define-overload semantic-grammar-keywordtable-builder ()
+(define-overloadable-function semantic-grammar-keywordtable-builder ()
   "Return the keyword table table value.")
 
 ;;; Token table builder
@@ -446,7 +447,7 @@ Also load the specified macro libraries."
       ',tokens
       ',(semantic-grammar-token-properties tokens))))
 
-(define-overload semantic-grammar-tokentable-builder ()
+(define-overloadable-function semantic-grammar-tokentable-builder ()
   "Return the value of the table of lexical tokens.")
 
 ;;; Parser table builder
@@ -455,7 +456,7 @@ Also load the specified macro libraries."
   "Return the default value of the parse table."
   (error "`semantic-grammar-parsetable-builder' not defined"))
 
-(define-overload semantic-grammar-parsetable-builder ()
+(define-overloadable-function semantic-grammar-parsetable-builder ()
   "Return the parser table value.")
 
 ;;; Parser setup code builder
@@ -464,7 +465,7 @@ Also load the specified macro libraries."
   "Return the default value of the setup code form."
   (error "`semantic-grammar-setupcode-builder' not defined"))
 
-(define-overload semantic-grammar-setupcode-builder ()
+(define-overloadable-function semantic-grammar-setupcode-builder ()
   "Return the parser setup code form.")
 
 ;;;;
@@ -542,15 +543,15 @@ Typically a DEFINE expression should look like this:
       (indent-sexp))))
 
 (defconst semantic-grammar-header-template
-  "\
-;;; %F --- Generated parser support file
+  '("\
+;;; " file " --- Generated parser support file
 
-%C
+" copy "
 
-;; Author: %U <%M>
-;; Created: %D
+;; Author: " user-full-name " <" user-mail-address ">
+;; Created: " date "
 ;; Keywords: syntax
-;; X-RCS: %V
+;; X-RCS: " vcid "
 
 ;; This file is not part of GNU Emacs.
 ;;
@@ -566,29 +567,30 @@ Typically a DEFINE expression should look like this:
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
-;; generated from the grammar file %G.
-
-;;; History:
-;;
+;; generated from the grammar file " gram ".
 
 ;;; Code:
-"
-  "Generated header template.")
+")
+  "Generated header template.
+The symbols in the template are local variables in
+`semantic-grammar-header'")
 
 (defconst semantic-grammar-footer-template
-  "\
+  '("\
 
-\(provide '%L)
+\(provide '" libr ")
 
-;;; %F ends here
-"
-  "Generated footer template.")
+;;; " file " ends here
+")
+  "Generated footer template.
+The symbols in the list are local variables in
+`semantic-grammar-footer'.")
 
 (defun semantic-grammar-copyright-line ()
   "Return the grammar copyright line, or nil if not found."
@@ -611,24 +613,27 @@ Typically a DEFINE expression should look like this:
         ;; generate a new one if not found.
         (copy (or (semantic-grammar-copyright-line)
                   (concat (format-time-string ";; Copyright (C) %Y ")
-                          user-full-name))))
-    (Sformat '((?U user-full-name)
-               (?M user-mail-address)
-               (?F file)
-               (?G gram)
-               (?C copy)
-               (?D date)
-               (?V vcid))
-             semantic-grammar-header-template)))
+                          user-full-name)))
+	(out ""))
+    (dolist (S semantic-grammar-header-template)
+      (cond ((stringp S)
+	     (setq out (concat out S)))
+	    ((symbolp S)
+	     (setq out (concat out (symbol-value S))))))
+    out))
 
 (defun semantic-grammar-footer ()
   "Return text of a generated standard footer."
   (let* ((file (semantic-grammar-buffer-file
                 semantic--grammar-output-buffer))
-         (libr (file-name-sans-extension file)))
-    (Sformat '((?F file)
-               (?L libr))
-             semantic-grammar-footer-template)))
+         (libr (file-name-sans-extension file))
+	 (out ""))
+    (dolist (S semantic-grammar-footer-template)
+      (cond ((stringp S)
+	     (setq out (concat out S)))
+	    ((symbolp S)
+	     (setq out (concat out (symbol-value S))))))
+    out))
 
 (defun semantic-grammar-token-data ()
   "Return the string value of the table of lexical tokens."
@@ -663,7 +668,7 @@ Typically a DEFINE expression should look like this:
                  (car delim-spec) (symbolp (car delim-spec))
                  (cadr delim-spec) (symbolp (cadr delim-spec)))
             delim-spec
-          (error)))
+          (error "Invalid delimiter")))
     (error
      (error "Invalid delimiters specification %s in block token %s"
             (cdr block-spec) (car block-spec)))))
@@ -890,6 +895,8 @@ Lisp code."
         
         )
       
+      (save-buffer 16)
+
       ;; If running in batch mode, there is nothing more to do.
       ;; Save the generated file and quit.
       (if (semantic-grammar-noninteractive)
@@ -897,11 +904,16 @@ Lisp code."
                 (delete-old-versions t)
                 (make-backup-files t)
                 (vc-make-backup-files t))
-            (save-buffer 16)
             (kill-buffer (current-buffer)))
         ;; If running interactively, eval declarations and epilogue
         ;; code, then pop to the buffer visiting the generated file.
         (eval-region (point) (point-max))
+	;; Loop over the defvars and eval them explicitly to force
+	;; them to be evaluated and ready to use.
+        (goto-char (point-min))
+	(while (re-search-forward "(defvar " nil t)
+	  (eval-defun nil))
+	;; Move cursor to a logical spot in the generated code.
         (goto-char (point-min))
         (pop-to-buffer (current-buffer))
         ;; The generated code has been evaluated and updated into
@@ -909,7 +921,7 @@ Lisp code."
         ;; have created this language for, and force them to call our
         ;; setup function again, refreshing all semantic data, and
         ;; enabling them to work with the new code just created.
-;;;; FIXME?
+
         ;; At this point, I don't know any user's defined setup code :-(
         ;; At least, what I can do for now, is to run the generated
         ;; parser-install function.
@@ -921,7 +933,7 @@ Lisp code."
     output))
 
 (defun semantic-grammar-recreate-package ()
-  "Unconditionnaly create Lisp code from grammar in current buffer.
+  "Unconditionally create Lisp code from grammar in current buffer.
 Like \\[universal-argument] \\[semantic-grammar-create-package]."
   (interactive)
   (semantic-grammar-create-package t))
@@ -973,6 +985,7 @@ See also the variable `semantic-grammar-file-regexp'."
         ;; Remove vc from find-file-hooks.  It causes bad stuff to
         ;; happen in Emacs 20.
         (find-file-hooks (delete 'vc-find-file-hook find-file-hooks)))
+    (message "Compiling Grammars from: %s" (locate-library "semantic-grammar"))
     (dolist (arg command-line-args-left)
       (unless (and arg (file-exists-p arg))
         (error "Argument %s is not a valid file name" arg))
@@ -1298,7 +1311,7 @@ the change bounds to encompass the whole nonterminal tag."
   (add-hook 'semantic-edits-new-change-hooks
             'semantic-grammar-edits-new-change-hook-fcn
             nil t)
-  (run-hooks 'semantic-grammar-mode-hook))
+  (semantic-run-mode-hooks 'semantic-grammar-mode-hook))
 
 ;;;;
 ;;;; Useful commands
@@ -1456,10 +1469,9 @@ expression then Lisp symbols are completed."
              (message "Symbols is already complete"))
             ((and (stringp ans) (string= ans sym))
              ;; Max matchable.  Show completions.
-             (let ((all (all-completions sym nonterms)))
-               (with-output-to-temp-buffer "*Completions*"
-                 (display-completion-list (all-completions sym nonterms)))
-               ))
+	     (with-output-to-temp-buffer "*Completions*"
+	       (display-completion-list (all-completions sym nonterms)))
+	     )
             ((stringp ans)
              ;; Expand the completions
              (forward-sexp -1)
@@ -1510,7 +1522,7 @@ library found in DEF."
           (list mac lib))))
 
 (defun semantic--grammar-macro-compl-dict ()
-  "Return a completion dictionnary of macro definitions."
+  "Return a completion dictionary of macro definitions."
   (let ((defs (semantic-grammar-macros))
         def dups dict)
     (while defs
@@ -1579,6 +1591,7 @@ Select the buffer containing the tag's definition, and move point there."
     ("INCLUDE-TAG" . "(INCLUDE-TAG <name> <system-flag> [ :key value ]*)")
     ("PACKAGE-TAG" . "(PACKAGE-TAG <name> <detail> [ :key value ]*)")
     ("CODE-TAG" . "(CODE-TAG <name> <detail> [ :key value ]*)")
+    ("ALIAS-TAG" . "(ALIAS-TAG <name> <aliasclass> <definition> [:key value]*)")
     ;; Special value macros
     ("$1" . "Match Value: Value from match list in slot 1")
     ("$2" . "Match Value: Value from match list in slot 2")
@@ -1635,8 +1648,16 @@ EXPANDER is the name of the function that expands MACRO."
        (t
         (setq doc (eldoc-function-argstring expander))))
       (when doc
-        (setq doc (eldoc-docstring-format-sym-doc
-                   macro (format "==> %s %s" expander doc)))
+        (setq doc
+	      (condition-case nil
+		  (eldoc-docstring-format-sym-doc
+                   macro (format "==> %s %s" expander doc)
+		   'default)
+		;; Older emacsen w/out the third arg here.
+		(error
+		 (eldoc-docstring-format-sym-doc
+		  macro (format "==> %s %s" expander doc)))))
+		
         (eldoc-last-data-store expander doc 'function))
       doc)))
 
@@ -1685,38 +1706,51 @@ Only tags of type 'nonterminal will be so marked."
 (define-mode-local-override semantic-ctxt-current-function
   semantic-grammar-mode (&optional point)
   "Determine the name of the current function at POINT."
-  (if (semantic-grammar-in-lisp-p)
+  (save-excursion
+    (and point (goto-char point))
+    (when (semantic-grammar-in-lisp-p)
       (with-mode-local emacs-lisp-mode
-	(semantic-ctxt-current-function point))
-    nil
-    ))
+        (semantic-ctxt-current-function)))))
 
 (define-mode-local-override semantic-ctxt-current-argument
   semantic-grammar-mode (&optional point)
   "Determine the argument index of the called function at POINT."
-  (if (semantic-grammar-in-lisp-p)
+  (save-excursion
+    (and point (goto-char point))
+    (when (semantic-grammar-in-lisp-p)
       (with-mode-local emacs-lisp-mode
-	(semantic-ctxt-current-argument point))
-    nil
-    ))
+        (semantic-ctxt-current-argument)))))
 
 (define-mode-local-override semantic-ctxt-current-assignment
   semantic-grammar-mode (&optional point)
   "Determine the tag being assigned into at POINT."
-  (if (semantic-grammar-in-lisp-p)
+  (save-excursion
+    (and point (goto-char point))
+    (when (semantic-grammar-in-lisp-p)
       (with-mode-local emacs-lisp-mode
-	(semantic-ctxt-current-assignment point))
-    nil
-    ))
+        (semantic-ctxt-current-assignment)))))
 
 (define-mode-local-override semantic-ctxt-current-class-list
   semantic-grammar-mode (&optional point)
   "Determine the class of tags that can be used at POINT."
-  (if (semantic-grammar-in-lisp-p)
-      (with-mode-local emacs-lisp-mode
-	(semantic-ctxt-current-class-list point))
-    '(nonterminal keyword)
-    ))
+  (save-excursion
+    (and point (goto-char point))
+    (if (semantic-grammar-in-lisp-p)
+        (with-mode-local emacs-lisp-mode
+          (semantic-ctxt-current-class-list))
+      '(nonterminal keyword))))
+
+(define-mode-local-override semantic-ctxt-current-mode
+  semantic-grammar-mode (&optional point)
+  "Return the major mode active at POINT.
+POINT defaults to the value of point in current buffer.
+Return `emacs-lisp-mode' is POINT is within Lisp code, otherwise
+return the current major mode."
+  (save-excursion
+    (and point (goto-char point))
+    (if (semantic-grammar-in-lisp-p)
+        'emacs-lisp-mode
+      (semantic-ctxt-current-mode-default))))
 
 (define-mode-local-override semantic-format-tag-abbreviate
   semantic-grammar-mode (tag &optional parent color)
@@ -1817,10 +1851,8 @@ Optional argument COLOR determines if color is added to the text."
 	(semantic-analyze-current-context point))
 
     (let* ((context-return nil)
-	   (startpoint (point))
-	   (prefixandbounds (semantic-analyze-calculate-bounds))
+	   (prefixandbounds (semantic-ctxt-current-symbol-and-bounds))
 	   (prefix (car prefixandbounds))
-	   (endsym (nth 1 prefixandbounds))
 	   (bounds (nth 2 prefixandbounds))
 	   (prefixsym nil)
 	   (prefixclass (semantic-ctxt-current-class-list))
@@ -1837,8 +1869,6 @@ Optional argument COLOR determines if color is added to the text."
 	     "context-for-semantic-grammar"
 	     :buffer (current-buffer)
 	     :scope nil
-	     :scopetypes nil
-	     :localvariables nil
 	     :bounds bounds
 	     :prefix (if prefixsym
 			 (list prefixsym)
@@ -1855,8 +1885,7 @@ Optional argument COLOR determines if color is added to the text."
   (if (semantic-grammar-in-lisp-p)
       (with-mode-local emacs-lisp-mode
 	(semantic-analyze-possible-completions context))
-    (save-excursion
-      (set-buffer (oref context buffer))
+    (with-current-buffer (oref context buffer)
       (let* ((prefix (car (oref context :prefix)))
 	     (completetext (cond ((semantic-tag-p prefix)
 				  (semantic-tag-name prefix))
@@ -1866,7 +1895,7 @@ Optional argument COLOR determines if color is added to the text."
 				  (car prefix))))
 	     (tags (semantic-find-tags-for-completion completetext
 						      (current-buffer))))
-	(semantic-analyze-tags-of-class-list 
+	(semantic-analyze-tags-of-class-list
 	 tags (oref context prefixclass)))
       )))
 

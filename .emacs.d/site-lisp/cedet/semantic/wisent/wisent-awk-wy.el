@@ -3,7 +3,7 @@
 ;; Copyright (C) 2002 David Ponce
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:31-0400
+;; Created: 2010-08-22 20:55:17-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file wisent-awk.wy.
-
-;;; History:
-;;
 
 ;;; Code:
 

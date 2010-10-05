@@ -9,8 +9,7 @@
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (setenv "PATH" (concat (getenv "PATH") ":/opt/local/bin:/usr/local/bin"))
-(setq exec-path (append exec-path '("/opt/local/bin")))
-(setq exec-path (append exec-path '("/usr/local/bin")))
+(setq exec-path (append exec-path '("/opt/local/bin" "/usr/local/bin")))
 
 ;;; This was installed by package-install.el.
 ;;; This provides support for the package system and
@@ -28,7 +27,6 @@
 ;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
-;(setq inferior-lisp-program "/opt/sbcl/bin/sbcl") ; your Lisp system
 (setq inferior-lisp-program "/opt/local/bin/lisp")
 (require 'slime)
 (slime-setup '(slime-repl slime-fuzzy))
@@ -49,15 +47,16 @@
 ;;  * http://github.com/technomancy/clojure-mode
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/clojure-mode/")
-(require 'clojure-mode)
-(require 'clojure-test-mode)
+(autoload 'clojure-mode "clojure-mode" nil t)
+(autoload 'clojure-test-mode "clojure-test-mode" nil t)
 
 ;;  
 ;; auto-complete
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-complete/")
 (require 'auto-complete-config)
-(autoload 'ac-config-load "auto-complete-config" t)
+;;(autoload 'auto-complete-config "auto-complete-config" nil t)
+(autoload 'ac-config-load "auto-complete-config" nil t)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
 (ac-config-default)
 
@@ -76,36 +75,37 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/highlight-parentheses/")
 (require 'highlight-parentheses)
 (setq hl-paren-colors
-      '(;"#8f8f8f" ; this comes from Zenburn
-                   ; and I guess I'll try to make the far-outer parens look likethis
-        ;"orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
+      '(;;"orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
+	"grey55" "#7F9F7F" "#8CD0D3" "#DCA3A3" "#385F38" "#F0DFAF" "#BCA3A3" "#C0BED1" "#FFCFAF" "#F0EFD0" "#F0DFAF" "#DFCFAF"
+	
+	"brown" "Darkblue" "darkgray" "darkgreen" "darkcyan" "darkred" "darkmagenta" "brown" "gray" "black" "darkmagenta" "Darkblue" "darkgreen" "darkcyan" "darkred" "red"
+	
 	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154" 
-	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
-	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
-	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154"
 ))
 
 ;;
 ;; setup clojure-mode hook
 ;;
 (defun clojure-mode-setup ()
+  (show-paren-mode t)
   (highlight-parentheses-mode t)
   (paredit-mode t))
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
-;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
+(add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 ;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
+;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
 ;;
 ;; nxml-mode
 ;;  * http://www.thaiopensource.com/nxml-mode/
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/nxml-mode/")
-(load "~/.emacs.d/site-lisp/nxml-mode/rng-auto.el")
+(autoload 'nxml-mode "nxml-mode" nil t)
 (setq auto-mode-alist
-        (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
-	      auto-mode-alist))
+      (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
+	    auto-mode-alist))
 (unify-8859-on-decoding-mode)
 
 ;;
@@ -133,43 +133,12 @@ by using nxml's indentation rules."
   (pprint-xml-region (point-min) (point-max)))
 
 ;;
-;; slime java helers
-;;
-(defun slime-java-describe (symbol-name)
-  "Get details on Java class/instance at point."
-  (interactive (list (slime-read-symbol-name "Java Class/instance: ")))
-  (when (not symbol-name)
-    (error "No symbol given"))
-  (save-excursion
-    (set-buffer (slime-output-buffer))
-    (unless (eq (current-buffer) (window-buffer))
-      (pop-to-buffer (current-buffer) t))
-    (goto-char (point-max))
-    (insert (concat "(require 'clojure.contrib.repl-utils)" "\n" "(clojure.contrib.repl-utils/show " symbol-name ")"))
-    (when symbol-name
-      (slime-repl-return)
-      (other-window 1))))
-
-(defun slime-javadoc (symbol-name)
-  "Get JavaDoc documentation on Java class at point."
-  (interactive (list (slime-read-symbol-name "JavaDoc info for: ")))
-  (when (not symbol-name)
-    (error "No symbol given"))
-  (set-buffer (slime-output-buffer))
-  (unless (eq (current-buffer) (window-buffer))
-    (pop-to-buffer (current-buffer) t))
-  (goto-char (point-max))
-  (insert (concat "(require 'clojure.contrib.repl-utils)" "\n" "(clojure.contrib.repl-utils/javadoc " symbol-name ")"))
-  (when symbol-name
-    (slime-repl-return)
-    (other-window 1)))
-
-;;
 ;; emacs-nav
 ;;  * http://code.google.com/p/emacs-nav/
 ;;  * hg clone https://emacs-nav.googlecode.com/hg/ emacs-nav
+;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-nav/")
-(require 'nav)
+(autoload 'nav "nav" nil t)
 
 ;;
 ;; magit
@@ -177,10 +146,12 @@ by using nxml's indentation rules."
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/magit/")
 (require 'magit)
+;;(autoload 'magit "magit" nil t)
 
 ;;
 ;; log4j mode
 ;;  * http://log4j-mode.sourceforge.net/
+;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/log4j-mode/")
 (autoload 'log4j-mode "log4j-mode" "Major mode for viewing log files." t)
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))
@@ -189,15 +160,17 @@ by using nxml's indentation rules."
 ;; javascript mode
 ;;  * http://www.emacswiki.org/emacs/JavaScriptMode
 ;;  * http://www.brgeight.se/downloads/emacs/javascript.el
+;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/javascript/")
 (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 (autoload 'javascript-mode "javascript" nil t)
 
 ;; org-mode
 ;;  * http://orgmode.org/
+;;
 (setq load-path (cons "~/.emacs.d/site-lisp/org-mode/lisp" load-path))
 (setq load-path (cons "~/.emacs.d/site-lisp/org-mode/contrib/lisp" load-path))
-(require 'org-install)
+(require 'org-install)  ; org-install.el only has autoloads
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
@@ -213,20 +186,16 @@ by using nxml's indentation rules."
 (require 'save-visited-files)
 (turn-on-save-visited-files-mode)
 
-;;labrepl
-;;(setq inferior-lisp-program "script/swank")
-;;(setq load-path (append (list "/Users/ffailla/dev/labrepl")))
-;;(setq load-path (cons "~/dev/org-mode/lisp" "/opt/local/bin" load-path))
-
 ;;
 ;; jdee
 ;;  * http://jdee.sourceforge.net/
 ;; 
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/jdee/lisp"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/cedet/common"))
-(load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
-(require 'jde)
+(autoload 'cedet "cedet" nil t)
+(autoload 'jde "jde" nil t)
+(add-to-list 'auto-mode-alist '("\\.java\\'" . jde))
 
 ;;
 ;; diff-mode customization
@@ -263,12 +232,11 @@ by using nxml's indentation rules."
 ;;
 ;; csharpmode
 ;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
-;;
+;;  * find . -name "*.cs" -print | etags -
 (add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist
       (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
-;find . -name "*.cs" -print | etags -
 
 ;(defun my-csharp-mode-fn ()
 ;  "function that runs when csharp-mode is initialized for a buffer."
@@ -277,10 +245,11 @@ by using nxml's indentation rules."
 ;  )
 ;(add-hook  'csharp-mode-hook 'my-csharp-mode-fn t)
 
-
 ;;
 ;; sql-mode / jisql
 ;;  * http://www.xigole.com/software/jisql/jisql.jsp
+;;
+(setq exec-path (append exec-path '("~/.emacs.d/site-lisp/jisql")))
 (defun my-sql-save-history-hook ()
   (let ((lval 'sql-input-ring-file-name)
 	(rval 'sql-product))
@@ -291,10 +260,9 @@ by using nxml's indentation rules."
 		       "-history.sql")))
 	  (set (make-local-variable lval) filename))
       (error
-         (format "SQL history will not be saved because %s is nil"
-                 (symbol-name rval))))))
+       (format "SQL history will not be saved because %s is nil"
+	       (symbol-name rval))))))
 (add-hook 'sql-interactive-mode-hook 'my-sql-save-history-hook)
-(setq exec-path (append exec-path '("~/.emacs.d/site-lisp/jisql")))
 
 ;;(defun sql-add-newline-first (output)
 ;;  "Add newline to beginning of OUTPUT for `comint-preoutput-filter-functions'"
@@ -312,7 +280,24 @@ by using nxml's indentation rules."
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
 (require 'ess-site)
+(autoload 'ess-site "ess-site" nil t)
+(add-to-list 'auto-mode-alist '("\\.R\\'" . ess-site))
 ;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
+
+;;
+;; cdt
+;;  * http://georgejahad.com/clojure/emacs-cdt.html
+;;  * git://github.com/GeorgeJahad/cdt.git
+;;
+(progn
+  (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
+  (setq cdt-source-path 
+	(reduce (lambda (acc f)
+		  (concat (expand-file-name acc) ":" (expand-file-name f)))
+		'("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
+  (load-file (format "%s/ide/emacs/cdt.el" cdt-dir)))
 
 ;;
 ;; start emacs server

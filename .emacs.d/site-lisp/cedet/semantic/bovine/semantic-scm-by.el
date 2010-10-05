@@ -1,9 +1,9 @@
 ;;; semantic-scm-by.el --- Generated parser support file
 
-;; Copyright (C) 2001, 2003 Eric M. Ludlam
+;; Copyright (C) 2001, 2003, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:46-0400
+;; Created: 2010-08-22 20:55:25-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file scheme.by.
-
-;;; History:
-;;
 
 ;;; Code:
 
@@ -179,6 +176,7 @@
      (symbol)
      (semantic-list)
      (string)
+     (number)
      ) ;; end expression
     )
   "Parser table.")

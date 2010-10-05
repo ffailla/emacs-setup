@@ -1,11 +1,11 @@
 ;;; cedet-autogen.el --- Generate autoloads for CEDET libraries
 
-;; Copyright (C) 2003, 2004 David Ponce
+;; Copyright (C) 2003, 2004, 2008 David Ponce
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Created: 22 Aug 2003
 ;; Keywords: maint
-;; X-CVS: $Id: cedet-autogen.el,v 1.5 2004/03/11 01:34:03 zappo Exp $
+;; X-CVS: $Id: cedet-autogen.el,v 1.8 2008/07/03 02:06:19 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -21,8 +21,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -70,11 +70,13 @@ replaced with side effect by an equivalent known form before calling
 the true `make-autoload' function."
   (if (consp (ad-get-arg 0))
       (let* ((form (ad-get-arg 0))
+	     (file (ad-get-arg 1))
              (car (car-safe form))
              name args doc
              )
         (cond
-         ((eq car 'define-overload)
+         ((or (eq car 'define-overload)
+	      (eq car 'define-overloadable-function))
           (setcar form 'defun)
           )
          ((eq car 'defmethod)
@@ -91,8 +93,11 @@ the true `make-autoload' function."
           (setq name (nth 1 form)
                 args (nth 2 form)
                 doc  (nth 4 form))
-          (setcar form 'defun)
-          (setcdr form (list name args (if (stringp doc) doc)))
+	  ;; @todo - use eieio-defclass-autoload instead.
+          ;(setcar form 'defun)
+          ;(setcdr form (list name args (if (stringp doc) doc)))
+	  (setcar form 'eieio-defclass-autoload)
+	  (setcdr form (list (list 'quote name) (list 'quote args) file doc))
           ))
         )))
 

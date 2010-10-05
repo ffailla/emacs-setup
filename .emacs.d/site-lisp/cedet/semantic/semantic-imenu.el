@@ -1,11 +1,11 @@
 ;;; semantic-imenu.el --- Use Semantic as an imenu tag generator
 
-;;; Copyright (C) 2000, 2001, 2002, 2003, 2004 Paul Kinnucan & Eric Ludlam
+;;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2010 Paul Kinnucan & Eric Ludlam
 ;;; Copyright (C) 2001, 2002, 2003 Eric Ludlam
 
 ;; Created By: Paul Kinnucan
 ;; Maintainer: Eric Ludlam
-;; X-RCS: $Id: semantic-imenu.el,v 1.51 2004/03/21 07:45:33 ponced Exp $
+;; X-RCS: $Id: semantic-imenu.el,v 1.61 2010/07/24 11:55:22 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -21,8 +21,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -38,6 +38,7 @@
 
 (require 'semantic)
 (require 'semantic-format)
+(require 'working)
 (eval-when-compile
   (condition-case nil
       (require 'imenu)
@@ -73,6 +74,7 @@
   :group 'imenu
   )
 
+;;;###autoload
 (defcustom semantic-imenu-summary-function 'semantic-format-tag-abbreviate
   "*Function to use when creating items in Imenu.
 Some useful functions are found in `semantic-format-tag-functions'."
@@ -80,6 +82,7 @@ Some useful functions are found in `semantic-format-tag-functions'."
   :type semantic-format-tag-custom-list)
 (make-variable-buffer-local 'semantic-imenu-summary-function)
 
+;;;###autoload
 (defcustom semantic-imenu-bucketize-file t
   "*Non-nil if tags in a file are to be grouped into buckets."
   :group 'semantic-imenu
@@ -100,6 +103,7 @@ This option is ignored if `semantic-imenu-bucketize-file' is nil."
   :type 'boolean)
 (make-variable-buffer-local 'semantic-imenu-buckets-to-submenu)
 
+;;;###autoload
 (defcustom semantic-imenu-expand-type-members t
   "*Non-nil if types should have submenus with members in them."
   :group 'semantic-imenu
@@ -114,7 +118,7 @@ nil means to keep them in the same order.
 Overriden to nil if `semantic-imenu-bucketize-file' is nil."
   :group 'semantic-imenu
   :type 'boolean)
-(make-variable-buffer-local 'semantic-imenu-bucketize-type-parts)
+(make-variable-buffer-local 'semantic-imenu-bucketize-type-members)
 (semantic-varalias-obsolete 'semantic-imenu-bucketize-type-parts
                             'semantic-imenu-bucketize-type-members)
 
@@ -134,7 +138,7 @@ See `semantic-bucketize' and the FILTER argument for more details on this functi
 		(function)))
 (make-variable-buffer-local 'semantic-imenu-sort-bucket-function)
 
-(defcustom semantic-imenu-index-directory t
+(defcustom semantic-imenu-index-directory nil
   "*Non nil to index the entire directory for tags.
 Doesn't actually parse the entire directory, but displays tags for all files
 currently listed in the current Semantic database.
@@ -142,7 +146,7 @@ This variable has no meaning if semanticdb is not active."
   :group 'semantic-imenu
   :type 'boolean)
 
-(defcustom semantic-imenu-auto-rebuild-directory-indexes t
+(defcustom semantic-imenu-auto-rebuild-directory-indexes nil
   "*If non-nil automatically rebuild directory index imenus.
 That is when a directory index imenu is updated, automatically rebuild
 other buffer local ones based on the same semanticdb."
@@ -155,13 +159,15 @@ other buffer local ones based on the same semanticdb."
 (defvar semantic-imenu-auto-rebuild-running nil
   "Non-nil if `semantic-imenu-rebuild-directory-indexes' is running.")
 
-(defvar semantic-imenu-expandable-tag-class 'type
-  "Tags of this class will be given submenu with children.
-By default, a `type' has interesting children.  In Texinfo, however,
-a `section' has interesting children.")
-(make-variable-buffer-local 'semantic-imenu-expandable-tag)
+;;;###autoload
+(defvar semantic-imenu-expandable-tag-classes '(type)
+  "List of expandable tag classes.
+Tags of those classes will be given submenu with children.
+By default, a `type' has interesting children.  In Texinfo, however, a
+`section' has interesting children.")
+(make-variable-buffer-local 'semantic-imenu-expandable-tag-classes)
 (semantic-varalias-obsolete 'semantic-imenu-expandable-token
-                            'semantic-imenu-expandable-tag-class)
+                            'semantic-imenu-expandable-tag-classes)
 
 ;;; Code:
 (defun semantic-imenu-tag-overlay (tag)
@@ -189,7 +195,9 @@ Optional argument REST is some extra stuff."
 	    (progn
 	      (if (not (eq ob (current-buffer)))
 		  (switch-to-buffer ob))
-	      (imenu-default-goto-function name os rest))
+	      (imenu-default-goto-function name os rest)
+	      (pulse-momentary-highlight-one-line (point))
+	      )
 	  ;; This should never happen, but check anyway.
 	  (message "Imenu is out of date, try again. (internal bug)")
 	  (setq imenu--index-alist nil)))
@@ -199,18 +207,25 @@ Optional argument REST is some extra stuff."
 	(let ((file (aref position 0))
 	      (pos (aref position 1)))
 	  (and file (find-file file))
-	  (imenu-default-goto-function name pos rest))
+	  (imenu-default-goto-function name pos rest)
+	  (pulse-momentary-highlight-one-line (point))
+	  )
       ;; When the POSITION is the symbol 'file-only' it means that this
       ;; is a directory index entry and there is no tags in this
       ;; file. So just jump to the beginning of the file.
       (if (eq position 'file-only)
 	  (progn
 	    (find-file name)
-	    (imenu-default-goto-function name (point-min) rest))
+	    (imenu-default-goto-function name (point-min) rest)
+	    (pulse-momentary-highlight-one-line (point))
+	    )
         ;; Probably POSITION don't came from a semantic imenu.  Try
         ;; the default imenu goto function.
         (condition-case nil
-            (imenu-default-goto-function name position rest)
+	    (progn
+	      (imenu-default-goto-function name position rest)
+	      (pulse-momentary-highlight-one-line (point))
+	      )
           (error
            (message "Semantic Imenu override problem. (Internal bug)")
            (setq imenu--index-alist nil)))))
@@ -240,9 +255,9 @@ Optional argument STREAM is an optional stream of tags used to create menus."
                (featurep 'semanticdb)
                (semanticdb-minor-mode-p))
           (semantic-create-imenu-directory-index
-	   (or stream (semantic-fetch-tags)))
+	   (or stream (semantic-fetch-tags-fast)))
         (semantic-create-imenu-index-1
-	 (or stream (semantic-fetch-tags)) nil))
+	 (or stream (semantic-fetch-tags-fast)) nil))
     (semantic-make-local-hook 'semantic-after-toplevel-cache-change-hook)
     (add-hook 'semantic-after-toplevel-cache-change-hook
               'semantic-imenu-flush-fcn nil t)
@@ -343,8 +358,8 @@ Optional argument PARENT is a tag parent of STREAM."
 			  (append index
 				  ;; do not create a menu separator in the parent menu
 				  ;; when creating a sub-menu
-				  (if (eq (semantic-tag-class (car item))
-					  semantic-imenu-expandable-tag-class)
+				  (if (memq (semantic-tag-class (car item))
+                                            semantic-imenu-expandable-tag-classes)
 				      (semantic-create-imenu-subindex item)
 				    (cons
 				     '("---")
@@ -369,8 +384,8 @@ Optional argument PARENT is a tag parent of STREAM."
       (setq tag (car tags)
 	    children (semantic-tag-components-with-overlays tag))
       (if (and (not notypecheck)
-               (eq (semantic-tag-class tag)
-                   semantic-imenu-expandable-tag-class)
+               (memq (semantic-tag-class tag)
+                     semantic-imenu-expandable-tag-classes)
 	       children
                )
           ;; to keep an homogeneous menu organisation, type menu items
@@ -443,8 +458,9 @@ Optional argument PARENT is a tag parent of STREAM."
                            'semantic-create-imenu-index)
                        semanticdb-current-database
                        (eq semanticdb-current-database db))
-              (message "Building %s Semantic directory index imenu"
-                       (buffer-name b))
+              (working-temp-message
+               "Building %s Semantic directory index imenu"
+               (buffer-name b))
               ;; Rebuild the imenu
               (imenu--cleanup)
               (setq imenu--index-alist nil)
@@ -456,7 +472,7 @@ Optional argument PARENT is a tag parent of STREAM."
                  'imenu-update-menubar))))))))
 
 (defun semantic-imenu-semanticdb-hook ()
-  "Function to be called from `semanticdb-mode-hooks'.
+  "Function to be called from `semanticdb-mode-hook'.
 Clears all imenu menus that may be depending on the database."
   (semantic-map-buffers
    #'(lambda ()
@@ -466,7 +482,7 @@ Clears all imenu menus that may be depending on the database."
        ;; Clear imenu cache to redraw the imenu.
        (semantic-imenu-flush-fcn))))
 
-(add-hook 'semanticdb-mode-hooks 'semantic-imenu-semanticdb-hook)
+(add-hook 'semanticdb-mode-hook 'semantic-imenu-semanticdb-hook)
 
 ;;; Interactive Utilities
 ;;
@@ -515,10 +531,11 @@ in which case it concatenates them together."
   (cond ((eq (length taglist) 1)
 	 (semantic-format-tag-abbreviate
           (car taglist) nil semantic-which-function-use-color))
-	((eq (semantic-tag-class (car taglist))
-	     semantic-imenu-expandable-tag-class)
+	((memq (semantic-tag-class (car taglist))
+               semantic-imenu-expandable-tag-classes)
 	 (concat (semantic-format-tag-name
-                  (car taglist) semantic-which-function-use-color) "."
+                  (car taglist) nil semantic-which-function-use-color)
+		 (car semantic-type-relation-separator-character)
 		 ;; recurse until we no longer have a type
 		 ;; or any tags left.
 		 (semantic-default-which-function (cdr taglist))))

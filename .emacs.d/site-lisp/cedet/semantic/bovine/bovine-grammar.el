@@ -1,12 +1,12 @@
 ;;; bovine-grammar.el --- Bovine's input grammar mode
 ;;
-;; Copyright (C) 2002, 2003, 2004 David Ponce
+;; Copyright (C) 2002, 2003, 2004, 2007, 2009 David Ponce
 ;;
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 26 Aug 2002
 ;; Keywords: syntax
-;; X-RCS: $Id: bovine-grammar.el,v 1.18 2004/03/20 00:16:51 zappo Exp $
+;; X-RCS: $Id: bovine-grammar.el,v 1.21 2009/01/10 00:16:26 zappo Exp $
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -22,8 +22,8 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -63,7 +63,7 @@ expanded from elsewhere."
       (setq inplace t)
       )))
   (let ((macro (assq (car form) bovine--grammar-macros))
-        inlist first n q x val)
+        inlist first n q x)
     (if macro
         (bovine-grammar-expand-form
          (apply (cdr macro) (cdr form))
@@ -126,7 +126,7 @@ expanded from elsewhere."
                     (insert ")")
                     (setq inlist nil)))
                   (insert "\n(nth " (int-to-string
-                                     (1- (string-to-int
+                                     (1- (string-to-number
                                           (substring n 1))))
                           " vals)")
                   (and (not x) (not inplace)
@@ -305,7 +305,7 @@ manual."
                   (insert (semantic-grammar-item-text item)))
                  ))))
           (if prec
-              (message "%prec %S ignored" prec))
+              (message "%%prec %S ignored" prec))
           (if actn
               (bovine-grammar-expand-action actn quotemode))
           (insert ")"))

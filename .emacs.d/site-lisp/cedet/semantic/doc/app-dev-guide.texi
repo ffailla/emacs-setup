@@ -25,7 +25,7 @@
 @copying
 This manual documents Application Development with Semantic.
 
-Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010 Eric M. Ludlam
 Copyright @copyright{} 2001, 2002, 2003, 2004 David Ponce
 Copyright @copyright{} 2002, 2003 Richard Y. Kim
 
@@ -88,7 +88,7 @@ Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004 @value{AUTHOR}
 A @semantic{} application takes the semantic tags generated
 by semantic parsers then provides useful services to the user.
 For a list of such applications,
-@inforef{the Semantic User's Guide, , semantic-user}.
+@inforef{top, the Semantic User's Guide , semantic-user}.
 
 An application developer needs to know
 @itemize @bullet
@@ -97,23 +97,25 @@ An application developer needs to know
 @item how to access information about each tag.
 @end itemize
 
-This chapter describes @semantic{} fuctions and concepts an application
+This chapter describes @semantic{} functions and concepts an application
 developer needs to know to perform all of the tasks just listed.
 
 @menu
 * Semantic Tags::               
 * Searching Tag Tables::        Searching tag tables.
 * Tags at Point::               Finding tags at point.
+* Tag Decoration::              Decorating tags
 * Tag Sorting::                 Reorganizing streams.
 * Tag Completion::              Completing read functions.
 * Override Methods::            Language dependent functions covering
                                 conversion to text strings, language dependent
                                 queries and local context information
 * Parser Features::             Application available parser features.
-* Semantic Database::           Persistant storage of tags.
+* Semantic Database::           Persistent storage of tags.
 * Idle Scheduling::             Scheduling jobs in idle time.
 * Example Programs::            Simple programming examples.
-* Current Context::             
+* Current Context::             Local context analysis.
+* Data Debugger::               Application Debugger
 * GNU Free Documentation License::  
 * Index::                       
 @end menu
@@ -126,7 +128,7 @@ developer needs to know to perform all of the tasks just listed.
 @node Searching Tag Tables
 @chapter Searching Tag Tables
 
-These functions take some key, and returns information found in a tag
+These functions take some key, and return information found in a tag
 table.  Some will return one tag (the first matching item found.)
 Others will return a list of all items matching a given criterion.
 Most of these functions work regardless of a buffer being in memory or
@@ -135,6 +137,9 @@ not.
 Any specialty search routine that claims to use a function that is an
 overload method will need to execute in a buffer of the same mode as
 the tags being searched.
+
+If you are looking for a search across multiple files, see
+@ref{Semantic Database}.
 
 @menu
 * Breadth Search::              Searching only one level of tags.
@@ -248,7 +253,7 @@ Optional argument @var{SEARCH-PARTS} and @var{SEARCH-INCLUDES} are passed to
 @end defun
 
 @defun semantic-brute-find-tag-by-position position streamorbuffer &optional nomedian
-Find a nonterminal covering @var{POSITION} within @var{STREAMORBUFFER}.
+Find a token covering @var{POSITION} within @var{STREAMORBUFFER}.
 @var{POSITION} is a number, or marker.  If @var{NOMEDIAN} is non-@code{nil}, don't do
 the median calculation, and return nil.
 
@@ -315,7 +320,7 @@ and is obsolete.
 @end defun
 
 @defun semantic-brute-find-first-tag-by-function function streamorbuffer &optional search-parts search-includes
-Find the first nonterminal which @var{FUNCTION} match within @var{STREAMORBUFFER}.
+Find the first tag which @var{FUNCTION} match within @var{STREAMORBUFFER}.
 @var{FUNCTION} must return non-@code{nil} if an element of @var{STREAM} will be included
 in the new list.
 
@@ -347,7 +352,7 @@ Used in completion.
 
 @defun semantic-find-tags-by-scope-protection scopeprotection parent &optional table
 @anchor{semantic-find-tags-by-scope-protection}
-Find all tags accessable by @var{SCOPEPROTECTION}.
+Find all tags accessible by @var{SCOPEPROTECTION}.
 @var{SCOPEPROTECTION} is a symbol which can be returned by the method
 @dfn{semantic-tag-protection}.  @var{A} hard-coded order is used to determine a match.
 @var{PARENT} is a tag representing the @var{PARENT} slot needed for
@@ -364,12 +369,19 @@ These tags are defined outside the scope of the original @var{TYPE} declaration.
 @var{TABLE} is a tag table.  See @dfn{semantic-something-to-tag-table}.
 @end defun
 
+@defun semantic-find-tags-subclasses-of-type type &optional table
+@anchor{semantic-find-tags-subclasses-of-type}
+Find all tags of class type in whose parent is @var{TYPE} in @var{TABLE}.
+These tags are defined outside the scope of the original @var{TYPE} declaration.
+@var{TABLE} is a tag table.  See @dfn{semantic-something-to-tag-table}.
+@end defun
+
 @node Custom Search
 @section Custom Search
 
 The searching framework for semantic for tag tables has two basic
 root methods.  One is a function and the other is a macro.  The
-functional version is needed if some sort of macro conflict arrises.
+functional version is needed if some sort of macro conflict arises.
 The macro version is useful because it eliminates a level of function
 call, and is faster.
 
@@ -385,17 +397,6 @@ Find tags for which @var{PREDICATE} is non-@code{nil} in @var{TABLE}.
 Find tags for which @var{FORM} is non-@code{nil} in @var{TABLE}.
 @var{TABLE} is a semantic tags table.  See @dfn{semantic-something-to-tag-table}.
 @end defun
-
-@c @defun semantic-recursive-find-nonterminal-by-name name buffer
-@c Recursivly find the first occurance of @var{NAME}.
-@c Start search with @var{BUFFER}.  Recurse through all dependencies till
-@c found.  The return item is of the form (@var{BUFFER} @var{TOKEN})
-@c where @var{BUFFER} is the buffer in which @var{TOKEN} (the token found
-@c to match @var{NAME}) was found.
-@c 
-@c @var{THIS} ISN'T @var{USED} @var{IN} @var{SEMANTIC}.  @var{DELETE}
-@c @var{ME} @var{SOON}.
-@c @end defun
 
 @node Tags at Point
 @chapter Tags at Point
@@ -423,7 +424,7 @@ from largest to smallest via the start location.
 
 @defun semantic-find-tag-by-overlay-in-region start end &optional buffer
 Find all tags which exist in whole or in part between @var{START} and @var{END}.
-Uses overlays to determine positin.
+Uses overlays to determine position.
 Optional @var{BUFFER} argument specifies the buffer to use.
 
 @obsolete{semantic-find-nonterminal-by-overlay-in-region,semantic-find-tag-by-overlay-in-region}
@@ -457,6 +458,181 @@ containing a field.  Return @code{nil} if there is no parent.
 @obsolete{semantic-current-nonterminal-parent,semantic-current-tag-parent}
 @end defun
 
+@node Tag Decoration
+@chapter Tag Decoration
+
+Tags can be decorated in different ways.  One way a user can control
+it is through @code{semantic-decoration-mode}.
+@inforef{semantic-user,,Tag Decoration Mode}
+
+Applications can use the same routines to decorate tags as well.
+
+@menu
+* Tag Highlighting::            Highlighting a tag
+* Tag Visible Properties::      Invisible, intangible and read only
+* Tag Secondary Overlays::      Decorating parts of a tag text
+* Tag Folding::                 Visibly Folding up tags
+@end menu
+
+@node Tag Highlighting
+@section Highlighting
+
+@defun semantic-highlight-tag tag &optional face
+@anchor{semantic-highlight-tag}
+Specify that @var{tag} should be highlighted.
+Optional @var{face} specifies the face to use.
+@obsolete{semantic-highlight-token,semantic-highlight-tag}
+@end defun
+
+@defun semantic-unhighlight-tag tag
+@anchor{semantic-unhighlight-tag}
+Unhighlight @var{tag}, restoring its previous face.
+@obsolete{semantic-unhighlight-token,semantic-unhighlight-tag}
+@end defun
+
+@defun semantic-momentary-highlight-tag tag &optional face
+@anchor{semantic-momentary-highlight-tag}
+Highlight @var{tag}, removing highlighting when the user hits a key.
+Optional argument @var{face} is the face to use for highlighting.
+If @var{face} is not specified, then @code{highlight} will be used.
+@obsolete{semantic-momentary-highlight-token,semantic-momentary-highlight-tag}
+@end defun
+
+The highlighting routines do their work by changing the face property
+of the tag overlay.  The raw routine is:
+
+@defun semantic-set-tag-face tag face
+@anchor{semantic-set-tag-face}
+Specify that @var{tag} should use @var{face} for display.
+@obsolete{semantic-set-token-face,semantic-set-tag-face}
+@end defun
+
+@node Tag Visible Properties
+@section Changing a tag's visible properties
+
+You can give a tag other properties as well, such as making it
+invisible or intangible.  You can control how code is edited
+programatically through these routines.
+
+@defun semantic-set-tag-invisible tag &optional visible
+@anchor{semantic-set-tag-invisible}
+Enable the text in @var{tag} to be made invisible.
+If @var{visible} is non-@code{nil}, make the text visible.
+@obsolete{semantic-set-token-invisible,semantic-set-tag-invisible}
+@end defun
+
+@defun semantic-tag-invisible-p tag
+@anchor{semantic-tag-invisible-p}
+Return non-@code{nil} if @var{tag} is invisible.
+@obsolete{semantic-token-invisible-p,semantic-tag-invisible-p}
+@end defun
+
+@defun semantic-set-tag-intangible tag &optional tangible
+@anchor{semantic-set-tag-intangible}
+Enable the text in @var{tag} to be made intangible.
+If @var{tangible} is non-@code{nil}, make the text visible.
+This function does not have meaning in XEmacs because it seems that
+the extent 'intangible' property does not exist.
+@obsolete{semantic-set-token-intangible,semantic-set-tag-intangible}
+@end defun
+
+@defun semantic-tag-intangible-p tag
+@anchor{semantic-tag-intangible-p}
+Return non-@code{nil} if @var{tag} is intangible.
+This function does not have meaning in XEmacs because it seems that
+the extent 'intangible' property does not exist.
+@obsolete{semantic-token-intangible-p,semantic-tag-intangible-p}
+@end defun
+
+@defun semantic-set-tag-read-only tag &optional writable
+@anchor{semantic-set-tag-read-only}
+Enable the text in @var{tag} to be made read-only.
+Optional argument @var{writable} should be non-@code{nil} to make the text writable
+instead of read-only.
+@obsolete{semantic-set-token-read-only,semantic-set-tag-read-only}
+@end defun
+
+@defun semantic-tag-read-only-p tag
+@anchor{semantic-tag-read-only-p}
+Return non-@code{nil} if the current @var{tag} is marked read only.
+@obsolete{semantic-token-read-only-p,semantic-tag-read-only-p}
+@end defun
+
+@node Tag Secondary Overlays
+@section Secondary Overlays
+
+Each tag which is being visited in a buffer has one overlay.  This
+overlay is used to track where the tag is while a user is editing, and
+can also be used for fast tag identification, and some simple
+decoration techniques.
+
+A secondary overlay associates a new overlay object with a tag which
+does not cover the entire body of a tag.  You can then put visible
+features on that overlay to decorate portions of a tag.  This is how
+tag boundaries are drawn.
+
+@subsection Creation and Deletion
+
+@defun semantic-tag-create-secondary-overlay tag &optional link-hook
+@anchor{semantic-tag-create-secondary-overlay}
+Create a secondary overlay for @var{tag}.
+Returns an overlay.  The overlay is also saved in @var{tag}.
+@var{link-hook} is a function called whenever @var{tag} is to be linked into
+a buffer.  It should take @var{tag} and @var{overlay} as arguments.
+The @var{link-hook} should be used to position and set properties on the
+generated secondary overlay.
+@end defun
+
+@defun semantic-tag-delete-secondary-overlay tag overlay-or-property
+@anchor{semantic-tag-delete-secondary-overlay}
+Delete from @var{tag} the secondary overlay @var{overlay-or-property}.
+If @var{overlay-or-property} is an overlay, delete that overlay.
+If @var{overlay-or-property} is a symbol, find the overlay with that property.
+@end defun
+
+@subsection Queries
+
+@defun semantic-tag-get-secondary-overlay tag property
+@anchor{semantic-tag-get-secondary-overlay}
+Return secondary overlays from @var{tag} with @var{property}.
+@var{property} is a symbol and all overlays with that symbol are returned..
+@end defun
+
+@defun semantic-tag-secondary-overlays tag
+@anchor{semantic-tag-secondary-overlays}
+Return a list of secondary overlays active on @var{tag}.
+@end defun
+
+@subsection Linking and Unlinking
+
+When a tag's file is put in a buffer, that tag is ``linked'' into the
+buffer.  When the buffer is deleted, the tag is ``unlinked''.  This
+process adds and removes the default overlay on the tag.  Secondary
+overlays use @code{semantic-tag-add-hook} and
+@code{semantic-tag-remove-hook} too apply link and unlink hooks.
+
+This allows the secondary overlays to be automatically removed or
+added by the secondary overlay system whenever a tag's file goes in or
+out of a buffeor.
+
+@node Tag Folding
+@section Folding
+
+Using secondary overlays, a set of tag folding routines are made
+available.  These routines are similar to the tag visible properties.
+
+@defun semantic-set-tag-folded tag &optional folded
+@anchor{semantic-set-tag-folded}
+Fold @var{tag}, such that only the first line of text is shown.
+Optional argument @var{folded} should be non-@code{nil} to fold the tag.
+@code{nil} implies the tag should be fully shown.
+@end defun
+
+@defun semantic-tag-folded-p tag
+@anchor{semantic-tag-folded-p}
+Non-@code{nil} if @var{tag} is currently folded.
+@end defun
+
 @node Tag Sorting
 @chapter Tag Sorting
 
@@ -482,63 +658,68 @@ This must first sort the tags by name alphabetically ascending.
 @end defun
 
 @defun semantic-bucketize tags &optional parent filter
-Sort @var{TAGS} into a group of buckets based on tag class.
+@anchor{semantic-bucketize}
+Sort @var{tags} into a group of buckets based on tag class.
 Unknown classes are placed in a Misc bucket.
-Type bucket names are defined by either `semantic-symbol->name-assoc-list'.
-If @var{PARENT} is specified, then @var{TAGS} belong to this @var{PARENT} in some way.
-This will use `semantic-symbol->name-assoc-list-for-type-parts' to
+Type bucket names are defined by either @code{semantic-symbol->name-assoc-list}.
+If @var{parent} is specified, then @var{tags} belong to this @var{parent} in some way.
+This will use @code{semantic-symbol->name-assoc-list-for-type-parts} to
 generate bucket names.
-Optional argument @var{FILTER} is a filter function to be applied to each bucket.
-The filter function will take one argument, which is a list of tags, and
+Optional argument @var{filter} is a filter function to be applied to each bucket.
+The filter function will take one argument, which is a list of tokens, and
 may re-organize the list with side-effects.
 @end defun
 
 @defvar semantic-bucketize-tag-class
-Function used to get a symbol describing the class of a token.
-This function must take one argument of a semantic token.
-It should return a symbol found in `semantic-symbol->name-assoc-list'
+@anchor{semantic-bucketize-tag-class}
+Function used to get a symbol describing the class of a tag.
+This function must take one argument of a semantic tag.
+It should return a symbol found in @code{semantic-symbol->name-assoc-list}
 which @dfn{semantic-bucketize} uses to bin up tokens.
 To create new bins for an application augment
-`semantic-symbol->name-assoc-list', and
-`semantic-symbol->name-assoc-list-for-type-parts' in addition
+@code{semantic-symbol->name-assoc-list}, and
+@code{semantic-symbol->name-assoc-list-for-type-parts} in addition
 to setting this variable (locally in your function).
 @end defvar
 
 @defun semantic-adopt-external-members tags
-Rebuild @var{TAGS} so that externally defined members are regrouped.
-Some languages such as @var{C}++ and @var{CLOS} permit the declaration of member
+@anchor{semantic-adopt-external-members}
+Rebuild @var{tags} so that externally defined members are regrouped.
+Some languages such as @var{c}++ and @var{clos} permit the declaration of member
 functions outside the definition of the class.  It is easier to study
 the structure of a program when such methods are grouped together
 more logically.
 
-This function uses @dfn{semantic-nonterminal-external-member-p} to
+This function uses @dfn{semantic-tag-external-member-p} to
 determine when a potential child is an externally defined member.
 
-Note: Applications which use this function must account for tag
+Note: Applications which use this function must account for token
 types which do not have a position, but have children which *do*
 have positions.
 
 Applications should use @code{semantic-mark-external-member-function}
 to modify all tags which are found as externally defined to some
-type.  For example, changing the tag type for generating extra
+type.  For example, changing the token type for generating extra
 buckets with the bucket function.
 @end defun
 
 @defvar semantic-orphaned-member-metaparent-type
+@anchor{semantic-orphaned-member-metaparent-type}
 In @dfn{semantic-adopt-external-members}, the type of @code{'type} for metaparents.
-@var{A} metaparent is a made-up type semantic tag used to hold the child list
+A metaparent is a made-up type semantic token used to hold the child list
 of orphaned members of a named type.
 @end defvar
 
 @defvar semantic-mark-external-member-function
+@anchor{semantic-mark-external-member-function}
 Function called when an externally defined orphan is found.
-Be default, the tag is always marked with the @code{adopted} property.
+By default, the token is always marked with the @code{adopted} property.
 This function should be locally bound by a program that needs
-to add additional behaviors into the tag list.
-This function is called with one argument which is a shallow copy
-of the tag to be modified.  This function should return the
-tag (or a copy of it) which is then integrated into the
-revised tag list.
+to add additional behaviors into the token list.
+This function is called with two arguments.  The first is @var{token} which is
+a shallow copy of the token to be modified.  The second is the @var{parent}
+which is adopting @var{token}.  This function should return @var{token} (or a copy of it)
+which is then integrated into the revised token list.
 @end defvar
 
 @node Tag Completion
@@ -586,6 +767,43 @@ If @var{INITIAL-INPUT} is non-@code{nil}, insert it in the minibuffer initially.
 @var{HISTORY} is a symbol representing a variable to story the history in.
 @end defun
 
+@defun semantic-complete-read-tag-project prompt &optional default-tag initial-input history
+@anchor{semantic-complete-read-tag-project}
+Ask for a tag by name from the current project.
+Available tags are from the current project, at the top level.
+Completion options are presented in a traditional way, with highlighting
+to resolve same-name collisions.
+@var{prompt} is a string to prompt with.
+@var{default-tag} is a semantic tag or string to use as the default value.
+If @var{initial-input} is non-@code{nil}, insert it in the minibuffer initially.
+@var{history} is a symbol representing a variable to store the history in.
+@end defun
+
+@defun semantic-complete-read-tag-analyzer prompt &optional context history
+@anchor{semantic-complete-read-tag-analyzer}
+Ask for a tag by name based on the current context.
+The function @dfn{semantic-analyze-current-context} is used to
+calculate the context.  @dfn{semantic-analyze-possible-completions} is used 
+to generate the list of possible completions.
+@var{prompt} is the first part of the prompt.  Additional prompt
+is added based on the contexts full prefix.
+@var{context} is the semantic analyzer context to start with.
+@var{history} is a symbol representing a variable to store the history in.
+usually a default-tag and initial-input are available for completion
+prompts.  these are calculated from the @var{context} variable passed in.
+@end defun
+
+@defun semantic-complete-inline-analyzer context
+@anchor{semantic-complete-inline-analyzer}
+Complete a symbol name by name based on the current context.
+This is similar to @code{semantic-complete-read-tag-analyze}, except
+that the completion interaction is in the buffer where the context
+was calculated from.
+@var{context} is the semantic analyzer context to start with.
+See @code{semantic-complete-inline-tag-engine} for details on how
+completion works.
+@end defun
+
 @node Custom Tag Completion Functions
 @section Custom Tag Completion Functions
 
@@ -608,17 +826,18 @@ There is one typing and selecting routine that can be used to create
 your custom completion prompt.
 
 @defun semantic-complete-read-tag-engine collector displayor prompt default-tag initial-input history
+@anchor{semantic-complete-read-tag-engine}
 Read a semantic tag, and return a tag for the selection.
-Argument @var{COLLECTOR} is a function which can be used to to return
+Argument @var{collector} is an object which can be used to to calculate
 a list of possible hits.  See @code{semantic-completion-collector-engine}
-for details on @var{COLLECTOR}.
-Argumeng @var{DISPLAYOR} is a function used to display a list of possible
+for details on @var{collector}.
+Argumeng @var{displayor} is an object used to display a list of possible
 completions for a given prefix.  See@code{semantic-completion-display-engine}
-for details on @var{DISPLAYOR}.
-@var{PROMPT} is a string to prompt with.
-@var{DEFAULT-TAG} is a semantic tag or string to use as the default value.
-If @var{INITIAL-INPUT} is non-@code{nil}, insert it in the minibuffer initially.
-@var{HISTORY} is a symbol representing a variable to story the history in.
+for details on @var{displayor}.
+@var{prompt} is a string to prompt with.
+@var{default-tag} is a semantic tag or string to use as the default value.
+If @var{initial-input} is non-@code{nil}, insert it in the minibuffer initially.
+@var{history} is a symbol representing a variable to story the history in.
 @end defun
 
 As you can see, this takes one @dfn{collector}, and one
@@ -629,7 +848,7 @@ For example:
 
 @example
 (defun semantic-complete-read-tag-buffer-deep (prompt &optional
-						      default-tag initial-input history)
+                                                      default-tag initial-input history)
   "Ask for a tag by name from the current buffer.
 PROMPT is a string to prompt with.
 DEFAULT-TAG is a semantic tag or string to use as the default value.
@@ -662,17 +881,52 @@ of tags.
 You can have a collector that satisfies multiple purposes using slots
 filled in the initializer for that object.
 
-All collectors inherit from:
+Collectors inherit from some of the following:
 
 @deffn Type semantic-collector-abstract
+@anchor{semantic-collector-abstract}
 Root class for completion engines.
+The baseclass provides basic functionality for interacting with
+a completion displayor object, and tracking the current progress
+of a completion.
+@end deffn
+
+@deffn Type semantic-collector-buffer-abstract
+@anchor{semantic-collector-buffer-abstract}
+Root class for per-buffer completion engines.
+These collectors track themselves on a per-buffer basis.
+@end deffn
+
+@deffn Type semantic-collector-project-abstract
+@anchor{semantic-collector-project-abstract}
+Root class for project wide completion engines.
+Uses semanticdb for searching all tags in the current project.
 @end deffn
 
 Available instantiable classes are:
 
 @deffn Type semantic-collector-buffer-deep
+@anchor{semantic-collector-buffer-deep}
 Completion engine for tags in the current buffer.
-Provides deep searches through types.
+When searching for a tag, uses semantic  deep search functions.
+Basics search only in the current buffer.
+@end deffn
+
+@deffn Type semantic-collector-project
+@anchor{semantic-collector-project}
+Completion engine for tags in a project.
+@end deffn
+
+@deffn Type semantic-collector-project-brutish
+@anchor{semantic-collector-project-brutish}
+Completion engine for tags in a project.
+@end deffn
+
+@deffn Type semantic-collector-analyze-completions
+@anchor{semantic-collector-analyze-completions}
+Completion engine that uses the context analyzer to provide options.
+The only options available for completion are those which can be logically
+inserted into the current context.
 @end deffn
 
 NOTE: Add sections for writing new collectors.
@@ -697,20 +951,39 @@ All displayors inherit from the displayor baseclass that defines the
 default behaviors:
 
 @deffn Type semantic-displayor-abstract
+@anchor{semantic-displayor-abstract}
 Manages the display of some number of tags.
+Provides the basics for a displayor, including interacting with
+a collector, and tracking tables of completion to display.
+@end deffn
+
+@deffn Type semantic-displayor-focus-abstract
+@anchor{semantic-displayor-focus-abstract}
+A displayor which has the ability to focus in on one tag.
+Focusing is a way of differentiationg between multiple tags
+which have the same name.
 @end deffn
 
 Distinct implementations of displayors include:
 
 @deffn Type semantic-displayor-traditional
+@anchor{semantic-displayor-traditional}
 Traditional display mechanism for a list of possible completions.
+Completions are showin in a new buffer and listed with the ability
+to click on the items to aid in completion.
 @end deffn
 
 @deffn Type semantic-displayor-traditional-with-focus-highlight
+@anchor{semantic-displayor-traditional-with-focus-highlight}
 A traditional displayor which can focus on a tag by showing it.
+Same as @code{semantic-displayor-traditional}, but with selection between
+multiple tags with the same name done by 'focusing' on the source
+location of the different tags to differentiate them.
+
 @end deffn
 
 @deffn Type semantic-displayor-tooltip
+@anchor{semantic-displayor-tooltip}
 Display mechanism using tooltip for a list of possible completions.
 @end deffn
 
@@ -727,56 +1000,60 @@ NOTE: Add sections for writing new collectors.
 These are older completion functions.  They may still be useful.
 
 @defun semantic-read-symbol prompt &optional default stream filter
+@anchor{semantic-read-symbol}
 Read a symbol name from the user for the current buffer.
-@var{PROMPT} is the prompt to use.
+@var{prompt} is the prompt to use.
 Optional arguments:
-@var{DEFAULT} is the default choice.  If no default is given, one is read
+@var{default} is the default choice.  If no default is given, one is read
 from under point.
-@var{STREAM} is the list of tags to complete from.
-@var{FILTER} is provides a filter on the types of things to complete.
-@var{FILTER} must be a function to call on each element.  (See !!!
+@var{stream} is the list of tokens to complete from.
+@var{filter} is provides a filter on the types of things to complete.
+@var{filter} must be a function to call on each element.
 @end defun
 
 @defun semantic-read-variable prompt &optional default stream
+@anchor{semantic-read-variable}
 Read a variable name from the user for the current buffer.
-@var{PROMPT} is the prompt to use.
+@var{prompt} is the prompt to use.
 Optional arguments:
-@var{DEFAULT} is the default choice.  If no default is given, one is read
+@var{default} is the default choice.  If no default is given, one is read
 from under point.
-@var{STREAM} is the list of tags to complete from.
+@var{stream} is the list of tokens to complete from.
 @end defun
 
 @defun semantic-read-function prompt &optional default stream
+@anchor{semantic-read-function}
 Read a function name from the user for the current buffer.
-@var{PROMPT} is the prompt to use.
+@var{prompt} is the prompt to use.
 Optional arguments:
-@var{DEFAULT} is the default choice.  If no default is given, one is read
+@var{default} is the default choice.  If no default is given, one is read
 from under point.
-@var{STREAM} is the list of tags to complete from.
+@var{stream} is the list of tags to complete from.
 @end defun
 
 @defun semantic-read-type prompt &optional default stream
+@anchor{semantic-read-type}
 Read a type name from the user for the current buffer.
-@var{PROMPT} is the prompt to use.
+@var{prompt} is the prompt to use.
 Optional arguments:
-@var{DEFAULT} is the default choice.  If no default is given, one is read
+@var{default} is the default choice.  If no default is given, one is read
 from under point.
-@var{STREAM} is the list of tags to complete from.
+@var{stream} is the list of tags to complete from.
 @end defun
 
 @node Override Methods
 @chapter Override Methods
 
-These functions are called `override methods' because they provide
-generic behaviors, which a given language can override.  For example,
-finding a dependency file in Emacs lisp can be done with the
-`locate-library' command (which overrides the default behavior.)  In C,
-a dependency can be found by searching a generic search path which can
-be passed in via a variable.
+@dfn{Override methods} provide generic behaviors, which a given
+language can override.  For example, finding a dependency (required
+file) file in Emacs lisp can be done with the @code{locate-library}
+command (which overrides the default behavior.)  In C, a dependency
+(include file) can be found by searching a generic search path which
+can be passed in via a variable.
 
 If you plan to use one of these functions from a buffer that is not
 of the same major-mode as the original tag, you can use this form to
-make sure th correct action takes place:
+make sure the correct action takes place:
 
 @defun semantic-with-mode-bindings mode &rest body
 @anchor{semantic-with-mode-bindings}
@@ -792,7 +1069,9 @@ For more on override methods, @inforef{Semantic Overload Mechanism, , lang-suppo
 * Format Tag::                  Converting Tokens into text strings
 * Tag Members::                 Tags in tags
 * Tag Details::                 Arbitrary token detail fetching
-* Making New Methods::          How to add your own methods for a tool
+* Tag File Reference::          Files a tag references.
+* Jump to a Tag::               Go to a tag's location
+* Making New Methods::          How to add your own methods for your own tool
 @end menu
 
 @node Format Tag
@@ -807,18 +1086,20 @@ variables to allow options on output forms when displaying tags in
 your programs.
 
 @defvar semantic-format-tag-functions
+@anchor{semantic-format-tag-functions}
 List of functions which convert a tag to text.
-Each function must take the parameters @var{TAG} &optional @var{PARENT} @var{COLOR}.
-@var{TAG} is the tag to convert.
-@var{PARENT} is a parent tag or name which refers to the structure
-or class which contains @var{TAG}.  @var{PARENT} is @var{NOT} a class which a @var{TAG}
+Each function must take the parameters @var{tag} &optional @var{parent} @var{color}.
+@var{tag} is the tag to convert.
+@var{parent} is a parent tag or name which refers to the structure
+or class which contains @var{tag}.  @var{parent} is @var{not} a class which a @var{tag}
 would claim as a parent.
-@var{COLOR} indicates that the generated text should be colored using
+@var{color} indicates that the generated text should be colored using
 @code{font-lock}.
 @end defvar
 
 @defvar semantic-format-tag-custom-list
-@var{A} List used by customizeable variables to choose a tag to text function.
+@anchor{semantic-format-tag-custom-list}
+A List used by customizable variables to choose a tag to text function.
 Use this variable in the @code{:type} field of a customizable variable.
 @end defvar
 
@@ -833,62 +1114,88 @@ When creating, or using these strings, particularly with color, use
 will preserve text properties.
 
 @defun semantic-format-tag-name tag &optional parent color
-Return the name string describing @var{TAG}.
+@anchor{semantic-format-tag-name}
+Return the name string describing @var{tag}.
 The name is the shortest possible representation.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-name-nonterminal,semantic-format-tag-name}
 @end defun
 
 @defun semantic-format-tag-abbreviate tag &optional parent color
-Return an abbreviated string describing @var{TAG}.
+@anchor{semantic-format-tag-abbreviate}
+Return an abbreviated string describing @var{tag}.
 The abbreviation is to be short, with possible symbols indicating
 the type of tag, or other information.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-abbreviate-nonterminal,semantic-format-tag-abbreviate}
 @end defun
 
 @defun semantic-format-tag-summarize tag &optional parent color
-Summarize @var{TAG} in a reasonable way.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+@anchor{semantic-format-tag-summarize}
+Summarize @var{tag} in a reasonable way.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-summerize-nonterminal,semantic-format-tag-summarize}
 @end defun
 
 @defun semantic-format-tag-prototype tag &optional parent color
-Return a prototype for @var{TAG}.
+@anchor{semantic-format-tag-prototype}
+Return a prototype for @var{tag}.
 This function should be overloaded, though it need not be used.
 This is because it can be used to create code by language independent
 tools.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-prototype-nonterminal,semantic-format-tag-prototype}
 @end defun
 
 @defun semantic-format-tag-concise-prototype tag &optional parent color
-Return a concise prototype for @var{TAG}.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+@anchor{semantic-format-tag-concise-prototype}
+Return a concise prototype for @var{tag}.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-concise-prototype-nonterminal,semantic-format-tag-concise-prototype}
 @end defun
 
 @defun semantic-format-tag-uml-abbreviate tag &optional parent color
-Return a @var{UML} style abbreviation for @var{TAG}.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+@anchor{semantic-format-tag-uml-abbreviate}
+Return a @var{uml} style abbreviation for @var{tag}.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-uml-abbreviate-nonterminal,semantic-format-tag-uml-abbreviate}
 @end defun
 
 @defun semantic-format-tag-uml-prototype tag &optional parent color
-Return a @var{UML} style prototype for @var{TAG}.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+@anchor{semantic-format-tag-uml-prototype}
+Return a @var{uml} style prototype for @var{tag}.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-uml-prototype-nonterminal,semantic-format-tag-uml-prototype}
 @end defun
 
 @defun semantic-format-tag-uml-concise-prototype tag &optional parent color
-Return a @var{UML} style concise prototype for @var{TAG}.
-Optional argument @var{PARENT} is the parent type if @var{TAG} is a detail.
-Optional argument @var{COLOR} means highlight the prototype with font-lock colors.
+@anchor{semantic-format-tag-uml-concise-prototype}
+Return a @var{uml} style concise prototype for @var{tag}.
+Optional argument @var{parent} is the parent type if @var{tag} is a detail.
+Optional argument @var{color} means highlight the prototype with font-lock colors.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-uml-concise-prototype-nonterminal,semantic-format-tag-uml-concise-prototype}
 @end defun
 
 @defun semantic-format-tag-prin1 tag &optional parent color
-Convert @var{TAG} to a string that is the print name for @var{TAG}.
-@var{PARENT} and @var{COLOR} are ignored.
+@anchor{semantic-format-tag-prin1}
+Convert @var{tag} to a string that is the print name for @var{tag}.
+@var{parent} and @var{color} are ignored.
+@obsolete{semantic-prin1-nonterminal,semantic-format-tag-prin1}
 @end defun
 
 An additional utility will return a string for just the data type of
@@ -896,10 +1203,9 @@ a tag.  This function is used in the above routines as well.
 
 @defun semantic-format-tag-type tag color
 @anchor{semantic-format-tag-type}
-Convert the data type of @var{TAG} to a string usable in tag formatting.
-It is presumed that @var{TYPE} is a string or semantic tag.
-This function can be overriden in semantic using the
-symbol @code{format-tag-type}.
+Convert the data type of @var{tag} to a string usable in tag formatting.
+It is presumed that @var{type} is a string or semantic tag.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @node Tag Members
@@ -911,14 +1217,16 @@ the top-level list may itself contain additional members.
 The following overridable functions can fetch those tags.
 
 @defun semantic-tag-components tag
-Return a list of components for @var{TAG}.
-A Component is a part of @var{TAG} which itself may be a @var{TAG}.
-Examples include the elements of a structure in a @code{`type} tag,
-or the list of arguments to a @code{'function} tag.
+Return a list of components for @var{tag}.
+A Component is a part of @var{tag} which itself may be a @var{tag}.
+Examples include the elements of a structure in a 
+tag of class `type, or the list of arguments to a
+tag of class @code{'function}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-tag-components-with-overlays tag
-Return the list of top level components belonging to @var{TAG}.
+Return the list of top level components belonging to @var{tag}.
 Children are any sub-tags which contain overlays.
 
 Default behavior is to get @dfn{semantic-tag-components} in addition
@@ -928,6 +1236,7 @@ Note for language authors:
   If a mode defines a language tag that has tags in it with overlays
 you should still return them with this function.
 Ignoring this step will prevent several features from working correctly.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 Some languages can define parts of a tag outside the actual scope of
@@ -935,40 +1244,46 @@ the parent tag.  You can fetch information about them with these
 overload functions.
 
 
-@defun semantic-tag-external-member-p parent token
-Return non-@code{nil} if @var{PARENT} is the parent of @var{TAG}.
-@var{TAG} is an external member of @var{PARENT} when it is somehow tagged
-as having @var{PARENT} as it's parent.
-@var{PARENT} and @var{TAG} must both be semantic tags.
+@defun semantic-tag-external-member-p parent tag
+@anchor{semantic-tag-external-member-p}
+Return non-@code{nil} if @var{parent} is the parent of @var{tag}.
+@var{tag} is an external member of @var{parent} when it is somehow tagged
+as having @var{parent} as its parent.
+@var{parent} and @var{tag} must both be semantic tags.
 
 The default behavior, if not overridden with
-@code{tag-external-member-p} is to match @code{'parent} extra specifier in
-the name of @var{TAG}.
+@code{tag-external-member-p} is to match @code{:parent} attribute in
+the name of @var{tag}.
 
 If this function is overridden, use
 @code{semantic-tag-external-member-children-p-default} to also
 include the default behavior, and merely extend your own.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-nonterminal-external-member-p,semantic-tag-external-member-p}
 @end defun
 
 @defun semantic-tag-external-member-children tag &optional usedb
-Return the list of children which are not *in* @var{TAG}.
-If optional argument @var{USEDB} is non-@code{nil}, then also search files in
-the Semantic Database.  If @var{USEDB} is a list of databases, search those
+@anchor{semantic-tag-external-member-children}
+Return the list of children which are not *in* @var{tag}.
+If optional argument @var{usedb} is non-@code{nil}, then also search files in
+the Semantic Database.  If @var{usedb} is a list of databases, search those
 databases.
 
 Children in this case are functions or types which are members of
-@var{TAG}, such as the parts of a type, but which are not defined inside
-the class.  @var{C}++ and @var{CLOS} both permit methods of a class to be defined
+@var{tag}, such as the parts of a type, but which are not defined inside
+the class.  @var{c}++ and @var{clos} both permit methods of a class to be defined
 outside the bounds of the class' definition.
 
 The default behavior, if not overridden with
 @code{tag-external-member-children} is to search using
 @dfn{semantic-tag-external-member-p} in all top level definitions
-with a parent of @var{TAG}.
+with a parent of @var{tag}.
 
 If this function is overridden, use
 @dfn{semantic-tag-external-member-children-default} to also
 include the default behavior, and merely extend your own.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@obsolete{semantic-nonterminal-external-member-children,semantic-tag-external-member-children}
 @end defun
 
 @node Tag Details
@@ -979,11 +1294,11 @@ be obvious for non-traditional languages with their own token types.
 
 @defun semantic-tag-protection tag &optional parent
 @anchor{semantic-tag-protection}
-Return protection information about @var{TAG} with optional @var{PARENT}.
+Return protection information about @var{tag} with optional @var{parent}.
 This function returns on of the following symbols:
    @code{nil}        - No special protection.  Language dependent.
-   @code{'public}    - Anyone can access this @var{TAG}.
-   @code{'private}   - Only methods in the local scope can access @var{TAG}.
+   @code{'public}    - Anyone can access this @var{tag}.
+   @code{'private}   - Only methods in the local scope can access @var{tag}.
    @code{'protected} - Like private for outside scopes, like public for child
                 classes.
 Some languages may choose to provide additional return symbols specific
@@ -991,17 +1306,19 @@ to themselves.  Use of this function should allow for this.
 
 The default behavior (if not overridden with @code{tag-protection}
 is to return a symbol based on type modifiers.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+It makes the overload @dfn{semantic-nonterminal-protection} obsolete.
 @obsolete{semantic-nonterminal-protection,semantic-tag-protection}
 @end defun
 
 @defun semantic-tag-protected-p tag protection &optional parent
 @anchor{semantic-tag-protected-p}
-Non-@code{nil} if @var{TAG} is is protected.
-@var{PROTECTION} is a symbol which can be returned by the method
+Non-@code{nil} if @var{tag} is is protected.
+@var{protection} is a symbol which can be returned by the method
 @dfn{semantic-tag-protection}.
-@var{PARENT} is the parent data type which contains @var{TAG}.
+@var{parent} is the parent data type which contains @var{tag}.
 
-For these PROTECTIONs, true is returned if @var{TAG} is:
+For these PROTECTIONs, true is returned if @var{tag} is:
 @table @asis
 @item @code{nil}
   Always true
@@ -1016,89 +1333,205 @@ For these PROTECTIONs, true is returned if @var{TAG} is:
 
 @defun semantic-tag-abstract-p tag &optional parent
 @anchor{semantic-tag-abstract-p}
-Return non @code{nil} if @var{TAG} is abstract.
-Optional @var{PARENT} is the parent tag of @var{TAG}.
-In @var{UML}, abstract methods and classes have special meaning and behavior
-in how methods are overridden.  In @var{UML}, abstract methods are italicized.
+Return non @code{nil} if @var{tag} is abstract.
+Optional @var{parent} is the parent tag of @var{tag}.
+In @var{uml}, abstract methods and classes have special meaning and behavior
+in how methods are overridden.  In @var{uml}, abstract methods are italicized.
 
-The default behavior (if not overridden with @code{tag-abstract}
+The default behavior (if not overridden with @code{tag-abstract-p}
 is to return true if @code{abstract} is in the type modifiers.
-@obsolete{semantic-tag-abstract,semantic-tag-abstract-p}
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+It makes the overload @dfn{semantic-nonterminal-abstract} obsolete.
+@obsolete{semantic-nonterminal-abstract,semantic-tag-abstract-p}
 @end defun
 
 @defun semantic-tag-leaf-p tag &optional parent
 @anchor{semantic-tag-leaf-p}
-Return non @code{nil} if @var{TAG} is leaf.
-Optional @var{PARENT} is the parent tag of @var{TAG}.
-In @var{UML}, leaf methods and classes have special meaning and behavior.
+Return non @code{nil} if @var{tag} is leaf.
+Optional @var{parent} is the parent tag of @var{tag}.
+In @var{uml}, leaf methods and classes have special meaning and behavior.
 
-The default behavior (if not overridden with @code{tag-leaf}
+The default behavior (if not overridden with @code{tag-leaf-p}
 is to return true if @code{leaf} is in the type modifiers.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+It makes the overload @dfn{semantic-nonterminal-leaf} obsolete.
 @obsolete{semantic-tag-leaf,semantic-tag-leaf-p}
 @end defun
 
 @defun semantic-tag-static-p tag &optional parent
 @anchor{semantic-tag-static-p}
-Return non @code{nil} if @var{TAG} is static.
-Optional @var{PARENT} is the parent tag of @var{TAG}.
-In @var{UML}, static methods and attributes mean that they are allocated
+Return non @code{nil} if @var{tag} is static.
+Optional @var{parent} is the parent tag of @var{tag}.
+In @var{uml}, static methods and attributes mean that they are allocated
 in the parent class, and are not instance specific.
-@var{UML} notation specifies that @var{STATIC} entries are underlined.
-This function can be overriden in semantic using the
-symbol @code{tag-static-p}.
+@var{uml} notation specifies that @var{static} entries are underlined.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @obsolete{semantic-tag-static,semantic-tag-static-p}
 @end defun
 
-@defvar semantic-dependency-include-path
-@anchor{semantic-dependency-include-path}
-Defines the include path used when searching for files.
-This should be a list of directories to search which is specific to
-the file being included.
-If @dfn{semantic-find-dependency} is overridden for a given language, this
-path is most likely ignored.
+@node Tag File Reference
+@section Tag File Reference
 
-@var{TODO}: use ffap.el to locate such items.
+Some tags refer to some other file.
+
+For include files, these options help Semantic find those files:
+
+@defvar semantic-dependency-system-include-path
+@anchor{semantic-dependency-system-include-path}
+Defines the system include path.
+This should be set with either @dfn{defvar-mode-local}, or with
+@dfn{semantic-add-system-include}.
+
+When searching for a file associated with a name found in an tag of
+class include, this path will be inspected for includes of type
+@code{system}.  Some include tags are agnostic to this setting and will
+check both the project and system directories.
 @end defvar
 
 @defun semantic-dependency-tag-file &optional tag
 @anchor{semantic-dependency-tag-file}
-Find the filename represented from @var{TAG}.
+Find the filename represented from @var{tag}.
 Depends on @code{semantic-dependency-include-path} for searching.  Always searches
 @code{.} first, then searches additional paths.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+It makes the overload @dfn{semantic-find-dependency} obsolete.
 @obsolete{semantic-find-dependency,semantic-dependency-tag-file}
 @end defun
 
+In languages with prototypes, such as C/C++, you can try to find a
+corresponding file where a prototype to some implementation lives.
+
 @defun semantic-prototype-file buffer
 @anchor{semantic-prototype-file}
-Return a file in which prototypes belonging to @var{BUFFER} should be placed.
+Return a file in which prototypes belonging to @var{buffer} should be placed.
 Default behavior (if not overridden) looks for a token specifying the
-prototype file, or the existence of an @var{EDE} variable indicating which
+prototype file, or the existence of an @var{ede} variable indicating which
 file prototypes belong in.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
-@defun semantic-go-to-tag &optional tag parent
+The semantic support for Texinfo lets you find references to functions
+in doc you might be maintaining.
+
+@defun semantic-texi-find-documentation name &optional type
+@anchor{semantic-texi-find-documentation}
+Find the function or variable @var{name} of @var{type} in the texinfo source.
+@var{name} is a string representing some functional symbol.
+@var{type} is a string, such as ``variable`` or ''Command'' used to find
+the correct definition in case @var{name} qualifies as several things.
+When this function exists, @var{point} is at the definition.
+If the doc was not found, an error is thrown.
+Note: @var{type} not yet implemented.
+@end defun
+
+
+@node Jump to a Tag
+@section Jump to a Tag
+
+Each tag has a file from which it came.  If a tag has been managed
+properly, you can jump to it with this function:
+
+@defun semantic-go-to-tag tag &optional parent
 @anchor{semantic-go-to-tag}
-Go to the location of @var{TAG}.
-@var{TAG} may be a stripped element, in which case @var{PARENT} specifies a
+Go to the location of @var{tag}.
+@var{tag} may be a stripped element, in which case @var{parent} specifies a
 parent tag that has position information.
 Different behaviors are provided depending on the type of tag.
 For example, dependencies (includes) will seek out the file that is
 depended on (see @dfn{semantic-dependency-tag-file}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+It makes the overload @dfn{semantic-find-nonterminal} obsolete.
 @obsolete{semantic-find-nonterminal,semantic-go-to-tag}
 @end defun
 
-@defun semantic-texi-find-documentation name &optional type
-Find the function or variable @var{NAME} of @var{TYPE} in the texinfo source.
-@var{NAME} is a string representing some functional symbol.
-@var{TYPE} is a string, such as ``variable`` or ''Command'' used to find
-the correct definition in case @var{NAME} qualifies as several things.
-When this function exists, @var{POINT} is at the definition.
-If the doc was not found, an error is thrown.
-Note: @var{TYPE} not yet implemented.
-@end defun
+When extracting tags from a database via search routines, those tags,
+by default, do not have the necessary information in them.  Be sure
+that when the database results are stripped, you use options that
+force that file information to be kept.
 
 @node Making New Methods
 @section Making New Methods
+
+The infrastructure for creating overridable methods base on major mode
+is handled by @file{mode-local.el} which is independent of @semantic{}.
+
+To create your own application specific mode local function, you
+should use @dfn{define-overloadable-function}.  This function creates
+the framework needed for different mode-authors to customize your
+applications.
+
+Once a function has been defined as mode-local, you should use
+@dfn{define-mode-local-override} to add a mode specific feature.
+
+@defun define-overloadable-function name args docstring &rest body
+@anchor{define-overload}
+Define a new function, as with @dfn{defun} which can be overloaded.
+@var{name} is the name of the function to create.
+@var{args} are the arguments to the function.
+@var{docstring} is a documentation string to describe the function.  The
+docstring will automatically had details about its overload symbol
+appended to the end.
+@var{body} is code that would be run when there is no override defined.  The
+default is to call the function @code{NAME-default} with the appropriate
+arguments.
+
+@var{body} can also include an override form that specifies which part of
+@var{body} is specifically overridden.  This permits to specify common code
+run for both default and overridden implementations.
+An override form is one of:
+
+  1. @code{(:override [OVERBODY])}
+  2. @code{(:override-with-args OVERARGS [OVERBODY])}
+
+@var{overbody} is the code that would be run when there is no override
+defined.  The default is to call the function @code{NAME-default} with the
+appropriate arguments deduced from @var{args}.
+@var{overargs} is a list of arguments passed to the override and
+@code{NAME-default} function, in place of those deduced from @var{args}.
+@end defun
+
+@defun define-mode-local-override name mode args docstring &rest body
+@anchor{define-mode-local-override}
+Define a mode specific override of the function overload @var{name}.
+Has meaning only if @var{name} has been created with @dfn{define-overload}.
+@var{mode} is the major mode this override is being defined for.
+@var{args} are the function arguments, which should match those of the same
+named function created with @dfn{define-overload}.
+@var{docstring} is the documentation string.
+@var{body} is the implementation of this function.
+@obsolete{define-mode-overload-implementation,define-mode-local-override}
+@end defun
+
+
+You can also create variable values that are mode local.
+
+@defun defvar-mode-local mode sym val &optional docstring
+@anchor{defvar-mode-local}
+Define @var{mode} local variable @var{sym} with value @var{val}.
+@var{docstring} is optional.
+@end defun
+
+@defun defconst-mode-local mode sym val &optional docstring
+@anchor{defconst-mode-local}
+Define @var{mode} local constant @var{sym} with value @var{val}.
+@var{docstring} is optional.
+@end defun
+
+Mode local variables are implemented as buffer local.  Special hooks
+enable mode-local to set these variables for the mode specified.  To
+set a value as in code, you can use a special setq form.
+
+@defun setq-mode-local mode &rest args
+@anchor{setq-mode-local}
+Assign new values to variables local in @var{mode}.
+@var{mode} must be a major mode symbol.
+@var{args} is a list (@var{sym} @var{val} @var{sym} @var{val} @dots{}).
+The symbols @var{sym} are variables; they are literal (not evaluated).
+The values @var{val} are expressions; they are evaluated.
+Set each @var{sym} to the value of its @var{val}, locally in buffers already in
+@var{mode}, or in buffers switched to that mode.
+Return the value of the last @var{val}.
+@end defun
 
 @node Parser Features
 @chapter Parser Features
@@ -1174,13 +1607,14 @@ Return non-@code{nil} if the current parse tree is up to date.
 If you just want to know when a buffer changes, use this hook.
 
 @defvar semantic-after-toplevel-cache-change-hook
-Hooks run after the buffer token list has changed.
-This list will change when a buffer is reparsed, or when the token
-list in a buffer is cleared.  It is *@var{NOT}* called if the current token
-list partially reparsed.
+@anchor{semantic-after-toplevel-cache-change-hook}
+Hooks run after the buffer tag list has changed.
+This list will change when a buffer is reparsed, or when the tag list
+in a buffer is cleared.  It is *@var{not}* called if the current tag list is
+partially reparsed.
 
-Hook functions must take one argument, which is the new list of
-tokens associated with this buffer.
+Hook functions must take one argument, which is the new list of tags
+associated with this buffer.
 
 For language specific hooks, make sure you define this as a local hook.
 @end defvar
@@ -1189,6 +1623,7 @@ If you want tighter interaction with how the user is editing
 different tags, you can use this hook instead.
 
 @defvar semantic-after-partial-cache-change-hook
+@anchor{semantic-after-partial-cache-change-hook}
 Hooks run after the buffer cache has been updated.
 
 This hook will run when the cache has been partially reparsed.
@@ -1205,11 +1640,12 @@ It is also useful to clean up any data your application is using when
 semantic flushes its tags table.
 
 @defvar semantic-before-toplevel-cache-flush-hook
-Hooks run before the toplevel nonterminal cache is flushed.
+@anchor{semantic-before-toplevel-cache-flush-hook}
+Hooks run before the toplevel tag cache is flushed.
 For language specific hooks, make sure you define this as a local
 hook.  This hook is called before a corresponding
 @code{semantic-after-toplevel-cache-change-hook} which is also called
-during a flush when the cache is given a new value of nil.
+during a flush when the cache is given a new value of @code{nil}.
 @end defvar
 
 @node Lexical Safety
@@ -1253,17 +1689,18 @@ attempts.
 Semanticdb is a database mechanism for storing tags parsed by
 @semantic{}.  The database operates in the background, saving tags as
 they are parsed between sessions.  When a file is read in, and there
-is a previously created set of tags available for it, sematnicdb will
+is a previously created set of tags available for it, semanticdb will
 save time by not parsing the file, and using the cached copy.
 
 In applications, semanticdb can provide access to the sum of all tags
-in a project or in the basic system.  This database can they be
+in a project or in the basic system.  This database can then be
 searched using a set of special routines.
 
 @menu
 * Semanticdb in Programs::      Basic usage.
 * Semanticdb Tag Queries::      Searching for tokens in the databases.
 * System Databases::            Special kinds of databases for system tags.
+* Semanticdb references::       Tables can refer to eachother.
 @end menu
 
 @node Semanticdb in Programs
@@ -1273,6 +1710,7 @@ If you write a program using semanticdb, you will probably want to
 make sure it is active in your program.
 
 @defun semanticdb-minor-mode-p
+@anchor{semanticdb-minor-mode-p}
 Return non-@code{nil} if @code{semanticdb-minor-mode} is active.
 @end defun
 
@@ -1281,23 +1719,35 @@ degrade service when semanticdb is not available, or to throw an
 error letting the user know it is required to be active.
 
 At the simplest level, you can ask if a given file is in the
-database, recieving a tag table.  Semanticdb will give you an
+database, receiving a tag table.  Semanticdb will give you an
 accurate set of tags just by asking.
 
 @defun semanticdb-file-stream file
-Return a list of tags belonging to @var{FILE}.
+@anchor{semanticdb-file-stream}
+Return a list of tags belonging to @var{file}.
 If file has database tags available in the database, return them.
 If file does not have tags available, then load the file, and create them.
+@end defun
+
+Alternately, you can get the table object for a file by asking for it.
+
+@defun semanticdb-file-table-object file &optional dontload
+@anchor{semanticdb-file-table-object}
+Return a semanticdb table belonging to @var{file}.
+If file has database tags available in the database, return it.
+If file does not have tags available, and @var{dontload} is @code{nil},
+then load the tags for @var{file}, and create a new table object for it.
+@var{dontload} does not affect the creation of new database objects.
 @end defun
 
 @node Semanticdb Tag Queries
 @section Semanticdb Tag Queries
 
-You can search for tokens in the database using the following
-functions.  It is important to note that database search functions do
-not return a plain list of tokens.  This is because some tokens may
-not be loaded in a buffer, which means that the found token would not
-have an overlay, and no way to determine where it came from.
+You can search for tags in the semantic database using the
+semanticdb-find API.  It is important to note that database search
+functions do not return a plain list of tags.  This is because some
+tags may not be loaded in a buffer, which means that the found tag
+would not have an overlay, and no way to determine where it came from.
 
 As such, all search functions return a special Database Results list.
 
@@ -1316,64 +1766,29 @@ included, imported, or otherwise indicated in the source file
 itself.  While not always true for interpreted languages (such as
 Emacs Lisp), it is common among declaritive languages.
 
-Sometimes a brute force aproach is needed, scanning every file
+Sometimes a brute force approach is needed, scanning every file
 available to the database.  You may want to do this if your
-application is collecting some large database unrelated to a file
-currently being worked on.
-
-As such, you can determine the full path of all files to search using
-the following override method:
-
-@defun semanticdb-find-translate-path path brutish
-Translate @var{PATH} into a list of semantic tables.
-Path translation involves identifying the @var{PATH} input argument
-in one of the following ways:
- @code{nil} - Take the current buffer, and use it's include list
- buffer - Use that buffer's include list.
- filename - Use that file's include list.  If the file is not
-     in a buffer, see of there is a semanticdb table for it.  If
-     not, read that file into a buffer.
- tag - Get that tag's buffer of file file.  See above.
- table - Search that table, and it's include list.
-In addition, once the base path is found, there is the possibility of
-each added table adding yet more tables to the path, so this routine
-can return a lengthy list.
-If argument @var{BRUTISH} is non-@code{nil}, then instead of using the include
-list, use all tables found in the parent project of the table
-identified by translating @var{PATH}.  Such searches use brute force to
-scan every available table.
-This routine uses @dfn{semanticdb-find-table-for-include} to translate
-specific include tags into a semanticdb table.
-This function can be overriden in semantic using the
-symbol @dfn{semanticdb-find-translate-path}.
-@end defun
-
-@defun semanticdb-find-table-for-include includetag &optional table
-For a single @var{INCLUDETAG} found in @var{TABLE}, find a @dfn{semanticdb-table} object
-@var{INCLUDETAG} is a semantic @var{TAG} of class 'include.
-@var{TABLE} as defined by @dfn{semantic-something-to-tag-table} to identify
-where the tag came from.  @var{TABLE} is optional if @var{INCLUDETAG} has an
-overlay of @code{:filename} attribute.
-This function can be overriden in semantic using the
-symbol @dfn{semanticdb-find-table-for-include}.
-@end defun
+application is collecting data unrelated to a file currently being
+worked on.
 
 @menu
 * DB Results::                  Accessing the results of a search.
+* DB Search Paths::             The list of tables to search.
 * DB Basic Name Search::        Searches based on name.
+* DB Data Type Search::         Searches for datatypes.
 * DB Basic Brute Search::       Searches on common tag attributes.
 * DB Advanced Search::          Complex searches on associations
-* DB Generic Brute Search::     Do It Yourself search criteria
+* DB Generic Search::           Do It Yourself search criteria
 @end menu
 
 @node DB Results
 @subsection DB Results
 
-The successful results of a search returns a special list of the
+The successful result of a search returns a special list of the
 following form:
 
 @example
-   ( (DATABASE TOKEN1 TOKEN2 ...) (DATABASE2 TOKEN3 TOKEN4 ...) ...)
+   ( (DATABASE TAG1 TAG2 ...) (DATABASE2 TAG3 TAG4 ...) ...)
 @end example
 
 It should not be necessary to access the results in this way,
@@ -1384,9 +1799,21 @@ To turn a semanticdb search result into a simple tag table, use:
 
 @defun semanticdb-strip-find-results results &optional find-file-match
 @anchor{semanticdb-strip-find-results}
-Strip a semanticdb search @var{RESULTS} to exclude objects.
+Strip a semanticdb search @var{results} to exclude objects.
 This makes it appear more like the results of a @code{semantic-find-} call.
-Optional @var{FIND-FILE-MATCH} is not yet implemented.
+Optional @var{find-file-match} loads all files associated with @var{results}
+into buffers.  This has the side effect of enabling @dfn{semantic-tag-buffer} to
+return a value.
+If the input @var{results} are not going to be used again, and if @var{find-file-match} is @code{nil},
+you can use @dfn{semanticdb-fast-strip-find-results} instead.
+@end defun
+
+@defun semanticdb-fast-strip-find-results results
+@anchor{semanticdb-fast-strip-find-results}
+Destructively strip a semanticdb search @var{results} to exclude objects.
+This makes it appear more like the results of a @code{semantic-find-} call.
+This is like @dfn{semanticdb-strip-find-results}, except the input list @var{results}
+will be changed.
 @end defun
 
 To write a function that accepts a tag table, or a semanticdb search
@@ -1394,17 +1821,17 @@ result, use this to test if it is a semanticdb search result:
 
 @defun semanticdb-find-results-p resultp
 @anchor{semanticdb-find-results-p}
-Non-@code{nil} if @var{RESULTP} is in the form of a semanticdb search result.
-This query only really tests the first entry in the list that is @var{RESULTP},
+Non-@code{nil} if @var{resultp} is in the form of a semanticdb search result.
+This query only really tests the first entry in the list that is @var{resultp},
 but should be good enough for debugging assertions.
 @end defun
 
 @defun semanticdb-find-result-with-nil-p resultp
 @anchor{semanticdb-find-result-with-nil-p}
-Non-@code{nil} of @var{RESULTP} is in the form of a semanticdb search result.
-@code{nil} is a valid value where a @var{TABLE} usually is, but only if the @var{TAG}
+Non-@code{nil} of @var{resultp} is in the form of a semanticdb search result.
+@code{nil} is a valid value where a @var{table} usually is, but only if the @var{tag}
 results include overlays.
-This query only really tests the first entry in the list that is @var{RESULTP},
+This query only really tests the first entry in the list that is @var{resultp},
 but should be good enough for debugging assertions.
 @end defun
 
@@ -1413,27 +1840,159 @@ table, or plain list, use these routines.
 
 @defun semanticdb-find-result-length result
 @anchor{semanticdb-find-result-length}
-Number of tags found in @var{RESULT}.
+Number of tags found in @var{result}.
 @end defun
 
 @defun semanticdb-find-result-nth result n
 @anchor{semanticdb-find-result-nth}
-In @var{RESULT}, return the Nth search result.
+In @var{result}, return the Nth search result.
 This is a @var{0} based search result, with the first match being element @var{0}.
 
-The returned value is a cons cell: (@var{TAG} . @var{TABLE}) where @var{TAG}
-is the tag at the Nth position.  @var{TABLE} is the semanticdb table where
-the @var{TAG} was found.  Sometimes @var{TABLE} can be nil.
+The returned value is a cons cell: (@var{tag} . @var{table}) where @var{tag}
+is the tag at the Nth position.  @var{table} is the semanticdb table where
+the @var{tag} was found.  Sometimes @var{table} can be @code{nil}.
 @end defun
 
 @defun semanticdb-find-result-nth-in-buffer result n
 @anchor{semanticdb-find-result-nth-in-buffer}
-In @var{RESULT}, return the Nth search result.
-Like @dfn{semanticdb-find-result-nth}, except that only the @var{TAG}
+In @var{result}, return the Nth search result.
+Like @dfn{semanticdb-find-result-nth}, except that only the @var{tag}
 is returned, and the buffer it is found it will be made current.
 If the result tag has no position information, the originating buffer
 is still made current.
 @end defun
+
+@defun semanticdb-find-result-mapc fcn result
+@anchor{semanticdb-find-result-mapc}
+Apply @var{fcn} to each element of find @var{result} for side-effects only.
+@var{fcn} takes two arguments.  The first is a @var{tag}, and the
+second is a @var{db} from whence @var{tag} originated.
+Returns result.
+@end defun
+
+@node DB Search Paths
+@subsection DB Search Paths
+
+For searches based on an include path (non-brutish) a path of tables
+needs to be generated.  Searching a lot of tables is slow, which is
+why a brutish search is not always recommended.  An include-based
+approach can also generate a lot of tables, so you can control how
+detailed a search is with a throttle variable.
+
+Ideally, each language mode will have a mode-specific value for
+this throttle value.  A user can also specify their own values if the
+default is not good enough.
+
+@defvar semanticdb-find-default-throttle
+@anchor{semanticdb-find-default-throttle}
+The default throttle for @code{semanticdb-find} routines.
+The throttle controls how detailed the list of database
+tables is for a symbol lookup.  The value is a list with
+the following keys:
+
+@table @code
+@item file
+The file the search is being performed from.  This option is here for
+completeness only, and is assumed to always be on.
+@item local
+Tables from the same local directory are included.  This includes
+files directly referenced by a file name which might be in a different
+directory.
+@item project
+Tables from the same local project are included If @code{project} is
+specified, then @code{local} is assumed.
+@item unloaded
+If a table is not in memory, load it.  If it is not cached on disk
+either, get the source, parse it, and create the table.
+@item system
+Tables from system databases.  These are specifically tables
+from system header files, or language equivalent.
+@item recursive
+For include based searches, includes tables referenced by included
+files.
+@item omniscience
+Included system databases which are omniscience, or somehow know
+everything.  Omniscience databases are found in
+@code{semanticdb-project-system-databases}.  The Emacs Lisp system
+@var{db} is an omniscience database.
+@end table
+
+@end defvar
+
+
+You can use the command @code{semanticdb-find-test-translate-path} to
+interactively test out how the path translator is working.  The path
+translation routines are:
+
+@defun semanticdb-find-translate-path path brutish
+@anchor{semanticdb-find-translate-path}
+Translate @var{path} into a list of semantic tables.
+Path translation involves identifying the @var{path} input argument
+in one of the following ways:
+  @code{nil} - Take the current buffer, and use its include list
+  buffer - Use that buffer's include list.
+  filename - Use that file's include list.  If the file is not
+      in a buffer, see of there is a semanticdb table for it.  If
+      not, read that file into a buffer.
+  tag - Get that tag's buffer of file file.  See above.
+  table - Search that table, and its include list.
+  find result - Search the results of a previous find.
+
+In addition, once the base path is found, there is the possibility of
+each added table adding yet more tables to the path, so this routine
+can return a lengthy list.
+
+If argument @var{brutish} is non-@code{nil}, then instead of using the include
+list, use all tables found in the parent project of the table
+identified by translating @var{path}.  Such searches use brute force to
+scan every available table.
+
+The return value is a list of objects of type @dfn{semanticdb-table} or
+its children.  In the case of passing in a find result, the result
+is returned unchanged.
+
+This routine uses @dfn{semanticdb-find-table-for-include} to translate
+specific include tags into a semanticdb table.
+
+Note: When searching using a non-brutish method, the list of
+included files will be cached between runs.  Database-references
+are used to track which files need to have their include lists
+refreshed when things change.  See @dfn{semanticdb-ref-test}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@end defun
+
+@defun semanticdb-find-table-for-include includetag &optional table
+@anchor{semanticdb-find-table-for-include}
+For a single @var{includetag} found in @var{table}, find a @dfn{semanticdb-table} object
+@var{includetag} is a semantic @var{tag} of class @code{'include}.
+@var{table} as defined by @dfn{semantic-something-to-tag-table} to identify
+where the tag came from.  @var{table} is optional if @var{includetag} has an
+overlay of @code{:filename} attribute.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@end defun
+
+
+TODO : Make this next part show up somewhere better.
+
+
+Each major mode should define their local include path with
+@code{defcustom-mode-local-semantic-dependency-system-include-path}.
+This macro builds a customizable variable that is kept in sync with
+the mode-local variable, and any include decorations that are active.
+
+@defun defcustom-mode-local-semantic-dependency-system-include-path mode name value &optional docstring
+@anchor{defcustom-mode-local-semantic-dependency-system-include-path}
+Create a mode-local value of the system-dependency include path.
+@var{mode} is the @code{major-mode} this name/value pairs is for.
+@var{name} is the name of the customizable value users will use.
+@var{value} is the path to add.
+@var{docstring} is a documentation string applied to the variable @var{name}
+users will customize.
+
+Creates a customizable variable users can customize that will
+keep semantic data structures up to date.
+@end defun
+
 
 @node DB Basic Name Search
 @subsection DB Basic Name Search
@@ -1446,59 +2005,107 @@ scanned, including those in type declarations.
 Normal Searches:
 
 @defun semanticdb-find-tags-by-name name &optional path find-file-match
-Search for all tags matching @var{NAME} on @var{PATH}.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+@anchor{semanticdb-find-tags-by-name}
+Search for all tags matching @var{name} on @var{path}.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 @defun semanticdb-find-tags-by-name-regexp regexp &optional path find-file-match
-Search for all tags matching @var{REGEXP} on @var{PATH}.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+@anchor{semanticdb-find-tags-by-name-regexp}
+Search for all tags matching @var{regexp} on @var{path}.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 @defun semanticdb-find-tags-for-completion prefix &optional path find-file-match
-Search for all tags matching @var{PREFIX} on @var{PATH}.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+@anchor{semanticdb-find-tags-for-completion}
+Search for all tags matching @var{prefix} on @var{path}.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 @defun semanticdb-find-tags-by-class class &optional path find-file-match
-Search for all tags of @var{CLASS} on @var{PATH}.
-Search also in all components of top level tags founds.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+@anchor{semanticdb-find-tags-by-class}
+Search for all tags of @var{class} on @var{path}.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 Deep Searches:
 
 @defun semanticdb-deep-find-tags-by-name name &optional path find-file-match
-Search for all tags matching @var{NAME} on @var{PATH}.
+@anchor{semanticdb-deep-find-tags-by-name}
+Search for all tags matching @var{name} on @var{path}.
 Search also in all components of top level tags founds.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 @defun semanticdb-deep-find-tags-by-name-regexp regexp &optional path find-file-match
-Search for all tags matching @var{REGEXP} on @var{PATH}.
+@anchor{semanticdb-deep-find-tags-by-name-regexp}
+Search for all tags matching @var{regexp} on @var{path}.
 Search also in all components of top level tags founds.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
 @defun semanticdb-deep-find-tags-for-completion prefix &optional path find-file-match
-Search for all tags matching @var{PREFIX} on @var{PATH}.
+@anchor{semanticdb-deep-find-tags-for-completion}
+Search for all tags matching @var{prefix} on @var{path}.
 Search also in all components of top level tags founds.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
+
+@node DB Data Type Search
+@subsection DB Data Type Search
+
+In typed languages, datatypes are looked up frequently in order to
+provide smart completions.  Semantic has a specialized datatype search
+that builds a cache of all datatypes on the include path.  Once this
+is built the first time, datatype lookups become very fast.
+
+Since it takes a long time to make a typecache the first time, you can
+have your tool decide if it wants to do work based on the existence of
+a typecache.
+
+@defun semanticdb-have-typecache-p table
+@anchor{semanticdb-have-typecache-p}
+Return non-@code{nil} (the typecache) if @var{table} has a pre-calculated typecache.
+@end defun
+
+@defun semanticdb-get-typecache table
+@anchor{semanticdb-get-typecache}
+Retrieve the typecache from the semanticdb @var{table}.
+If there is no table, create one, and fill it in.
+@end defun
+
+Searching doesn't require a typecache.  You can just pass in a
+database table, or path, much the way most semantic database searches work.
+
+@defun semanticdb-typecache-find type &optional path
+@anchor{semanticdb-typecache-find}
+Search the typecache for @var{type} in @var{path}.
+If type is a string, split the string, and search for the parts.
+If type is a list, treat the type as a pre-split string.
+@var{path} can be @code{nil} for the current buffer, or a semanticdb table.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
+@end defun
+
+You can debug the typecache with this routine:
+
+@deffn Command semanticdb-typecache-dump
+@anchor{semanticdb-typecache-dump}
+Dump the typecache for the current buffer.
+@end deffn
 
 @node DB Basic Brute Search
 @subsection DB Basic Brute Search
@@ -1507,11 +2114,12 @@ associated with that tag should be loaded into a buffer.
  such as name, type, or other attribute.
 
 @defun semanticdb-brute-deep-find-tags-by-name name &optional path find-file-match
-Search for all tags matching @var{NAME} on @var{PATH}.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-The argument @var{BRUTISH} will be set so that searching includes all tables
+@anchor{semanticdb-brute-deep-find-tags-by-name}
+Search for all tags matching @var{name} on @var{path}.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+The argument @var{brutish} will be set so that searching includes all tables
 in the current project.
-@var{FIND-FILE-MATCH} indicates that any time a matchi is found, the file
+@var{find-file-match} indicates that any time a matchi is found, the file
 associated wit that tag should be loaded into a buffer.
 @end defun
 
@@ -1528,30 +2136,46 @@ associated wit that tag should be loaded into a buffer.
  symbol list into Emacs for a regular semanticdb search.
 
 @defun semanticdb-find-tags-external-children-of-type type &optional path find-file-match
-Search for all tags defined outside of @var{TYPE} w/ @var{TYPE} as a parent.
+@anchor{semanticdb-find-tags-external-children-of-type}
+Search for all tags defined outside of @var{type} w/ @var{type} as a parent.
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
+associated with that tag should be loaded into a buffer.
+@end defun
+
+@defun semanticdb-find-tags-subclasses-of-type type &optional path find-file-match
+@anchor{semanticdb-find-tags-subclasses-of-type}
+Search for all tags of class type defined that subclass @var{TYPE}.
 See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
 @var{FIND-FILE-MATCH} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
 @end defun
 
-@node DB Generic Brute Search
-@subsection DB Generic Brute Search
+@node DB Generic Search
+@subsection DB Generic Search
 
- The generic search, @dfn{semanticdb-find-nonterminal-by-function}
- will call your function with every tag available.  (Very slow for
- system databases.)
-
-NOTE:  There is no such function.  Hopefully we can get away without
-implementing one, which will make system databases more useful.  If
-you are really stuck, you can use the following, though I don't
-recommend it.
+If you would like to write your own search routine, you can the
+generic tag collector.  It will map your function across valid
+semantic databases.
 
 @defun semanticdb-find-tags-collector function &optional path find-file-match brutish
-Search for all tags returned by @var{FUNCTION} over @var{PATH}.
-See @dfn{semanticdb-find-translate-path} for details on @var{PATH}.
-@var{FIND-FILE-MATCH} indicates that any time a match is found, the file
+@anchor{semanticdb-find-tags-collector}
+Collect all tags returned by @var{function} over @var{path}.
+The @var{function} must take two arguments.  The first is @var{table},
+which is a semanticdb table containing tags.  The second argument
+to @var{function} is @var{tags}.  @var{tags} may be a list of tags.  If @var{tags} is non-@code{nil}, then
+@var{function} should search the @var{tag} list, not through @var{table}.
+
+See @dfn{semanticdb-find-translate-path} for details on @var{path}.
+@var{find-file-match} indicates that any time a match is found, the file
 associated with that tag should be loaded into a buffer.
-If optional argument @var{BRUTISH} is non-@code{nil}, then ignore include statements,
+
+Note: You should leave @var{find-file-match} as @code{nil}.  It is far more
+efficient to take the results from any search and use
+@dfn{semanticdb-strip-find-results} instead.  This argument is here
+for backward compatibility.
+
+If optional argument @var{brutish} is non-@code{nil}, then ignore include statements,
 and search all tables in this project tree.
 @end defun
 
@@ -1566,20 +2190,83 @@ Search routines for these databases return a special type of table
 not associated with a file.  It is important to be aware of this
 possible return value.
 
-At this time, there is only one type:
 
 @deffn Type semanticdb-project-database-emacs-lisp
 @anchor{semanticdb-project-database-emacs-lisp}
 Database representing Emacs core.
 @end deffn
 
-@subsection Semantic Prased System Databases
+This Emacs database is loaded automatically.
 
-Another kind of system database is one created by the semantic tools,
-but saved in a special way.  These databases are created with a
-script, or at some other convenient time.  They can then be searched
-normally.  They will appear on the same list of system databases as
-back ends that refer to object files indirectly.
+
+@deffn Type semanticdb-project-database-ebrowse
+@anchor{semanticdb-project-database-ebrowse}
+Semantic Database deriving tags using the @var{ebrowse} tool.
+@var{ebrowse} is a C/C++ parser for use with @code{ebrowse} Emacs program.
+@end deffn
+
+To create new EBROWSE project databases, use:
+
+@deffn Command semanticdb-create-ebrowse-database dir
+@anchor{semanticdb-create-ebrowse-database}
+Create an @var{ebrowse} database for directory @var{dir}.
+The database file is stored in ~/.semanticdb, or whichever directory
+is specified by @code{semanticdb-default-system-save-directory}.
+@end deffn
+
+@node Semanticdb references
+@section Semanticdb References
+
+Semantic database can keep references to eachother.  The semanticdb
+search routine @code{semanticdb-find-translate-path} will keep the
+references up-to date whenever you do a semanticdb search.  Whenever a
+buffer is reparsed, all caches are synchronized through the reference
+tables.
+
+The reference mechanism will let you identify references in either
+direction.
+
+This routine will return a list of TAGS that refer to some database.
+Use the routine @code{semanticdb-find-table-for-include} to conver
+these include tags into tables.
+
+@defun semanticdb-includes-in-table dbt
+@anchor{semanticdb-includes-in-table}
+Return a list of direct includes in table @var{dbt}.
+@end defun
+
+To run a function against all @semantic{} tables that refer to the
+current table, use this routine:
+
+@defun semanticdb-notify-references dbt method
+@anchor{semanticdb-notify-references}
+Notify all references of the table @var{dbt} using method.
+@var{method} takes two arguments.
+  (@var{method} @var{table-to-notify} @var{dbt})
+@var{table-to-notify} is a semanticdb-table which is being notified.
+@var{dbt}, the second argument is @var{dbt}.
+@end defun
+
+
+The following routines will help keep things up-to-date:
+
+@defun semanticdb-check-references dbt
+@anchor{semanticdb-check-references}
+Check and cleanup references in the database @var{dbt}.
+Any reference to a file that cannot be found, or whos file no longer
+refers to @var{dbt} will be removed.
+@end defun
+
+To debug references, use this routine:
+
+@deffn Command semanticdb-ref-test refresh
+@anchor{semanticdb-ref-test}
+Dump out the list of references for the current buffer.
+If @var{refresh} is non-@code{nil}, cause the current table to have its references
+refreshed before dumping the result.
+@end deffn
+
+
 
 @node Idle Scheduling
 @chapter Idle Scheduling
@@ -1599,7 +2286,7 @@ Reparse other buffers that need it
 Execute other scheduled semantic related operations.
 @end enumerate
 
-Care is take in the idle scheduler to exit immediatly if user input
+Care is take in the idle scheduler to exit immediately if user input
 is detected, improving editing performance.
 
 The reason for grouping these tasks together is so that the automatic
@@ -1656,115 +2343,7 @@ call to @code{semantic-throw-on-input}.
 @node Example Programs
 @chapter Programming Examples
 
-  *** NOTE ***  These examples are for semantic 1.4.
-Using the below functions will generate compile time warnings with
-advice on what functions to use in semantic 2.0.
-
-
-Here are some simple examples that use different aspects of the
-semantic library APIs.  For fully functional example programs with
-lots of comments, see the file @file{semantic-examples.el}.
-
-@heading Interactively querying for a token name
-
-If you need a command that asks the user for a token name, you can
-get full range completion using the query functions
-@ref{Tag Completion}.
-
-@example
-(interactive (list (semantic-read-symbol "Symbol: ")))
-@end example
-
-@heading Finding a symbol in a buffer
-
-If you have the name of a function or variable, and need to find its
-location in a buffer, you need a search function.  There is a wide
-range of searches you can perform @ref{Searching Tag Tables}.
-
-@example
-(semantic-find-nonterminal-by-name
- "some-name"
- (current-buffer)
- t    ;; look inside structures and classes for these symbols
- nil) ;; do not look inside header files.
-@end example
-
-@heading Finding a symbol in a project
-
-If you have the name of a function or variable, and need to find its
-location somewhere in a project, you need to use the Semantic Database
-@inforef{semanticdb, , semanticdb}.  There are many search functions similar to the
-ones found in @ref{Searching Tag Tables}.
-
-The Semantic Database is interesting in that the return structure is
-not
-
-@heading Locating a token in a buffer
-
-If you have a nonterminal token, or a list of them, you may want to
-find their position in a buffer.
-
-@example
-(semanticdb-find-nonterminal-by-name
- "symbol"
- nil   ;; Defaults to the current project's database list.
- t     ;; Search inside types
- nil   ;; Do not search include files
- nil   ;; Only search files in the same mode (all C files)
- t     ;; When a token is found, make sure it is loaded in a buffer.
- )
-@end example
-
-Of interesting note above, semanticdb can find symbols in files that
-are not loaded into an Emacs buffer.  These tokens do not have an
-associated overlay, and the function @dfn{semantic-token-buffer} will
-fail.
-
-The last parameter's tells the search function to
-@dfn{find-file-noselect} any file in which a matching token was
-found.  This will allow you to merge all the tokens into a completion
-list, or other flat list needed by most functions that use
-association lists.
-
-If you do not ask semanticdb to load those files, you will need to
-explicitly request the database object (found in the @code{car} of
-each sublist) get the file loaded.  It is useful to not auto find all
-files if you don't need to jump to that token.
-
-@heading Converting a token into a human readable string.
-
-A tag is a rather unpleasant Lisp structure when trying
-to decipher what is going on.  As such, there is a wide range of
-functions available that can convert a token into a human readable,
-and colorful string @ref{Format Tag}.
-
-If you program interfaces with lots of users, you will probably want
-to have your program define a configurable variable that will let
-users change the visible portion of your program.
-
-@example
-(defcustom my-summary-function 'semantic-uml-prototype-nonterminal
-  "*Function to use when showing info about my tag."
-  :group 'my-program
-  :type semantic-format-tag-custom-list)
-@end example
-
-Note the special type provided by Semantic.
-
-Next, you can call this function to create a string.
-
-@example
-(funcall my-summary-function tag
-                             tag-parent
-                             t ; use color
-                             )
-@end example
-
-In this case, @var{tag-parent} is an optional argument.  In many
-cases, parent is not used by the outputting function.  The parent must
-be a tag whose @code{semantic-tag-componenets} contains @var{tag}, or
-nil for top-level definitions.  In particular, C++ needs the parent to
-correctly calculate the protection of each method.
+  *** NOTE ***  This section needs to be written
 
 
 @node Current Context
@@ -1804,6 +2383,7 @@ movement to.  If this is @code{nil}, @code{'function} is used.
 This will find the smallest tag of that class (function, variable,
 type, etc) and make sure non-@code{nil} is returned if you cannot
 go up past the bounds of that tag.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-beginning-of-context &optional point
@@ -1811,8 +2391,7 @@ go up past the bounds of that tag.
 Move @var{point} to the beginning of the current context.
 Return non-@code{nil} if there is no upper context.
 The default behavior uses @dfn{semantic-up-context}.
-This function can be overriden in semantic using the
-symbol @code{beginning-of-context}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-end-of-context &optional point
@@ -1821,8 +2400,7 @@ Move @var{point} to the end of the current context.
 Return non-@code{nil} if there is no upper context.
 Be default, this uses @dfn{semantic-up-context}, and assumes parenthetical
 block delimiters.
-This function can be overriden in semantic using the
-symbol @code{end-of-context}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 These next set of functions can be used to navigate across commands.
@@ -1831,16 +2409,14 @@ These next set of functions can be used to navigate across commands.
 @anchor{semantic-end-of-command}
 Move to the end of the current command.
 Be default, uses @code{semantic-command-separation-character}.
-This function can be overriden in semantic using the
-symbol @code{end-of-command}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-beginning-of-command
 @anchor{semantic-beginning-of-command}
 Move to the beginning of the current command.
 Be default, uses @code{semantic-command-separation-character}.
-This function can be overriden in semantic using the
-symbol @code{beginning-of-command}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @node Local Variables
@@ -1855,6 +2431,7 @@ scoped variables.
 Get the local variables based on POINT's context.
 Local variables are returned in Semantic tag format.
 This can be overriden with @code{get-local-variables}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-get-local-arguments &optional point
@@ -1866,6 +2443,7 @@ Arguments are obtained by overriding @code{get-local-arguments}, or by the
 default function @dfn{semantic-get-local-arguments-default}.  This, must
 return a list of tags, or a list of strings that will be converted to
 tags.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-get-all-local-variables &optional point
@@ -1874,8 +2452,7 @@ Get all local variables for this context, and parent contexts.
 Local variables are returned in Semantic tag format.
 Be default, this gets local variables, and local arguments.
 Optional argument @var{point} is the location to start getting the variables from.
-This function can be overriden in semantic using the
-symbol @code{get-all-local-variables}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @node Derived Context
@@ -1892,8 +2469,7 @@ specific behavior.  By default, it assumes a C like language.
 @anchor{semantic-ctxt-current-symbol}
 Return the current symbol the cursor is on at @var{point} in a list.
 This will include a list of type/field names when applicable.
-This function can be overriden in semantic using the
-symbol @code{ctxt-current-symbol}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-ctxt-current-assignment &optional point
@@ -1901,8 +2477,7 @@ symbol @code{ctxt-current-symbol}.
 Return the current assignment near the cursor at @var{point}.
 Return a list as per @dfn{semantic-ctxt-current-symbol}.
 Return @code{nil} if there is nothing relevant.
-This function can be overriden in semantic using the
-symbol @code{ctxt-current-assignment}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-ctxt-current-function &optional point
@@ -1911,21 +2486,19 @@ Return the current function call the cursor is in at @var{point}.
 The function returned is the one accepting the arguments that
 the cursor is currently in.  It will not return function symbol if the
 cursor is on the text representing that function.
-This function can be overriden in semantic using the
-symbol @code{ctxt-current-function}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-ctxt-current-argument &optional point
 @anchor{semantic-ctxt-current-argument}
 Return the index of the argument position the cursor is on at @var{point}.
-This function can be overriden in semantic using the
-symbol @code{ctxt-current-argument}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-ctxt-current-thing
 @anchor{semantic-ctxt-current-thing}
 Calculate a thing identified by the current cursor position.
-Calls previously defined @code{semantic-ctxt-current-...} calls until something
+Calls previously defined @code{semantic-ctxt-current-@dots{}} calls until something
 gets a match.  See @dfn{semantic-ctxt-current-symbol},
 @dfn{semantic-ctxt-current-function}, and @dfn{semantic-ctxt-current-assignment}
 for details on the return value.
@@ -1933,23 +2506,21 @@ for details on the return value.
 
 @defun semantic-ctxt-current-class-list &optional point
 @anchor{semantic-ctxt-current-class-list}
-Return a list of tag classes that are allowed at @var{POINT}.
-If @var{POINT} is @code{nil}, the current buffer location is used.
+Return a list of tag classes that are allowed at @var{point}.
+If @var{point} is @code{nil}, the current buffer location is used.
 For example, in Emacs Lisp, the symbol after a ( is most likely
 a function.  In a makefile, symbols after a : are rules, and symbols
 after a $( are variables.
-This function can be overriden in semantic using the
-symbol @code{ctxt-current-class-list}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @defun semantic-ctxt-scoped-types &optional point
 @anchor{semantic-ctxt-scoped-types}
-Return a list of type names currently in scope at @var{POINT}.
+Return a list of type names currently in scope at @var{point}.
 The return value can be a mixed list of either strings (names of
 types that are in scope) or actual tags (type declared locally
 that may or may not have a name.)
-This function can be overriden in semantic using the
-symbol @code{ctxt-scoped-types}.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end defun
 
 @node Context Analysis
@@ -1957,7 +2528,7 @@ symbol @code{ctxt-scoped-types}.
 
 The context parsing API is used in a context analysis library.  This
 library provides high level routines for scanning through token
-databases to create lists of token associates.  At it's core is a set
+databases to create lists of token associates.  At its core is a set
 of EIEIO classes defining a context.  The context contains information
 about what was parsed at a given position, such as the strings there,
 and they type of assignment.  The analysis library then searches the
@@ -1965,18 +2536,58 @@ databases to determine the types and names available.
 
 Two high level functions which can be run interactively are:
 
-@deffn Command semantic-analyze-current-context position
-Analyze the current context at @var{POSITION}.
-If called interactively, display interesting information about @var{POSITION}
+@deffn Command semantic-analyze-current-context &optional position
+@anchor{semantic-analyze-current-context}
+Analyze the current context at optional @var{position}.
+If called interactively, display interesting information about @var{position}
 in a separate buffer.
-Returns an object based on symbol @code{semantic-analyze-context}.
+Returns an object based on symbol @dfn{semantic-analyze-context}.
+
+This function can be overriden with the symbol @code{analyze-context}.
+When overriding this function, your override will be called while
+cursor is at @var{position}.  In addition, your function will not be called
+if a cached copy of the return object is found.
+This function can be overloaded (see @dfn{define-mode-local-override} for details).
 @end deffn
 
 
-@deffn Command semantic-analyze-possible-completions point
-Return a list of semantic tokens which are possible completions.
-Analysis is done at @var{POINT}.
-@end deffn
+@defun semantic-analyze-possible-completions context flags
+@anchor{semantic-analyze-possible-completions}
+Return a list of semantic tags which are possible completions.
+@var{CONTEXT} is either a position (such as point), or a precalculated
+context.  Passing in a context is useful if the caller also needs
+to access parts of the analysis.
+The remaining @var{FLAGS} arguments are passed to the mode specific completion engine.
+Bad flags should be ignored by modes that don't use them.
+See @dfn{semantic-analyze-possible-completions-default} for details on the default @var{FLAGS}.
+
+@itemize
+@item
+Elements currently in scope
+@item
+Constants currently in scope
+@item
+Elements match the @code{:prefix} in the @var{context}.
+@item
+Type of the completion matches the type of the context.
+@end itemize
+
+Context type matching can identify the following:
+
+@itemize
+@item
+No specific type
+@item
+Assignment into a variable of some type.
+@item
+Argument to a function with type constraints.
+@end itemize
+
+When called interactively, displays the list of possible completions
+in a buffer.
+This function can be overloaded with @dfn{define-mode-local-override}.
+@end defun
+
 
 @menu
 * Analysis Overview::           A description of how the analyzer works.
@@ -1988,7 +2599,7 @@ Analysis is done at @var{POINT}.
 @subsection Analysis Overview
 
 The semantic analysis function @dfn{semantic-analye-current-context}
-creats an Analysis Object.  See @ref{Analysis Objects}.  This object
+creates an Analysis Object.  See @ref{Analysis Objects}.  This object
 contains many useful pieces of information needed to do any other
 kind of intelligent action on the local context.
 
@@ -1996,14 +2607,20 @@ If you call this function interactively, it will popup a buffer with
 a summary of the return value.  This is useful when debugging.
 
 @example
-+--------+   +----------------+   +----------------------------+
-| Buffer |---| Context Parser |---| Local Context Synax Result |
-+--------+   +----------------+   +----------------------------+
++--------+   +----------------+      +-----------------+
+| Buffer |---| Context Parser |------|   Scope Object  |
++--------+   +----------------+      +-----------------+
     |                                        |
 +--------+   +-----------+                   |
-| Parser |---| Tag Table |------------+      |
-+--------+   +-----------+            |      |
-                                      V      V
+| Parser |---| Tag Table |---------------+   |
++--------+   +-----------+               |   |
+                                         |   |
+                                         |   |
+             +-----------+               |   |
+         +-->| Typecache |-----------+   |   |
+         |   +-----------+           |   |   |
+         |                           |   |   |
+         |                           V   V   V
 +-------------+                     +-------------------+
 | Semantic DB |-------------------->| Semantic Analyzer |
 +-------------+                     +-------------------+
@@ -2026,11 +2643,114 @@ a summary of the return value.  This is useful when debugging.
 
 @c (progn (require 'semantic-analyze) (eieiodoc-class semantic-analyze-context "analyze"))
 
+NOTE: Need to regenerate this section
 
 @c END OF ANALZE OBJECT SECTION
 
 @node Completion Overview
 @subsection Completion Overview
+
+NOTE: Need to write this section too.
+
+@node Data Debugger
+@chapter Data structure debugger
+
+The data structures that @semantic{} provides can be complex, and
+figuring out why some level of application API performs incorrectly
+can be difficult.
+
+The data debugger is provided by @file{data-debug.el} which is
+independent of @semantic{}, though @semantic{} extends it for tag
+structures and objects it provides.
+
+The data debugger provides a way to look inside the
+various data structures of Semantic in a structures and complete way
+to help identify what a problem may be.
+
+When using @code{edebug} to interactively debug a function, the key
+@kbd{E} is bound to @code{data-debug-edebug-expr}, which will provide
+a buffer with the evaluated expression shown in it.
+
+@deffn Command data-debug-edebug-expr expr
+@anchor{data-debug-edebug-expr}
+Dump out the context of some expression @var{expr} in edebug with ddebug.
+@end deffn
+
+@section App Debugger Entry Points
+
+There are a few basic functions that enter into the debugger.  For
+historical reasons, the @semantic{} functions use the name
+@code{adebug} to specify functions that use the data debugger.
+
+@deffn Command semantic-adebug-bovinate
+@anchor{semantic-adebug-bovinate}
+The same as @dfn{bovinate}. Display the results in a debug buffer.
+@end deffn
+
+@deffn Command semantic-adebug-searchdb regex
+@anchor{semantic-adebug-searchdb}
+Search the semanticdb for @var{regex} for the current buffer.
+Display the results as a debug list.
+@end deffn
+
+@deffn Command semantic-adebug-analyze
+@anchor{semantic-adebug-analyze}
+Perform @dfn{semantic-analyze-current-context}.
+Display the results as a debug list.
+@end deffn
+
+@section data-debug mode
+
+The semantic adebug API now sits on @code{data-debug} mode, which
+provides a simple user facing UI for looking into the data structures.
+
+@deffn Command data-debug-mode
+@anchor{semantic-adebug-mode}
+Major-mode for the Data Debugging.
+
+Keybindings:
+@table @kbd
+@item spc
+Expand or contract
+@item N
+Next entry, and expand/contract.
+@item P
+Previous entry, and expand/contract.
+@item n
+Next entry
+@item p
+Next entry
+@item <mouse-2>
+Expand/Contract entries.
+@end table
+
+@end deffn
+
+@section Create new debugger entry commands
+
+Creating a new Application debugger entry point is easy.
+First, get a datastructure you need to analyze.
+
+The first function to call is:
+
+@defun data-debug-new-buffer name
+@anchor{semantic-adebug-new-buffer}
+Create a new ddebug buffer with @var{name}.
+@end defun
+
+Next, you need to find the correct function for inserting your
+datastructure.  All adebug insertion functions are of the form
+@code{data-debug-insert-THING}, where @var{thing} is either the word
+@code{thing}, or whatever your object is.  Use Emacs help to pick
+something out.
+
+@defun data-debug-insert-thing thing prefix prebuttontext &optional parent
+@anchor{data-debug-insert-thing}
+Insert @var{thing} with @var{prefix}.
+@var{prebuttontext} is some text to insert between prefix and the thing
+that is not included in the indentation calculation of any children.
+If @var{parent} is non-@code{nil}, it is somehow related as a parent to thing.
+@end defun
 
 
 @node GNU Free Documentation License

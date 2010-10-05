@@ -6,7 +6,7 @@
 ;; Maintainer: David Ponce <david@dponce.com>
 ;; Created: 02 Aug 2003
 ;; Keywords: syntax
-;; X-RCS: $Id: wisent-grammar-macros.el,v 1.2 2003/08/31 15:08:30 ponced Exp $
+;; X-RCS: $Id: wisent-grammar-macros.el,v 1.6 2006/05/31 12:46:17 ponced Exp $
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -22,8 +22,8 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -127,6 +127,14 @@ NAME, DETAIL and ATTRIBUTES."
   `(wisent-raw-tag
     (semantic-tag-new-code ,name ,detail ,@attributes)))
 
+(defun wisent-grammar-ALIAS-TAG (name aliasclass definition &rest attributes)
+  "Expand call to ALIAS-TAG grammar macro.
+Return the form to create a semantic tag of class alias.
+See the function `semantic-tag-new-alias' for the meaning of arguments
+NAME, ALIASCLASS, DEFINITION and ATTRIBUTES."
+  `(wisent-raw-tag
+    (semantic-tag-new-alias ,name ,aliasclass ,definition ,@attributes)))
+
 (defun wisent-grammar-EXPANDTAG (raw-tag)
   "Expand call to EXPANDTAG grammar macro.
 Return the form to produce a list of cooked tags from raw form of
@@ -172,6 +180,24 @@ Return the form to merge the abstract syntax trees AST1 and AST2.
 See also the function `semantic-ast-merge'."
   `(semantic-ast-merge ,ast1 ,ast2))
 
+(defun wisent-grammar-SKIP-BLOCK (&optional symb)
+  "Expand call to SKIP-BLOCK grammar macro.
+Return the form to skip a parenthesized block.
+Optional argument SYMB is a $I placeholder symbol that gives the
+bounds of the block to skip.  By default, skip the block at `$1'.
+See also the function `wisent-skip-block'."
+  (let ($ri)
+    (when symb
+      (unless (setq $ri (wisent-grammar-region-placeholder symb))
+        (error "Invalid form (SKIP-BLOCK %s)" symb)))
+    `(wisent-skip-block ,$ri)))
+
+(defun wisent-grammar-SKIP-TOKEN ()
+  "Expand call to SKIP-TOKEN grammar macro.
+Return the form to skip the lookahead token.
+See also the function `wisent-skip-token'."
+  `(wisent-skip-token))
+
 (defvar-mode-local wisent-grammar-mode semantic-grammar-macros
   '(
     (ASSOC          . semantic-grammar-ASSOC)
@@ -185,12 +211,15 @@ See also the function `semantic-ast-merge'."
     (PACKAGE-TAG    . wisent-grammar-PACKAGE-TAG)
     (EXPANDTAG      . wisent-grammar-EXPANDTAG)
     (CODE-TAG       . wisent-grammar-CODE-TAG)
+    (ALIAS-TAG      . wisent-grammar-ALIAS-TAG)
     (AST-ADD        . wisent-grammar-AST-ADD)
     (AST-PUT        . wisent-grammar-AST-PUT)
     (AST-GET        . wisent-grammar-AST-GET)
     (AST-GET1       . wisent-grammar-AST-GET1)
     (AST-GET-STRING . wisent-grammar-AST-GET-STRING)
     (AST-MERGE      . wisent-grammar-AST-MERGE)
+    (SKIP-BLOCK     . wisent-grammar-SKIP-BLOCK)
+    (SKIP-TOKEN     . wisent-grammar-SKIP-TOKEN)
     )
   "Semantic grammar macros used in wisent grammars.")
 

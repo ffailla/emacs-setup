@@ -1,10 +1,10 @@
-;;; ede-pmake.el --- EDE Generic Project Makefile code generator.
+;; ede-pmake.el --- EDE Generic Project Makefile code generator.
 
-;;;  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004  Eric M. Ludlam
+;;;  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
-;; RCS: $Id: ede-pmake.el,v 1.43 2004/06/24 08:06:50 ponced Exp $
+;; RCS: $Id: ede-pmake.el,v 1.66 2010/03/15 13:40:54 xscript Exp $
 
 ;; This software is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;; 
@@ -44,6 +44,7 @@
 ;;       1) Insert distribution source variables for targets
 ;;       2) Insert user requested rules
 
+(eval-when-compile (require 'cl))
 (require 'ede-proj)
 (require 'ede-proj-obj)
 (require 'ede-proj-comp)
@@ -52,17 +53,18 @@
 (defmethod ede-proj-makefile-create ((this ede-proj-project) mfilename)
   "Create a Makefile for all Makefile targets in THIS.
 MFILENAME is the makefile to generate."
-  (let ((mt nil) tmp
+  (let ((mt nil)
 	(isdist (string= mfilename (ede-proj-dist-makefile this)))
 	(depth 0)
-	(tmp this)
+	(orig-buffer nil)
+	(buff-to-kill nil)
 	)
     ;; Find out how deep this project is.
-    (while (ede-parent-project tmp)
-      (setq depth (1+ depth)
-	    tmp (ede-parent-project tmp)))
+    (let ((tmp this))
+      (while (setq tmp (ede-parent-project tmp))
+	(setq depth (1+ depth))))
     ;; Collect the targets that belong in a makefile.
-    (mapcar
+    (mapc
      (lambda (obj)
        (if (and (obj-of-class-p obj 'ede-proj-target-makefile)
 		(string= (oref obj makefile) mfilename))
@@ -72,30 +74,39 @@ MFILENAME is the makefile to generate."
     (setq mt (nreverse mt))
     ;; Add in the header part of the Makefile*
     (save-excursion
-      (set-buffer (find-file-noselect mfilename))
+      (setq orig-buffer (get-file-buffer mfilename))
+      (set-buffer (setq buff-to-kill (find-file-noselect mfilename)))
+      (goto-char (point-min))
+      (if (and
+	   (not (eobp))
+	   (not (looking-at "# Automatically Generated \\w+ by EDE.")))
+	  (if (not (y-or-n-p (format "Really replace %s? " mfilename)))
+	      (error "Not replacing Makefile"))
+	(message "Replace EDE Makefile"))
       (erase-buffer)
+      (ede-srecode-setup)
       ;; Insert a giant pile of stuff that is common between
       ;; one of our Makefiles, and a Makefile.in
-      (insert
-       "# Automatically Generated " (file-name-nondirectory mfilename)
-       " by EDE.\n"
-       "# For use with: "
+      (ede-srecode-insert
+       "file:ede-empty"
+       "MAKETYPE"
        (with-slots (makefile-type) this
 	 (cond ((eq makefile-type 'Makefile) "make")
 	       ((eq makefile-type 'Makefile.in) "autoconf")
 	       ((eq makefile-type 'Makefile.am) "automake")
-	       (t (error ":makefile-type in project invalid"))))
-       "\n#\n"
-       "# DO NOT MODIFY THIS FILE OR YOUR CHANGES MAY BE LOST.\n"
-       "# EDE is the Emacs Development Environment.\n"
-       "# http://cedet.sourceforge.net/ede.shtml\n"
-       "# \n")
+	       (t (error ":makefile-type in project invalid")))))
+
       ;; Just this project's variables
       (ede-proj-makefile-insert-variables this)
+
       ;; Space
       (insert "\n")
+
       (cond
        ((eq (oref this makefile-type) 'Makefile)
+	;; Make sure the user has the right kind of make
+	(ede-make-check-version)
+
 	(let* ((targ (if isdist (oref this targets) mt))
 	       (sp (oref this subproj))
 	       (df (apply 'append
@@ -104,7 +115,7 @@ MFILENAME is the makefile to generate."
 				  targ))))
 	  ;; Distribution variables
 	  (ede-compiler-begin-unique
-	    (mapcar 'ede-proj-makefile-insert-variables targ))
+	    (mapc 'ede-proj-makefile-insert-variables targ))
 	  ;; Only add the distribution stuff in when depth != 0
 	  (let ((top  (ede-toplevel this))
 		(tmp this)
@@ -164,6 +175,8 @@ MFILENAME is the makefile to generate."
 		(oref this include-file))
 	  ;; Some C inference rules
 	  ;; Dependency rules borrowed from automake.
+	  ;;
+	  ;; NOTE: This is GNU Make specific.
 	  (if (and (oref this automatic-dependencies) df)
 	      (insert "DEPS_MAGIC := $(shell mkdir .deps > /dev/null "
 		      "2>&1 || :)\n"
@@ -189,6 +202,9 @@ MFILENAME is the makefile to generate."
 	(error "Makefile.in is not supported"))
        ((eq (oref this makefile-type) 'Makefile.am)
 	(require 'ede-pconf)
+	;; Basic vars needed:
+	(ede-proj-makefile-automake-insert-subdirs this)
+	(ede-proj-makefile-automake-insert-extradist this)
 	;; Distribution variables
 	(let ((targ (if isdist (oref this targets) mt)))
 	  (ede-compiler-begin-unique
@@ -204,7 +220,11 @@ MFILENAME is the makefile to generate."
 	)
        (t (error "Unknown makefile type when generating Makefile")))
       ;; Put the cursor in a nice place
-      (goto-char (point-min)))))
+      (goto-char (point-min)))
+    ;; If we have an original buffer, then don't kill it.
+    (when (not orig-buffer)
+      (kill-buffer buff-to-kill))
+    ))
 
 ;;; VARIABLE insertion
 ;;
@@ -220,26 +240,42 @@ MFILENAME is the makefile to generate."
   "Add VARNAME into the current Makefile.
 Execute BODY in a location where a value can be placed."
   `(let ((addcr t) (v ,varname))
-       (if (re-search-backward (concat "^" v "\\s-*=") nil t)
-	   (progn
-	     (ede-pmake-end-of-variable)
-	     (if (< (current-column) 40)
-		 (if (and (/= (preceding-char) ?=)
-			  (/= (preceding-char) ? ))
-		     (insert " "))
-	       (insert "\\\n   "))
-	     (setq addcr nil))
-	 (insert v "="))
+     (if (save-excursion
+	   (goto-char (point-max))
+	   (re-search-backward (concat "^" v "\\s-*=") nil t))
+	 (progn
+	   (goto-char (match-end 0))
+	   (ede-pmake-end-of-variable)
+	   (if (< (current-column) 40)
+	       (if (and (/= (preceding-char) ?=)
+			(/= (preceding-char) ? ))
+		   (insert " "))
+	     (insert "\\\n   "))
+	   (setq addcr nil))
+       (insert v "="))
+     ,@body
+     (if addcr (insert "\n"))
+     (goto-char (point-max))))
+(put 'ede-pmake-insert-variable-shared 'lisp-indent-function 1)
+
+(defmacro ede-pmake-insert-variable-once (varname &rest body)
+  "Add VARNAME into the current Makefile if it doesn't exist.
+Execute BODY in a location where a value can be placed."
+  `(let ((addcr t) (v ,varname))
+     (unless (re-search-backward (concat "^" v "\\s-*=") nil t)
+       (insert v "=")
        ,@body
        (if addcr (insert "\n"))
-       (goto-char (point-max))))
-(put 'ede-pmake-insert-variable-shared 'lisp-indent-function 1)
+       (goto-char (point-max)))
+     ))
+(put 'ede-pmake-insert-variable-once 'lisp-indent-function 1)
 
 ;;; SOURCE VARIABLE NAME CONSTRUCTION
 ;;
 ;;;###autoload
 (defun ede-pmake-varname (obj)
-  "Convert OBJ into a variable name name, which converts .  to _."
+  "Convert OBJ into a variable name name.
+Change .  to _ in the variable name."
   (let ((name (oref obj name)))
     (while (string-match "\\." name)
       (setq name (replace-match "_" nil t name)))
@@ -264,6 +300,61 @@ Argument THIS is the target to get sources from."
 Use CONFIGURATION as the current configuration to query."
   (cdr (assoc configuration (oref this configuration-variables))))
 
+(defmethod ede-proj-makefile-insert-variables-new ((this ede-proj-project))
+  "Insert variables needed by target THIS.
+
+NOTE: Not yet in use!  This is part of an SRecode conversion of
+      EDE that is in progress."
+;  (let ((conf-table (ede-proj-makefile-configuration-variables
+;		     this (oref this configuration-default)))
+;	(conf-done nil))
+;
+;    (ede-srecode-insert-with-dictionary
+;     "declaration:ede-vars"
+;
+;     ;; Insert all variables, and augment them with details from
+;     ;; the current configuration.
+;     (mapc (lambda (c)
+;
+;	     (let ((ldict (srecode-dictionary-add-section-dictionary
+;			   dict "VARIABLE"))
+;		   )
+;	       (srecode-dictionary-set-value ldict "NAME" (car c))
+;	       (if (assoc (car c) conf-table)
+;		   (let ((vdict (srecode-dictionary-add-section-dictionary
+;				 ldict "VALUE")))
+;		     (srecode-dictionary-set-value
+;		      vdict "VAL" (cdr (assoc (car c) conf-table)))
+;		     (setq conf-done (cons (car c) conf-done))))
+;	       (let ((vdict (srecode-dictionary-add-section-dictionary
+;			     ldict "VALUE")))
+;		 (srecode-dictionary-set-value vdict "VAL" (cdr c))))
+;	     )
+;
+;	   (oref this variables))
+;
+;     ;; Add in all variables from the configuration not allready covered.
+;     (mapc (lambda (c)
+;
+;	     (if (member (car c) conf-done)
+;		 nil
+;	       (let* ((ldict (srecode-dictionary-add-section-dictionary
+;			      dict "VARIABLE"))
+;		      (vdict (srecode-dictionary-add-section-dictionary
+;			      ldict "VALUE"))
+;		      )
+;		 (srecode-dictionary-set-value ldict "NAME" (car c))
+;		 (srecode-dictionary-set-value vdict "VAL" (cdr c))))
+;	     )
+;
+;	   conf-table)
+;
+     
+     ;; @TODO - finish off this function, and replace the below fcn
+
+;     ))
+  )
+
 (defmethod ede-proj-makefile-insert-variables ((this ede-proj-project))
   "Insert variables needed by target THIS."
   (let ((conf-table (ede-proj-makefile-configuration-variables
@@ -287,10 +378,14 @@ Use CONFIGURATION as the current configuration to query."
 	  conf-table))
   (let* ((top "")
 	 (tmp this))
+    ;; Use relativistic paths for subdirs.
     (while (ede-parent-project tmp)
       (setq tmp (ede-parent-project tmp)
 	    top (concat "../" top)))
-    (insert "\ntop=" top))
+    ;; If this is the top, then use CURDIR.
+    (if (and (not (oref this metasubproject)) (string= top ""))
+	(insert "\ntop=\"$(CURDIR)\"/")
+      (insert "\ntop=" top)))
   (insert "\nede_FILES=" (file-name-nondirectory (oref this file)) " "
 	  (file-name-nondirectory (ede-proj-dist-makefile this)) "\n"))
 
@@ -316,19 +411,36 @@ sources variable."
   (ede-proj-makefile-insert-source-variables this moresource)
   )
 
+(defmethod ede-proj-makefile-configuration-variables ((this ede-proj-target-makefile)
+						      configuration)
+  "Return a list of configuration variables from THIS.
+Use CONFIGURATION as the current configuration to query."
+  (cdr (assoc configuration (oref this configuration-variables))))
+
 (defmethod ede-proj-makefile-insert-variables ((this ede-proj-target-makefile)
 					       &optional moresource)
   "Insert variables needed by target THIS.
 Optional argument MORESOURCE is a list of additional sources to add to the
 sources variable."
   (call-next-method)
+  (let* ((proj (ede-target-parent this))
+	 (conf-table (ede-proj-makefile-configuration-variables
+		      this (oref proj configuration-default)))
+	 (conf-done nil)
+	 )
+    ;; Add in all variables from the configuration not allready covered.
+    (mapc (lambda (c)
+	    (if (member (car c) conf-done)
+		nil
+	      (insert (car c) "=" (cdr c) "\n")))
+	  conf-table))
   (let ((comp (ede-proj-compilers this))
 	(link (ede-proj-linkers this))
 	(name (ede-proj-makefile-target-name this))
 	(src (oref this source)))
+    (ede-proj-makefile-insert-object-variables (car comp) name src)
     (while comp
       (ede-compiler-only-once (car comp)
-	(ede-proj-makefile-insert-object-variables (car comp) name src)
 	(ede-proj-makefile-insert-variables (car comp)))
       (setq comp (cdr comp)))
     (while link
@@ -349,7 +461,7 @@ sources variable."
 ;;; GARBAGE PATTERNS
 ;;
 (defmethod ede-proj-makefile-garbage-patterns ((this ede-proj-project))
-  "Return a list of patterns that are considred garbage to THIS.
+  "Return a list of patterns that are considered garbage to THIS.
 These are removed with make clean."
   (let ((mc (ede-map-targets
 	     this (lambda (c) (ede-proj-makefile-garbage-patterns c))))
@@ -364,7 +476,7 @@ These are removed with make clean."
     (nreverse uniq)))
 
 (defmethod ede-proj-makefile-garbage-patterns ((this ede-proj-target))
-  "Return a list of patterns that are considred garbage to THIS.
+  "Return a list of patterns that are considered garbage to THIS.
 These are removed with make clean."
   ;; Get the  the source object from THIS, and use the specified garbage.
   (let ((src (ede-target-sourcecode this))
@@ -383,9 +495,7 @@ These are removed with make clean."
   (newline)
   (insert (ede-name this) ":")
   (newline)
-  (insert "\tcd "
-	  (directory-file-name (ede-subproject-relative-path this))
-	  "; $(MAKE)")
+  (insert "\t$(MAKE) -C " (directory-file-name (ede-subproject-relative-path this)))
   (newline)
   (newline)
   )
@@ -412,6 +522,19 @@ Argument THIS is the target that should insert stuff."
   (ede-proj-makefile-insert-dist-dependencies this)
   )
 
+(defmethod ede-proj-makefile-automake-insert-subdirs ((this ede-proj-project))
+  "Insert a SUBDIRS variable for Automake."
+  (ede-pmake-insert-variable-once "SUBDIRS"
+    (ede-map-subprojects
+     this (lambda (sproj)
+	    (insert " " (ede-subproject-relative-path sproj))
+	    ))))
+
+(defmethod ede-proj-makefile-automake-insert-extradist ((this ede-proj-project))
+  "Insert the EXTRADIST variable entries needed for Automake and EDE."
+  (ede-pmake-insert-variable-once "EXTRA_DIST"
+    (insert "Project.ede")))
+
 (defmethod ede-proj-makefile-insert-dist-rules ((this ede-proj-project))
   "Insert distribution rules for THIS in a Makefile, such as CLEAN and DIST."
   (let ((junk (ede-proj-makefile-garbage-patterns this))
@@ -422,6 +545,8 @@ Argument THIS is the target that should insert stuff."
 		"\trm -f "
 		(mapconcat (lambda (c) c) junk " ")
 		"\n\n"))
+    ;; @TODO: ^^^ Clean should also recurse. ^^^
+
     (insert ".PHONY: dist\n")
     (insert "\ndist:")
     (ede-proj-makefile-insert-dist-dependencies this)
@@ -458,8 +583,7 @@ Argument THIS is the target that should insert stuff."
     (ede-map-subprojects
      this (lambda (sproj)
 	    (let ((rp (directory-file-name (ede-subproject-relative-path sproj))))
-	      (insert "\tcd " rp
-		      "; $(MAKE) $(MFLAGS) DISTDIR=$(DISTDIR)/" rp
+	      (insert "\t$(MAKE) -C " rp " $(MFLAGS) DISTDIR=$(DISTDIR)/" rp
 		      " dist"
 		      "\n"))))
 
@@ -502,7 +626,9 @@ Argument THIS is the target that should insert stuff."
   "Insert the commands needed by target THIS.
 For targets, insert the commands needed by the chosen compiler."
   (mapc 'ede-proj-makefile-insert-commands (ede-proj-compilers this))
-  (mapc 'ede-proj-makefile-insert-commands (ede-proj-linkers this)))
+  (when (object-assoc t :uselinker (ede-proj-compilers this))
+    (mapc 'ede-proj-makefile-insert-commands (ede-proj-linkers this))))
+
 
 (defmethod ede-proj-makefile-insert-user-rules ((this ede-proj-project))
   "Insert user specified rules needed by THIS target.
@@ -529,7 +655,7 @@ This allows customization of how these elements appear."
 	    (setq out
 		  (concat out "$(" (ede-compiler-intermediate-object-variable
 				    (car c)
-				    (ede-pmake-varname this)) ")")
+				    (ede-proj-makefile-target-name this)) ")")
 		  c (cdr c)))
 	  out)
       (let ((sv (ede-proj-makefile-sourcevar this))
@@ -560,7 +686,7 @@ Argument TARGETS are the targets we should depend on for TAGS."
     ;; Now recurse into all subprojects
     (setq tg (oref this subproj))
     (while tg
-      (insert "\tcd " (ede-subproject-relative-path (car tg)) "; make $(MFLAGS) $@\n")
+      (insert "\t$(MAKE) -C " (ede-subproject-relative-path (car tg)) " $(MFLAGS) $@\n")
       (setq tg (cdr tg)))
     (insert "\n")))
 

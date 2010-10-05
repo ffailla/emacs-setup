@@ -2,7 +2,6 @@
 ;; EDE project file.
 (ede-proj-project "EDE"
   :name "EDE"
-  :version "1.0beta3"
   :file "Project.ede"
   :targets (list 
    (ede-proj-target-elisp-autoloads "autoloads"
@@ -14,33 +13,46 @@
     :name "init"
     :path ""
     :source '("ede-load.el")
+    :compiler 'ede-emacs-preload-compiler
+    :pre-load-packages '("cedet-compat")
     )
    (ede-proj-target-elisp "ede"
     :name "ede"
     :path ""
-    :source '("project-am.el" "ede.el" "ede-pmake.el" "ede-pconf.el" "ede-proj.el" "ede-dired.el" "ede-proj-elisp.el" "ede-proj-misc.el" "ede-proj-obj.el" "ede-proj-prog.el" "ede-proj-archive.el" "ede-proj-shared.el" "ede-proj-info.el" "ede-proj-scheme.el" "ede-proj-aux.el" "ede-proj-comp.el" "ede-source.el" "ede-util.el" "ede-system.el" "ede-speedbar.el")
+    :source '("ede.el" "ede-auto.el" "ede-base.el" "ede-custom.el" "ede-dired.el" "ede-source.el" "ede-util.el" "ede-system.el" "ede-speedbar.el" "ede-srecode.el" "ede-files.el" "ede-locate.el" "ede-make.el" "ede-shell.el")
     :versionsource '("ede.el")
-    :aux-packages '("eieio" "speedbar")
+    :compiler 'ede-emacs-preload-compiler
+    :aux-packages '("eieio" "speedbar" "cedet-files" "srecode")
+    )
+   (ede-proj-target-elisp "proj-project"
+    :name "proj-project"
+    :path ""
+    :source '("ede-proj.el" "ede-pmake.el" "ede-pconf.el" "ede-proj-elisp.el" "ede-proj-misc.el" "ede-proj-obj.el" "ede-proj-prog.el" "ede-proj-archive.el" "ede-proj-shared.el" "ede-proj-info.el" "ede-proj-scheme.el" "ede-proj-aux.el" "ede-proj-comp.el")
+    :compiler 'ede-emacs-preload-compiler
+    :aux-packages '("eieio" "speedbar" "cedet-files" "srecode")
+    )
+   (ede-proj-target-elisp "projects"
+    :name "projects"
+    :path ""
+    :source '("project-am.el" "ede-simple.el" "ede-cpp-root.el" "ede-emacs.el" "ede-linux.el" "ede-generic.el")
+    :compiler 'ede-emacs-preload-compiler
+    :aux-packages '("eieio" "cedet-files" "semantic" "semantic-el")
     )
    (ede-proj-target-elisp "aux-lisp"
     :name "aux-lisp"
     :path ""
-    :source '("autoconf-edit.el" "autoconf-compat.el")
+    :source '("autoconf-edit.el" "autoconf-compat.el" "makefile-edit.el")
     )
    (ede-proj-target-aux "misc"
     :name "misc"
     :path ""
-    :source '("NEWS" "README" "TODO" "ede-proj-skel.el")
+    :source '("README" "ede-proj-skel.el" "ChangeLog")
     )
    (ede-proj-target-makefile-info "ede"
     :name "ede.info"
     :path ""
     :source '("ede.texi" "ede-projects.texi" "ede-targets.texi" "ede-sourcecode.texi" "ede-compilers.texi")
     :mainmenu "ede.texi"
-    )
-   (ede-proj-target-aux "test"
-    :name "test"
-    :path "subdir/"
     )
    )
   :web-site-url "http://cedet.sourceforge.net/ede.shtml"

@@ -12,7 +12,7 @@ identifying components in a programming language source for purposes
 such as color highlighting.  This approach has proved is usefulness,
 but have limitations.
 
-@semantic{} provides a new intrastructure that goes far beyond text
+@semantic{} provides a new infrastructure that goes far beyond text
 analysis based on regular expressions.
 
 @semantic{} uses @dfn{parsers} to analyze programming language
@@ -215,7 +215,7 @@ which are in the internal representation of the language grammar used by
 @semantic{}.
 
 The @semantic{} database provides caching of the parse trees by saving them
-into files named @file{semantic.cache} automatically when loading them
+into files named @file{semantic.cache}, and automatically loading them
 when appropriate instead of re-parsing.  The reason for this is to save the
 time it takes to parse a file which could take several seconds or more
 for large files.

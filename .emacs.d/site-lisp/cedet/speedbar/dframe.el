@@ -1,10 +1,10 @@
 ;;; dframe --- dedicate frame support modes
 
-;;; Copyright (C) 1996, 97, 98, 99, 2000, 01, 02, 03, 04 Free Software Foundation
+;;; Copyright (C) 1996, 97, 98, 99, 2000, 01, 02, 03, 04, 05, 10 Free Software Foundation
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: file, tags, tools
-;; X-RCS: $Id: dframe.el,v 1.25 2004/03/06 19:29:52 zappo Exp $
+;; X-RCS: $Id: dframe.el,v 1.30 2010/05/21 02:40:57 zappo Exp $
 
 (defvar dframe-version "1.3"
   "The current version of the dedicated frame library.")
@@ -23,8 +23,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -116,35 +116,7 @@
 (defvar dframe-xemacs20p (and dframe-xemacsp
 			      (>= emacs-major-version 20)))
 
-;; From custom web page for compatibility between versions of custom
-;; with help from ptype@dera.gov.uk (Proto Type)
-(eval-and-compile
-  (condition-case ()
-      (require 'custom)
-    (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable)
-	   ;; Some XEmacsen w/ custom don't have :set keyword.
-	   ;; This protects them against custom.
-	   (fboundp 'custom-initialize-set))
-      nil ;; We've got what we needed
-    ;; We have the old custom-library, hack around it!
-    (if (boundp 'defgroup)
-	nil
-      (defmacro defgroup (&rest args)
-	nil))
-    (if (boundp 'defface)
-	nil
-      (defmacro defface (var values doc &rest args)
-	(` (progn
-	     (defvar (, var) (quote (, var)))
-	     ;; To make colors for your faces you need to set your .Xdefaults
-	     ;; or set them up ahead of time in your .emacs file.
-	     (make-face (, var))
-	     ))))
-    (if (boundp 'defcustom)
-	nil
-      (defmacro defcustom (var value doc &rest args)
-	(` (defvar (, var) (, value) (, doc)))))))
+(require 'custom)
 
 
 ;;; Compatibility functions
@@ -192,6 +164,11 @@ Thus, if a file is selected for edit, the buffer will appear in the
 selected frame and the focus will change to that frame."
   :group 'dframe
   :type 'boolean)
+
+(defcustom dframe-after-select-attached-frame-hook nil
+  "*Hook run after dframe has selected the attached frame."
+  :group 'dframe
+  :type 'hook)
 
 (defvar dframe-track-mouse-function nil
   "*A function to call when the mouse is moved in the given frame.
@@ -502,7 +479,7 @@ a cons cell indicationg a position of the form (LEFT . TOP)."
 	     (setq newleft (+ pfx pfw 5)
 		   newtop pfy))
 	    ((eq location 'left)
-	     (setq newleft (+ pfx 10 nfw)
+	     (setq newleft (- pfx 10 nfw)
 		   newtop pfy))
 	    ((eq location 'left-right)
 	     (setq newleft
@@ -600,7 +577,6 @@ The function must take an EVENT.")
 Should enables auto-updating if the last state was also enabled.
 Argument E is the event making the frame visible."
   (interactive "e")
-  (message "%S" e)
   (let ((f last-event-frame))
     (if (and (dframe-attached-frame f)
 	     dframe-make-frame-visible-function)
@@ -612,7 +588,6 @@ Argument E is the event making the frame visible."
 Should disables auto-updating if the last state was also enabled.
 Argument E is the event iconifying the frame."
   (interactive "e")
-  (message "%S" e)
   (let ((f last-event-frame))
     (if (and (dframe-attached-frame f)
 	     dframe-iconify-frame-function e)
@@ -623,7 +598,6 @@ Argument E is the event iconifying the frame."
   "Handle `delete-frame' event.
 Argument E is the event deleting the frame."
   (interactive "e")
-  (message "%S" e)
   (let ((fl (frame-list))
 	(sf (selected-frame)))
     ;; Loop over all frames.  If dframe-delete-frame-function is
@@ -650,7 +624,7 @@ selecting FRAME."
   (interactive)
   (if (eq (selected-frame) (symbol-value frame-var))
       (if (frame-live-p dframe-attached-frame)
-	  (select-frame dframe-attached-frame))
+	  (dframe-select-attached-frame))
     ;; make sure we have a frame
     (if (not (frame-live-p (symbol-value frame-var)))
 	(funcall activator 1))
@@ -682,33 +656,40 @@ If the current frame's buffer uses DESIRED-MAJOR-MODE, then use that frame."
 	(symbol-value frame-var))
     (symbol-value frame-var)))
 
-(defun dframe-attached-frame (frame)
-  "Return the attached frame belonging to the dframe controlled frame FRAME."
+(defun dframe-attached-frame (&optional frame)
+  "Return the attached frame belonging to the dframe controlled frame FRAME.
+If optional arg FRAME is nil just return `dframe-attached-frame'."
   (save-excursion
     (if frame (select-frame frame))
     dframe-attached-frame))
 
-(defun dframe-select-attached-frame (frame)
-  "Switch to the frame the dframe controled frame FRAME was started from."
+(defun dframe-select-attached-frame (&optional frame)
+  "Switch to the frame the dframe controlled frame FRAME was started from. If
+optional arg FRAME is nil assume the attached frame is already selected and
+just run the hooks `dframe-after-select-attached-frame-hook'. Return the
+attached frame."
   (let ((frame (dframe-attached-frame frame)))
-    (if frame (select-frame frame) nil)))
+    (if frame (select-frame frame))
+    (prog1 frame
+      (run-hooks 'dframe-after-select-attached-frame-hook))))
 
 (defmacro dframe-with-attached-buffer (&rest forms)
   "Execute FORMS in the attached frame's special buffer.
 Optionally select that frame if necessary."
   `(save-selected-window
      ;;(speedbar-set-timer speedbar-update-speed)
-     (select-frame dframe-attached-frame)
+     (dframe-select-attached-frame)
      ,@forms
      (dframe-maybee-jump-to-attached-frame)))
 
 (defun dframe-maybee-jump-to-attached-frame ()
   "Jump to the attached frame ONLY if this was not a mouse event."
-  (if (or (not (dframe-mouse-event-p last-input-event))
-	  dframe-activity-change-focus-flag)
-      (progn
-	;(select-frame dframe-attached-frame)
-	(other-frame 0))))
+  (when (or (not (dframe-mouse-event-p last-input-event))
+            dframe-activity-change-focus-flag)
+    (dframe-select-attached-frame)
+    ;; KB: For what is this - raising the frame?? 
+    (other-frame 0)))
+
 
 (defvar dframe-suppress-message-flag nil
   "Non-nil means that `dframe-message' should just return a string.")
@@ -720,6 +701,7 @@ Argument FMT is the format string, and ARGS are the arguments for message."
     (if dframe-suppress-message-flag
 	(apply 'format fmt args)
       (if dframe-attached-frame
+          ;; KB: Here we do not need calling `dframe-select-attached-frame'
 	  (select-frame dframe-attached-frame))
       (apply 'message fmt args))))
 
@@ -731,6 +713,7 @@ Argument PROMPT is the prompt to use."
 	     dframe-attached-frame
 	     ;;(not (eq default-minibuffer-frame dframe-attached-frame))
 	     )
+        ;; KB: Here we do not need calling `dframe-select-attached-frame'
 	(select-frame dframe-attached-frame))
     (y-or-n-p prompt)))
 
@@ -978,7 +961,7 @@ This should be bound to mouse event E."
   "Placed in the variable `temp-buffer-show-function' in dedicated frames.
 If a user requests help using \\[help-command] <Key> the temp BUFFER will be
 redirected into a window on the attached frame."
-  (if dframe-attached-frame (select-frame dframe-attached-frame))
+  (if dframe-attached-frame (dframe-select-attached-frame))
   (pop-to-buffer buffer nil)
   (other-window -1)
   ;; Fix for using this hook on some platforms: Bob Weiner

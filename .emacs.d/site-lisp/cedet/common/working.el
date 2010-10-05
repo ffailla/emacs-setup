@@ -1,9 +1,10 @@
 ;;; working --- Display a "working" message in the minibuffer.
 
-;;;  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003  Eric M. Ludlam
+;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003,
+;;               2004, 2007, 2008, 2009  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
-;; Version: 1.4
+;; Version: 1.5
 ;; Keywords: status
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -18,8 +19,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -99,8 +100,13 @@
 ;; 1.3 Added `working-status-timeout' and `working-status-call-process'.
 ;;     Added test fns `working-wait-for-keypress' and `working-verify-sleep'.
 ;;
+;; 1.4 ???
+;;
+;; 1.5 Use features from the fame library.
+;;
 
 (require 'custom)
+(require 'fame)
 
 ;;; Code:
 (defgroup working nil
@@ -162,8 +168,8 @@ percentage display.  A number such as `2' means `2%'."
 ;; When the user doesn't want messages in the minibuffer, hack the mode
 ;; line of the current buffer.
 (if (featurep 'xemacs)
-    (defalias 'working-mode-line-update 'redraw-modeline)
-  (defalias 'working-mode-line-update 'force-mode-line-update))
+    (eval-and-compile (defalias 'working-mode-line-update 'redraw-modeline))
+  (eval-and-compile (defalias 'working-mode-line-update 'force-mode-line-update)))
 
 (defvar working-mode-line-message nil
   "Message used by working when showing status in the mode line.")
@@ -200,38 +206,29 @@ percentage display.  A number such as `2' means `2%'."
 ;;; Programmer functions
 ;;
 (eval-when-compile
-  (or (fboundp 'noninteractive)
-      ;; Silence the Emacs byte compiler
-      (defun noninteractive nil))
-  (or (boundp 'noninteractive)
-      ;; Silence the XEmacs byte compiler
-      (defvar noninteractive))
-  )
+  (cond
+   ((fboundp 'noninteractive)
+    ;; Silence the XEmacs byte compiler
+    (defvar noninteractive))
+   ((boundp 'noninteractive)
+    ;; Silence the Emacs byte compiler
+    (defun noninteractive nil))
+   ))
 
-(defun working-message-emacs (&rest args)
+(defsubst working-noninteractive ()
+  "Return non-nil if running without interactive terminal."
+  (if (boundp 'noninteractive)
+      noninteractive
+    (noninteractive)))
+
+(defun working-message-echo (&rest args)
   "Print but don't log a one-line message at the bottom of the screen.
 See the function `message' for details on ARGS."
-  (or noninteractive
-      (let ((message-log-max nil)) ;; No logging
-        (apply 'message args))))
+  (or (working-noninteractive)
+      (apply 'fame-message-nolog args)))
 
-(defun working-message-xemacs (&rest args)
-  "Print but don't log a one-line message at the bottom of the screen.
-See the function `message' for details on ARGS."
-  (or (noninteractive)
-      (let ((log-message-filter-function #'ignore)) ;; No logging
-        (apply 'message args))))
-
-(eval-and-compile
-  (defalias 'working-message-echo
-    (if (boundp 'log-message-filter-function)
-	'working-message-xemacs
-      'working-message-emacs))
-  (defalias 'working-current-message
-    (if (fboundp 'current-message)
-        'current-message
-      'ignore))
-  )
+(defalias 'working-current-message 'fame-current-message)
+(defalias 'working-temp-message 'fame-temp-message)
 
 (defun working-message (&rest args)
   "Display a message using `working-message-echo' or in mode line.
@@ -245,52 +242,10 @@ See the function `message' for details on ARGS."
       (sit-for 0)
       )))
 
-;;; Display messages temporarily
-;;
-(cond
- ;; We need timers to display messages temporarily
- ((fboundp 'run-with-timer)
-
-  (defvar working-temp-message-delay 1
-    "Lifetime of a temporary message, in seconds.")
-  
-  (defvar working-temp-message-timer nil)
-  (defvar working-temp-message-saved nil)
-  
-  (defun working-temp-restore-message ()
-    "Restore a previous non temporary message."
-    (when (timerp working-temp-message-timer)
-      (cancel-timer working-temp-message-timer)
-      (setq working-temp-message-timer nil))
-    (when working-temp-message-saved
-      (working-message-echo working-temp-message-saved)
-      (setq working-temp-message-saved nil)))
-  
-  (defun working-temp-message (string &rest args)
-    "Display a message temporarily.
-Pass STRING and ARGS to the function `message'.
-The original message is restored to the echo area after
-`working-temp-message-delay' seconds."
-    ;;(declare (debug t))
-    (condition-case nil
-        (progn
-          (working-temp-restore-message)
-          (setq working-temp-message-saved (working-current-message))
-          (apply 'message string args)
-          (setq working-temp-message-timer
-                (run-with-timer working-temp-message-delay nil
-                                'working-temp-restore-message)))
-      (error
-       (working-temp-restore-message))))
-  )
- (t
-  (defalias 'working-temp-message 'message)
-  ))
-
 ;;; Compatibility
 (cond ((fboundp 'run-with-timer)
-       (defalias 'working-run-with-timer 'run-with-timer)
-       (defalias 'working-cancel-timer 'cancel-timer)
+       (eval-and-compile (defalias 'working-run-with-timer 'run-with-timer))
+       (eval-and-compile (defalias 'working-cancel-timer 'cancel-timer))
        )
       ;;Add compatibility here
       (t 
@@ -445,7 +400,7 @@ is t to display the done string, or the percentage to display."
   (let* ((ps (if (eq percent t)
 		 (concat "... " working-donestring)
 	       (working-percent-display length percent)))
-	 (psl (+ 2 length (if (eq percent t) working-ref1 (length ps)))))
+	 (psl (+ 2 length (length ps))))
     (cond ((eq percent t)
 	   (concat (working-bar-display psl 100) " " ps))
 	  (t
@@ -459,7 +414,7 @@ is t to display the done string, or the percentage to display."
   (let* ((ps (if (eq percent t)
 		 (concat "... " working-donestring)
 	       (working-percent-display length percent)))
-	 (psl (+ 1 length (if (eq percent t) working-ref1 (length ps)))))
+	 (psl (+ 1 length (length ps))))
     (cond ((eq percent t)
 	   (concat ps " " (working-bar-display psl 100)))
 	  (t
@@ -489,7 +444,7 @@ is t to display the done string, or the percentage to display."
   (let* ((ps (if (eq percent t)
 		 (concat " ... " working-donestring)
 	       (working-percent-display length percent)))
-	 (psl (+ 1 length (if (eq percent t) working-ref1 (length ps)))))
+	 (psl (+ 1 length (length ps))))
     (cond ((eq percent t)
 	   (concat (working-bubble-display psl t)))
 	  (t
@@ -627,41 +582,48 @@ is t to display the done string, or the number to display."
 (defun working-verify-parenthesis-a ()
   "Verify all the parenthesis in an elisp program buffer."
   (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (working-status-forms "Scanning" "done"
+  (working-status-forms "Scanning" "done"
+    (save-excursion
+      (goto-char (point-min))
       (while (not (eobp))
 	;; Use default buffer position.
 	(working-status)
 	(forward-sexp 1)
 	(sleep-for 0.05)
 	)
-      (working-status t))))
+      (working-status t))
+    (sit-for 1)))
  
 (defun working-verify-parenthesis-b ()
   "Verify all the parenthesis in an elisp program buffer."
   (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (working-status-forms "Scanning" "done"
+  (working-status-forms "Scanning" "done"
+    (save-excursion
+      (goto-char (point-min))
       (while (not (eobp))
 	;; Use default buffer position.
 	(working-dynamic-status nil)
 	(forward-sexp 1)
 	(sleep-for 0.05)
 	)
-      (working-dynamic-status t))))
+      (working-dynamic-status t))
+    (sit-for 0)))
 
 (defun working-wait-for-keypress ()
   "Display funny graphics while waiting for a keypress."
   (interactive)
-  (working-status-timeout .1 "Press a key" "done"
-    (while (sit-for 10))))
+  (working-status-timeout .1 "Working Test: Press a key" "done"
+    (while (sit-for 10)))
+  (when (input-pending-p)
+    (if (fboundp 'read-event)
+	(read-event)
+      (read-char)))
+  )
 
 (defun working-verify-sleep ()
   "Display funny graphics while waiting for sleep to sleep."
   (interactive)
-  (working-status-call-process .1 "Zzzzz" "Snort" "sleep" nil nil nil "5"))
+  (working-status-call-process .1 "Zzzzz" "Snort" "sleep" nil nil nil "2"))
 
 (defun working-verify-mode-line ()
   "Display graphics in the mode-line for timeout."

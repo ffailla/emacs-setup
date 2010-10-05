@@ -107,7 +107,7 @@ public class DefaultFormatter implements JisqlFormatter {
     }
 
     //FF - added this to account for text and ntext fields in sql server
-    public static int MAXIMUM_DISPLAY_SIZE = 2000;
+    public static int MAXIMUM_DISPLAY_SIZE = 4096;
     private static int getColumnDisplaySize(ResultSetMetaData metaData, int col) throws java.sql.SQLException
     {
 	return Math.min(MAXIMUM_DISPLAY_SIZE, metaData.getColumnDisplaySize(col));

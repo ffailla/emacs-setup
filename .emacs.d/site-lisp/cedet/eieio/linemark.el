@@ -5,7 +5,7 @@
 ;; Created: Dec 1999
 ;; Keywords: lisp
 ;;
-;; Copyright (C) 1999, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009 Eric M. Ludlam
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,8 +18,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;;; Commentary:
 ;;
@@ -75,6 +76,7 @@
 
 (defgroup linemark nil
   "Line marking/highlighting."
+  :group 'tools
   )
 
 (eval-and-compile
@@ -211,7 +213,6 @@ the buffer."
 		 (if (< 0 arg) (linemark-end entry)
 		   (linemark-begin entry))
 	       (point)))
-	 (oll nil)
 	 (dir (if (< 0 arg) 1 -1))
 	 (ofun (if (> 0 arg)
 		   'linemark-previous-overlay-change
@@ -246,9 +247,12 @@ Call the new entrie's activate method."
   (let ((file (plist-get args :filename))
 	(line (plist-get args :line))
 	(face (plist-get args :face)))
-    (if (not file) (setq file (buffer-file-name)))
-    (if (not file) (error "You can only add marks to files."))
-    (setq file (expand-file-name file))
+    (if (not file)
+        (progn
+          (setq file (buffer-file-name))
+          (if file
+              (setq file (expand-file-name file))
+            (setq file (buffer-name)))))
     (when (not line)
       (setq line (count-lines (point-min) (point)))
       (if (bolp) (setq line (1+ line))))
@@ -272,7 +276,7 @@ Call the new entrie's activate method."
 
 (defmethod linemark-display ((g linemark-group) active-p)
   "Set object G to be active or inactive."
-  (mapcar (lambda (g) (linemark-display g active-p)) (oref g marks))
+  (mapc (lambda (g) (linemark-display g active-p)) (oref g marks))
   (oset g active active-p))
 
 (defmethod linemark-display ((e linemark-entry) active-p)
@@ -282,20 +286,25 @@ Call the new entrie's activate method."
 	(if (oref e overlay)
 	    ;; Already active
 	    nil
-	  (if (get-file-buffer file)
-	      (save-excursion
-		(set-buffer (get-file-buffer file))
-		(goto-line (oref e line))
-		(beginning-of-line)
-		(oset e overlay
-		      (linemark-make-overlay (point)
-					     (save-excursion
-					       (end-of-line) (point))
-					     (current-buffer)))
-		(with-slots (overlay) e
-		  (linemark-overlay-put overlay 'face (oref e face))
-		  (linemark-overlay-put overlay 'obj e)
-		  (linemark-overlay-put overlay 'tag 'linemark))))))
+          (let ((buffer))
+	    (if (get-file-buffer file)
+                (setq buffer (get-file-buffer file))
+              (setq buffer (get-buffer file)))
+            (if buffer
+		(save-excursion
+                  (set-buffer buffer)
+                  (save-excursion
+                    (goto-line (oref e line))
+                    (beginning-of-line)
+                    (oset e overlay
+                          (linemark-make-overlay (point)
+                                                 (save-excursion
+                                                   (end-of-line) (point))
+                                                 (current-buffer)))
+                    (with-slots (overlay) e
+                      (linemark-overlay-put overlay 'face (oref e face))
+                      (linemark-overlay-put overlay 'obj e)
+                      (linemark-overlay-put overlay 'tag 'linemark))))))))
     ;; Not active
     (with-slots (overlay) e
       (if overlay
@@ -308,7 +317,7 @@ Call the new entrie's activate method."
 
 (defmethod linemark-delete ((g linemark-group))
   "Remove group G from linemark tracking."
-  (mapcar 'linemark-delete (oref g marks))
+  (mapc 'linemark-delete (oref g marks))
   (setq linemark-groups (delete g linemark-groups)))
 
 (defmethod linemark-delete ((e linemark-entry))
@@ -380,7 +389,8 @@ Call the new entrie's activate method."
   "Clear all bookmarks in this buffer."
   (interactive)
   (mapcar (lambda (e)
-	    (if (string= (oref e filename) (buffer-file-name))
+	    (if (or (string= (oref e filename) (buffer-file-name))
+                    (string= (oref e filename) (buffer-name)))
 		(linemark-delete e)))
 	  (oref viss-bookmark-group marks)))
 

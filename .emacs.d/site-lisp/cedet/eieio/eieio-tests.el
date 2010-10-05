@@ -1,10 +1,10 @@
 ;;; eieio-tests.el -- eieio tests routines
 
 ;;;
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003 Eric M. Ludlam
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009, 2010 Eric M. Ludlam
 ;;
 ;; Author: <zappo@gnu.org>
-;; RCS: $Id: eieio-tests.el,v 1.28 2003/09/10 16:59:36 zappo Exp $
+;; RCS: $Id: eieio-tests.el,v 1.50 2010/06/18 00:08:17 zappo Exp $
 ;; Keywords: oop, lisp, tools
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -18,12 +18,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's author (see below) or write to:
-;;
-;;              The Free Software Foundation, Inc.
-;;              675 Mass Ave.
-;;              Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;; Please send bug reports, etc. to zappo@gnu.org
 ;;
@@ -58,17 +55,20 @@
 
 (condition-case msg
 
-    (progn
+    ;; Only run this test if the message framework thingy works.
+    (when (and (message "foo") (string= "foo" (current-message)))
+
       (defclass class-alloc-initarg ()
 	((throwwarning :initarg :throwwarning
 		       :allocation :class))
 	"Throw a warning mixing allocation class and an initarg.")
 
-      (if (not (string-match "Class allocated slots do not need :initarg"
-			     (current-message)))
-	  (error ":initarg and :allocation warning not thrown!"))
+      (when (not (string-match "Class allocated slots do not need :initarg"
+			       (or (current-message) "")))
+	(message "Errant message : %S" (current-message))
+	(error ":initarg and :allocation warning not thrown!"))
       )
-  (error (error msg)))
+  (error (error "%S" msg)))
   
 
 (defclass class-b ()
@@ -138,7 +138,19 @@
     (error "defgeneric did not make a generic method."))
 
 (defmethod generic1 ((c class-a))
-  "Method on generic1.")
+  "Method on generic1."
+  'monkey)
+
+(defmethod generic1 (not-an-object)
+  "Method generic1 that can take a non-object."
+  not-an-object)
+
+(let ((ans-obj (generic1 (class-a "test")))
+      (ans-num (generic1 666)))
+  (when (not (eq ans-obj 'monkey))
+    (error "Specialized method called wrong method."))
+  (when (not (eq ans-num 666))
+    (error "Generic method called wrong method.")))
 
 ;;; Class with a static method
 ;;
@@ -146,34 +158,47 @@
   ((some-slot :initform nil
 	      :allocation :class
 	      :documentation "A slot."))
-  :documentation "A class used for testing static methods."
-  :abstract t)
+  :documentation "A class used for testing static methods.")
 
-(defmethod static-method-class-method :STATIC ((c static-method-class))
+(defmethod static-method-class-method :STATIC ((c static-method-class) value)
   "Test static methods.
 Argument C is the class bound to this static method."
-  (oset-default c some-slot t))
+  (if (eieio-object-p c) (setq c (object-class c)))
+  (oset-default c some-slot value))
 
 (condition-case nil
-    (static-method-class-method static-method-class)
-  (error (error "Failed to call static method.")))
-(if (not (eq (oref static-method-class some-slot) t))
-    (error "Call to static method did not run."))
+    (static-method-class-method static-method-class 'class)
+  (error (error "Failed to call static method on a class.")))
+(if (not (eq (oref static-method-class some-slot) 'class))
+    (error "Call to static method on a class did not run."))
+
+(condition-case nil
+    (static-method-class-method (static-method-class "test") 'object)
+  (error (error "Failed to call static method on an object.")))
+(if (not (eq (oref static-method-class some-slot) 'object))
+    (error "Call to static method on an object did not run."))
 
 (defclass static-method-class-2 (static-method-class)
   ()
   "A second class after the previous for static methods.")
 
-(defmethod static-method-class-method :STATIC ((c static-method-class-2))
+(defmethod static-method-class-method :STATIC ((c static-method-class-2) value)
   "Test static methods.
 Argument C is the class bound to this static method."
-  (oset-default c some-slot 'moose))
+  (if (eieio-object-p c) (setq c (object-class c)))
+  (oset-default c some-slot (intern (concat "moose-" (symbol-name value)))))
 
 (condition-case nil
-    (static-method-class-method static-method-class-2)
-  (error (error "Failed to call 2nd static method.")))
-(if (not (eq (oref static-method-class-2 some-slot) 'moose))
-    (error "Call to 2nd static method did not run."))
+    (static-method-class-method static-method-class-2 'class)
+  (error (error "Failed to call 2nd static method on a class.")))
+(if (not (eq (oref static-method-class-2 some-slot) 'moose-class))
+    (error "Call to 2nd static method on a class did not run."))
+
+(condition-case nil
+    (static-method-class-method (static-method-class-2 "test") 'object)
+  (error (error "Failed to call 2nd static method on an object.")))
+(if (not (eq (oref static-method-class-2 some-slot) 'moose-object))
+    (error "Call to 2nd static method on an object did not run."))
 
 
 ;;; Perform method testing
@@ -203,7 +228,7 @@ Argument A is object of type symbol `class-a'."
   (call-next-method)
   )
 
-(defmethod no-next-method ((a class-a))
+(defmethod no-next-method ((a class-a) &rest args)
   "Override signal throwing for variable `class-a'.
 Argument A is the object of class variable `class-a'."
   'moose)
@@ -213,7 +238,7 @@ Argument A is the object of class variable `class-a'."
   (error "no-next-method return value failure."))
 
 ;; Non-existing methods.
-(defmethod no-applicable-method ((b class-b) method)
+(defmethod no-applicable-method ((b class-b) method &rest args)
   "No need.
 Argument B is for booger.
 METHOD is the method that was attempting to be called."
@@ -252,7 +277,8 @@ METHOD is the method that was attempting to be called."
 
 (defmethod class-fun2 ((b class-b))
   "More fun with class B."
-  (error "Class B fun2 should not be called"))
+  (error "Class B fun2 should not be called")
+  )
 
 (defmethod class-fun2 ((ab class-ab))
   "More fun with class AB."
@@ -282,71 +308,36 @@ METHOD is the method that was attempting to be called."
 
 ;;; Test the BEFORE, PRIMARY, and AFTER method tags.
 ;;
-(defvar class-fun-tag-state nil)
+(let ((lib (locate-library  "eieio-test-methodinvoke.el")))
+  (load-file lib))
 
-(defmethod class-fun-tag :PRIMARY ((a class-a))
-  "Tagging fun primary A."
-  (message ":PRIMARY method")
-  (unless (eq class-fun-tag-state 'before-generic)
-    (error "BEFORE generic not called before PRIMARY method (%s)"
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'primary-method)
-  (call-next-method))
+;;; Test value of a generic function call
+;;
+(defvar class-fun-value-seq '())
 
-(defmethod class-fun-tag :BEFORE ((a class-a))
-  "Tagging fun before A."
-  (message ":BEFORE method")
-  (unless (eq class-fun-tag-state nil)
-    (error "BEFORE method not called first (%s)" 
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'before-method)
-  (call-next-method))
+(defmethod class-fun-value :BEFORE ((a class-a))
+  "Return `before', and push `before' in `class-fun-value-seq'."
+  (push 'before class-fun-value-seq)
+  'before)
 
-(defmethod class-fun-tag :AFTER ((a class-a))
-  "Tagging fun after A."
-  (message ":AFTER method")
-  (unless (eq class-fun-tag-state 'primary-generic)
-    (error "PRIMARY generic not called before AFTER method (%s)"
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'after-method)
-  (call-next-method))
+(defmethod class-fun-value :PRIMARY ((a class-a))
+  "Return `primary', and push `primary' in `class-fun-value-seq'."
+  (push 'primary class-fun-value-seq)
+  'primary)
 
-(defmethod class-fun-tag :PRIMARY (a)
-  "Generic untyped primary for A."
-  (message ":PRIMARY generic")
-  (unless (eq class-fun-tag-state 'primary-method)
-    (error "PRIMARY generic not called after PRIMARY method (%s)" 
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'primary-generic))
+(defmethod class-fun-value :AFTER ((a class-a))
+  "Return `after', and push `after' in `class-fun-value-seq'."
+  (push 'after class-fun-value-seq)
+  'after)
 
-(defmethod class-fun-tag :BEFORE (a)
-  "Generic untyped before for A."
-  (message ":BEFORE generic")
-  (unless (eq class-fun-tag-state 'before-method)
-    (error "BEFORE generic not called after BEFORE method (%s)" 
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'before-generic))
-
-(defmethod class-fun-tag :AFTER (a)
-  "Generic untyped after for A."
-  (message ":AFTER generic")
-  (unless (eq class-fun-tag-state 'after-method)
-    (error "AFTER generic not called after AFTER method (%s)" 
-	   class-fun-tag-state))
-  (setq class-fun-tag-state 'after-generic))
-
-(let ((class-fun-tag-state nil))
-  (condition-case er
-      (progn
-	(class-fun-tag a)
-	(unless (eq class-fun-tag-state 'after-generic)
-	  (error "AFTER generic not called last. (%s)" 
-		 class-fun-tag-state))
-	)
-    (error 
-     (if (eq (car er) 'error)
-	 (error (car (cdr er)))
-       (error "%S" er)))))
+(let* ((class-fun-value-seq nil)
+       (value (class-fun-value a)))
+  (unless (eq value 'primary)
+    (error
+     "Value of the generic function call isn't the primary method value [%S]."
+     value))
+  (unless (equal class-fun-value-seq '(after primary before))
+    (error "Methods were not called from :BEFORE to :AFTER.")))
 
 
 ;;; Test initialization methods
@@ -407,7 +398,50 @@ METHOD is the method that was attempting to be called."
       (error ""))
   (unbound-slot nil)
   (error (error "Oref of unbound slot succeeded.")))
-  
+
+(defclass virtual-slot-class ()
+  ((base-value :initarg :base-value))
+  "Class has real slot :base-value and simulated slot :derived-value.")
+
+(defmethod slot-missing ((vsc virtual-slot-class)
+			 slot-name operation &optional new-value)
+  "Simulate virtual slot derived-value."
+  (cond
+   ((or (eq slot-name :derived-value)
+	(eq slot-name 'derived-value))
+    (with-slots (base-value) vsc
+      (if (eq operation 'oref)
+	  (+ base-value 1)
+	(setq base-value (- new-value 1)))))
+   (t (call-next-method)))
+  )
+
+(defvar vsca)
+(setq vsca (virtual-slot-class "vsca" :base-value 1))
+(unless (= (oref vsca :base-value) 1)
+  (error "Wrong slot value."))
+(unless (= (oref vsca :derived-value) 2)
+  (error "Wrong slot value."))
+
+(oset vsca :derived-value 3)
+(unless (= (oref vsca :base-value) 2)
+  (error "Wrong slot value."))
+(unless (= (oref vsca :derived-value) 3)
+  (error "Wrong slot value."))
+
+(oset vsca :base-value 3)
+(unless (= (oref vsca :base-value) 3)
+  (error "Wrong slot value."))
+(unless (= (oref vsca :derived-value) 4)
+  (error "Wrong slot value."))
+
+;; should also be possible to initialize instance using virtual slot
+(defvar vscb)
+(setq vscb (virtual-slot-class "vscb" :derived-value 5))
+(unless (= (oref vscb :base-value) 4)
+  (error "Wrong slot value."))
+(unless (= (oref vscb :derived-value) 5)
+  (error "Wrong slot value."))
 
 (defmethod slot-unbound ((a class-a) &rest foo)
   "If a slot in A is unbound, ignore FOO."
@@ -489,33 +523,54 @@ METHOD is the method that was attempting to be called."
     (error "Class allocatd slot thought bound when it is unbound."))
 
 
-;;; Test function type in a class
-;;
-(defvar class-typep-var 0
-  "A variable used in an initform.")
+;;; initforms that need to be evalled at construction time.
+(defvar eieio-test-permuting-value 1)
+(setq eieio-test-permuting-value 1)
 
-(setq class-typep-var 1)
-
-(defclass class-typep ()
-  ((slot1 :type function
-	  :initform <
-	  )
-   (slot2 :type integer
-	  :initform (lambda () class-typep-var)
-	  )
-   (slot4 :type function
-	  :initform (lambda-default () 2)
-	  )
+(defclass inittest nil
+  ((staticval :initform 1)
+   (symval :initform eieio-test-permuting-value)
+   (evalval :initform (symbol-value 'eieio-test-permuting-value))
+   (evalnow :initform (symbol-value 'eieio-test-permuting-value)
+	    :allocation :class)
    )
-  "Test different types in a class.")
+  "Test initforms that eval.")
 
-(setq class-typep-var 2)
+(setq eieio-test-permuting-value 2)
 
-(defvar ct nil)
-(setq ct (class-typep "foo"))
+(setq pvinit (inittest "permuteme"))
 
-(if (/= (oref ct slot2) 2)
-    (error "Default value for slot2 incorrect.")) 
+(when (not (eq (oref pvinit staticval) 1))
+  (error "Error with initial value for staticval slot."))
+(when (not (eq (oref pvinit symval) 'eieio-test-permuting-value))
+  (error "Error with initial value for symval slot."))
+(when (not (eq (oref pvinit evalval) 2))
+  (error "Error with initial value for evalval slot."))
+(when (not (eq (oref pvinit evalnow) 1))
+  (error "Error with initial value for evalnow slot."))
+
+
+;;; Init forms with types that don't match the runnable.
+(defclass test-subordinate nil
+  ((text :initform "" :type string))
+  "Test class that will be a calculated value.")
+
+(defclass test-superior nil
+  ((sub :initform (test-subordinate "test")
+	:type test-subordinate))
+  "A class with an initform that creates a class.")
+
+(setq tests (test-superior "test"))
+
+(condition-case err
+    (progn
+      (defclass broken-init nil
+	((broken :initform 1
+		 :type string))
+	"This class should break.")
+      (error t))
+  (invalid-slot-type nil) ;; This is the error
+  (error (error "Wrong type of error thrown from broken init class.")))
 
 
 ;;; Inheritance status
@@ -563,6 +618,16 @@ METHOD is the method that was attempting to be called."
 	   :group vorlon
 	   :accessor get-slot-2
 	   :protection :private)
+   (slot-3 :initarg :emu
+	   :initform emu
+	   :type symbol
+	   :allocation :class
+	   :documentation "Third slot test class allocated accessor"
+	   :custom symbol
+	   :label "Fuzz"
+	   :group tokra
+	   :accessor get-slot-3
+	   :protection :private)
    )
   (:custom-groups (foo))
   "A class for testing slot arguments."
@@ -589,6 +654,73 @@ METHOD is the method that was attempting to be called."
       (class-c "C2" :moose "not a symbol")
       (error "A string was set on a symbol slot during init."))
   (invalid-slot-type nil))
+
+(if (not (eq (get-slot-3 t1) 'emu))
+    (error "Accessor to private :class slot returned bad value from object."))
+
+(if (not (eq (get-slot-3 class-c) 'emu))
+    (error "Accessor to private :class slot returned bad value from class."))
+
+(setf (get-slot-3 t1) 'setf-emu)
+(if (not (eq (get-slot-3 t1) 'setf-emu))
+    (error "setf and get through accessor failed!"))
+
+;; Slot Default inheritance Testing
+;;
+(defclass class-subc (class-c)
+  ((slot-1 ;; :initform moose  - don't override this
+	   )
+   (slot-2 :initform "linux" ;; Do override this one
+	   :protection :private
+	   )
+   ;; (slot-3 :initform emu) - don't touch this one.
+   )
+  "A class for testing slot arguments."
+  )
+
+(defvar t2 nil)
+(setq t2 (class-subc "subc"))
+
+(if (not (and (eq (oref t2 slot-1) 'moose)
+	      (eq (oref t2 :moose) 'moose)))
+    (error "Initialization of slot failed."))
+
+(if (not (string= (get-slot-2 t2) "linux"))
+    (error "Accessor to private slot returned bad value."))
+
+(condition-case nil
+    (progn
+      (oref t2 slot-2)
+      (error "Reference of private slot passed."))
+  (invalid-slot-name nil))
+
+(if (not (string= (get-slot-2 t2) "linux"))
+    (error "Accessor to private slot returned bad value."))
+
+(condition-case nil
+    (progn
+      (class-subc "C2" :moose "not a symbol")
+      (error "A string was set on a symbol slot during init."))
+  (invalid-slot-type nil))
+
+
+(when nil
+
+  ;;; HACK ALERT: The new value of a class slot is inherited by the
+  ;; subclass!  This is probably a bug.  We should either share the slot
+  ;; so sets on the baseclass change the subclass, or we should inherit
+  ;; the original value. 
+
+  (if (not (eq (get-slot-3 t2) 'emu))
+      (error "Accessor to private :class slot returned bad value from object."))
+
+  (if (not (eq (get-slot-3 class-subc) 'emu))
+      (error "Accessor to private :class slot returned bad value from class."))
+
+  (setf (get-slot-3 t2) 'setf-emu)
+  (if (not (eq (get-slot-3 t2) 'setf-emu))
+      (error "setf and get through accessor failed!"))
+  )
 
 ;; Slot protection
 (defclass prot-0 ()
@@ -714,6 +846,158 @@ Do not override for `prot-2'."
        (error "Instance inheritor: Level zero inheritance failed."))
       (t t))
 
+;;; Test slot attribute override patterns
+;;
+(defclass slotattr-base ()
+  ((initform :initform init)
+   (type :type list)
+   (initarg :initarg :initarg)
+   (protection :protection :private)
+   (custom :custom (repeat string)
+	   :label "Custom Strings"
+	   :group moose)
+   (docstring :documentation
+	      "Replace the doc-string for this property.")
+   (printer :printer printer1)
+   )
+  "Baseclass we will attempt to subclass.
+Subclasses to override slot attributes.")
+
+(let ((good-fail t))
+  (condition-case nil
+      (progn
+	(defclass slotattr-fail (slotattr-base)
+	  ((protection :protection :public)
+	   )
+	  "This class should throw an error.")
+	(setq good-fail nil))
+    (error nil))
+  (if (not good-fail)
+      (error "Subclass overrode :protection slot attribute.")))
+
+(let ((good-fail t))
+  (condition-case nil
+      (progn
+	(defclass slotattr-fail (slotattr-base)
+	  ((type :type string)
+	   )
+	  "This class should throw an error.")
+	(setq good-fail nil))
+    (error nil))
+  (if (not good-fail)
+      (error "Subclass overrode :type slot attribute.")))
+
+
+(defclass slotattr-ok (slotattr-base)
+  ((initform :initform no-init)   
+   (initarg :initarg :initblarg)
+   (custom :custom string
+	   :label "One String"
+	   :group cow)
+   (docstring :documentation
+	      "A better doc string for this class.")
+   (printer :printer printer2)
+   )
+  "This class should allow overriding of various slot attributes.")
+
+(let ((obj (slotattr-ok "moose")))
+  (if (not (eq (oref obj initform) 'no-init))
+      (error "Initform did not override in instance allocation."))
+)
+
+;;; Test slot attribute override patterns for CLASS allocated slots
+;;
+(defclass slotattr-class-base ()
+  ((initform :allocation :class
+	     :initform init)
+   (type :allocation :class
+	 :type list)
+   (initarg :allocation :class
+	    :initarg :initarg)
+   (protection :allocation :class
+	       :protection :private)
+   (custom :allocation :class
+	   :custom (repeat string)
+	   :label "Custom Strings"
+	   :group moose)
+   (docstring :allocation :class
+	      :documentation
+	      "Replace the doc-string for this property.")
+   )
+  "Baseclass we will attempt to subclass.
+Subclasses to override slot attributes.")
+
+(let ((good-fail t))
+  (condition-case nil
+      (progn
+	(defclass slotattr-fail (slotattr-class-base)
+	  ((protection :protection :public)
+	   )
+	  "This class should throw an error.")
+	(setq good-fail nil))
+    (error nil))
+  (if (not good-fail)
+      (error "Subclass overrode :protection slot attribute.")))
+
+(let ((good-fail t))
+  (condition-case nil
+      (progn
+	(defclass slotattr-fail (slotattr-class-base)
+	  ((type :type string)
+	   )
+	  "This class should throw an error.")
+	(setq good-fail nil))
+    (error nil))
+  (if (not good-fail)
+      (error "Subclass overrode :type slot attribute.")))
+
+
+(defclass slotattr-class-ok (slotattr-class-base)
+  ((initform :initform no-init)   
+   (initarg :initarg :initblarg)
+   (custom :custom string
+	   :label "One String"
+	   :group cow)
+   (docstring :documentation
+	      "A better doc string for this class.")
+   )
+  "This class should allow overriding of various slot attributes.")
+
+(if (not (eq (oref-default slotattr-class-ok initform) 'no-init))
+    (error "Initform did not override in instance allocation."))
+
+
+(let* ((cv (class-v 'slotattr-ok))
+       (docs   (aref cv class-public-doc))
+       (names  (aref cv class-public-a))
+       (cust   (aref cv class-public-custom))
+       (label  (aref cv class-public-custom-label))
+       (group  (aref cv class-public-custom-group))
+       (types  (aref cv class-public-type))
+       (args   (aref cv class-initarg-tuples))
+       (i 0)
+       )
+  
+  (if (not (assoc :initblarg args))
+      (error ":initarg did not override for subclass."))
+
+  (while (< i (length names))
+
+    (cond
+     ((eq (nth i names) 'custom)
+      (if (not (eq (nth i cust) 'string))
+	  (error "Custom slot attribute did not override."))
+      (if (not (string= (nth i label) "One String"))
+	  (error "Custom Label slot attribute did not override."))
+      (let ((grp (nth i group)))
+	(if (not (and (memq 'moose grp) (memq 'cow grp)))
+	    (error "Custom Group slot attribute did not combine."))
+	))
+
+     (t nil))
+
+    (setq i (1+ i))))
+
 ;;; Test clone on boring objects too!
 ;;
 (defvar CLONETEST1 nil)
@@ -731,18 +1015,43 @@ Do not override for `prot-2'."
 ;;
 (defclass PO (eieio-persistent)
   ((slot1 :initarg :slot1
-	  :initform 2)
+	  :initform 'moose
+	  :printer PO-slot1-printer)
    (slot2 :initarg :slot2
 	  :initform "foo"))
   "A Persistent object with two initializable slots.")
 
+(defun PO-slot1-printer (slotvalue)
+  "Print the slot value SLOTVALUE to stdout.
+Assume SLOTVALUE is a symbol of some sort."
+  (princ "(make-symbol \"")
+  (princ (symbol-name slotvalue))
+  (princ "\")")
+  nil)
+;;(PO-slot1-printer 'moose)
+
 (defvar PO1 nil)
-(setq PO1 (PO "persist" :slot1 4 :slot2 "testing"
+(setq PO1 (PO "persist" :slot1 'goose :slot2 "testing"
 	      :file (concat default-directory "test-p.el")))
 
 (eieio-persistent-save PO1)
 
-(eieio-persistent-read "test-p.el")
+(let ((obj (eieio-persistent-read "test-p.el")))
+  (message "%S" obj)
+  )
+
+
+(let* ((find-file-hooks nil)
+       (tbuff (find-file-noselect "test-p.el"))
+       )
+  (condition-case nil
+      (unwind-protect
+	  (save-excursion
+	    (set-buffer tbuff)
+	    (goto-char (point-min))
+	    (re-search-forward ":slot1 (make-symbol"))
+	(kill-buffer tbuff))
+    (error "PO's Slot1 printer function didn't work.")))
 
 
 ;;; Test the instance tracker
@@ -773,8 +1082,8 @@ Do not override for `prot-2'."
 
 (let ((obj1 (SINGLE "Moose"))
       (obj2 (SINGLE "Cow")))
-  (if (not (and (object-p obj1)
-		(object-p obj2)
+  (if (not (and (eieio-object-p obj1)
+		(eieio-object-p obj2)
 		(eq obj1 obj2)
 		(oref obj1 a-slot)))
       (error "Two instances of a singleton")))

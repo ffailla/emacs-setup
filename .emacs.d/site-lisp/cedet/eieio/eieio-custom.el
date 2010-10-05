@@ -1,9 +1,9 @@
 ;;; eieio-custom.el -- eieio object customization
 
-;;; Copyright (C) 1999, 2000, 2001 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2005, 2007, 2008, 2009 Eric M. Ludlam
 ;;
 ;; Author: <zappo@gnu.org>
-;; RCS: $Id: eieio-custom.el,v 1.20 2003/03/02 13:28:36 zappo Exp $
+;; RCS: $Id: eieio-custom.el,v 1.28 2009/03/17 00:50:59 zappo Exp $
 ;; Keywords: OO, lisp
 ;;                                                                          
 ;; This program is free software; you can redistribute it and/or modify
@@ -17,12 +17,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's author (see below) or write to:
-;;
-;;              The Free Software Foundation, Inc.
-;;              675 Mass Ave.
-;;              Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;; Please send bug reports, etc. to zappo@gnu.org
 
@@ -37,6 +34,14 @@
 (require 'wid-edit)
 (require 'custom)
 
+;;; Compatibility
+;;
+(eval-and-compile
+  (if (featurep 'xemacs)
+      (defalias 'eieio-overlay-lists (lambda () (list (extent-list))))
+    (defalias 'eieio-overlay-lists 'overlay-lists)
+    )
+  )
 ;;; Code:
 (defclass eieio-widget-test-class nil
   ((a-string :initarg :a-string
@@ -67,7 +72,8 @@ of these.")
 
 (defcustom eieio-widget-test (eieio-widget-test-class "Foo")
   "Test variable for editing an object."
-  :type 'object)
+  :type 'object
+  :group 'eieio)
 
 (defface eieio-custom-slot-tag-face '((((class color)
 					(background dark))
@@ -87,7 +93,7 @@ of these.")
   "Buffer local variable in object customize buffers for the current group.")
 
  (defvar eieio-custom-ignore-eieio-co  nil
-   "When true, all customizable fields of the current object are updated.
+   "When true, all customizable slots of the current object are updated.
 Updates occur regardless of the current customization group.")
 
 (define-widget 'object-slot 'group
@@ -195,7 +201,7 @@ Optional argument IGNORE is an extraneous parameter."
 	 (obj (widget-get widget :value))
 	 (master-group (widget-get widget :eieio-group))
 	 (cv (class-v (object-class-fast obj)))
-	 (fields (aref cv class-public-a))
+	 (slots (aref cv class-public-a))
 	 (flabel (aref cv class-public-custom-label))
 	 (fgroup (aref cv class-public-custom-group))
 	 (fdoc (aref cv class-public-doc))
@@ -224,13 +230,13 @@ Optional argument IGNORE is an extraneous parameter."
 			   (capitalize (symbol-name (car groups)))))
 	  (setq groups (cdr groups)))
 	(widget-insert "\n\n")))
-    ;; Loop over all the fields, creating child widgets.
-    (while fields
+    ;; Loop over all the slots, creating child widgets.
+    (while slots
       ;; Output this slot if it has a customize flag associated with it.
       (when (and (car fcust)
 		 (or (not master-group) (member master-group (car fgroup)))
-		 (slot-boundp obj (car fields)))
-	;; In this case, this field has a custom type.  Create it's
+		 (slot-boundp obj (car slots)))
+	;; In this case, this slot has a custom type.  Create it's
 	;; children widgets.
 	(let ((type (eieio-filter-slot-type widget (car fcust)))
 	      (stuff nil))
@@ -263,13 +269,13 @@ Optional argument IGNORE is an extraneous parameter."
 					 (or
 					  (class-slot-initarg
 					   (object-class-fast obj)
-					   (car fields))
-					  (car fields)))))
+					   (car slots))
+					  (car slots)))))
 				 (capitalize
 				  (if (string-match "^:" s)
 				      (substring s (match-end 0))
 				    s)))))
-			    :value (slot-value obj (car fields))
+			    :value (slot-value obj (car slots))
 			    :doc  (if (car fdoc) (car fdoc)
 				    "Slot not Documented.")
 			    :eieio-custom-visibility 'visible
@@ -277,7 +283,7 @@ Optional argument IGNORE is an extraneous parameter."
 			   chil))
 	  )
 	)
-      (setq fields (cdr fields)
+      (setq slots (cdr slots)
 	    fdoc (cdr fdoc)
 	    fcust (cdr fcust)
 	    flabel (cdr flabel)
@@ -298,23 +304,23 @@ Optional argument IGNORE is an extraneous parameter."
 	 (chil (if (widget-get widget :eieio-show-name)
 		   (nthcdr 1 wids) wids))
 	 (cv (class-v (object-class-fast obj)))
-	 (fields (aref cv class-public-a))
+	 (slots (aref cv class-public-a))
 	 (fcust (aref cv class-public-custom)))
     ;; If there are any prefix widgets, clear them.
     ;; -- None yet
     ;; Create a batch of initargs for each slot.
-    (while (and fields chil)
+    (while (and slots chil)
       (if (and (car fcust)
 	       (or eieio-custom-ignore-eieio-co
 		   (not master-group) (member master-group (car fgroup)))
-	       (slot-boundp obj (car fields)))
+	       (slot-boundp obj (car slots)))
 	  (progn
-	    ;; Only customized fields have widgets
+	    ;; Only customized slots have widgets
 	    (let ((eieio-custom-ignore-eieio-co t))
-	      (eieio-oset obj (car fields)
+	      (eieio-oset obj (car slots)
 			  (car (widget-apply (car chil) :value-inline))))
 	    (setq chil (cdr chil))))
-      (setq fields (cdr fields)
+      (setq slots (cdr slots)
 	    fgroup (cdr fgroup)
 	    fcust (cdr fcust)))
     ;; Set any name updates on it.
@@ -342,18 +348,18 @@ object widget.
 Optional argument GROUP specifies a subgroup of slots to edit as a symbol.
 These groups are specified with the `:group' slot flag."
   ;; Insert check for multiple edits here.
-  (let* ((g (or group 'default))
-	 (b (switch-to-buffer (get-buffer-create
-			       (concat "*CUSTOMIZE "
-				       (object-name obj) " "
-				       (symbol-name g) "*")))))
+  (let* ((g (or group 'default)))
+    (switch-to-buffer (get-buffer-create
+		       (concat "*CUSTOMIZE "
+			       (object-name obj) " "
+			       (symbol-name g) "*")))
     (toggle-read-only -1)
     (kill-all-local-variables)
     (erase-buffer)
-    (let ((all (overlay-lists)))
+    (let ((all (eieio-overlay-lists)))
       ;; Delete all the overlays.
-      (mapcar 'delete-overlay (car all))
-      (mapcar 'delete-overlay (cdr all)))
+      (mapc 'delete-overlay (car all))
+      (mapc 'delete-overlay (cdr all)))
     ;; Add an apply reset option at the top of the buffer.
     (eieio-custom-object-apply-reset obj)
     (widget-insert "\n\n")
@@ -367,7 +373,7 @@ These groups are specified with the `:group' slot flag."
     ;; Now initialize the buffer
     (use-local-map widget-keymap)
     (widget-setup)
-					;(widget-minor-mode)
+    ;;(widget-minor-mode)
     (goto-char (point-min))
     (widget-forward 3)
     (make-local-variable 'eieio-co)
@@ -423,19 +429,19 @@ Must return the created widget."
 
 (defun eieio-object-value-to-abstract (widget value)
   "For WIDGET, convert VALUE to an abstract /safe/ representation."
-  (if (object-p value) value
+  (if (eieio-object-p value) value
     (if (null value) value
       nil)))
 
 (defun eieio-object-abstract-to-value (widget value)
-  "For WIDGET, convert VALUE to an abstract /safe/ representation."
+  "For WIDGET, convert VALUE from an abstract /safe/ representation."
   value)
 
 
 ;;; customization group functions
 ;;
 ;; These functions provide the ability to create dynamic menus to
-;; customize specific sections of an object.  The do not hook directly
+;; customize specific sections of an object.  They do not hook directly
 ;; into a filter, but can be used to create easymenu vectors.
 (defmethod eieio-customize-object-group ((obj eieio-default-superclass))
   "Create a list of vectors for customizing sections of OBJ."

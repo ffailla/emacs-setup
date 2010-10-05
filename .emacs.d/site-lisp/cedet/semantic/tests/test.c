@@ -1,7 +1,7 @@
 /* Test file for C language.
  * Attempt to include as many aspects of the C language as possible.
  *
- * $Id: test.c,v 1.10 2004/07/20 18:32:44 zappo Exp $
+ * $Id: test.c,v 1.12 2008/05/17 20:16:03 zappo Exp $
  *
  */
 /* types of include files */
@@ -9,6 +9,8 @@
 #include <includeme2.h>
 #include <subdir/includeme3.h>
 #include <includeme.notanhfile>
+#include <stdlib.h>
+#include <cmath>
 
 #if 0
 int dont_show_function()
@@ -120,6 +122,8 @@ enum myenum1 funp5(char *arg41, union myunion1 *arg42);
 
 char funpp1 __P(char argp1, struct mystruct2 argp2, char *arg4p);
 
+int fun1();
+
 /* Here is a function pointer */
 int (*funcptr)(int a, int b);
 
@@ -134,6 +138,11 @@ fun0()
 }
 
 int fun1 ()
+{
+  int sv = 1;
+}
+
+int fun1p1 (void)
 {
   int sv = 1;
 }
@@ -197,6 +206,11 @@ int funk3(arg_51, arg_53)
 
   /* Bad var/slot and param */
   blah.notafunction(moose);
+
+  /* Print something. */
+  printf("Moose", );
+
+  tan();
 }
 
 int funk4_fixme(arg_61, arg_62)

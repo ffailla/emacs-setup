@@ -1,8 +1,8 @@
 ;;; semantic-bovine.el --- LL Parser/Analyzer core.
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007 Eric M. Ludlam
 
-;; X-CVS: $Id: semantic-bovine.el,v 1.10 2004/03/20 00:19:42 zappo Exp $
+;; X-CVS: $Id: semantic-bovine.el,v 1.16 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -18,24 +18,26 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
-;; Semantix 1.x uses an LL parser named the "bovinator".  This parser
+;; Semantic 1.x uses an LL parser named the "bovinator".  This parser
 ;; had several conveniences in it which made for parsing tags out of
 ;; languages with list characters easy.  This parser lives on as one
 ;; of many available parsers for semantic the tool.
 ;;
 ;; This parser should be used when the language is simple, such as
-;; makefiles or other data-declaritive langauges.
+;; makefiles or other data-declarative languages.
 
 ;;; Code:
 (require 'semantic)
+(require 'bovine-debug)
 
-;;; VAriables
+;;; Variables
 ;;
+;;;###autoload
 (defvar semantic-bovinate-nonterminal-check-obarray nil
   "Obarray of streams already parsed for nonterminal symbols.
 Use this to detect infinite recursion during a parse.")
@@ -126,7 +128,7 @@ list of semantic tokens found."
         (while nt-loop
           (catch 'push-non-terminal
             (setq nt-popup nil
-                  end (cdr (cdr (car stream))))
+                  end (semantic-lex-token-end (car stream)))
             (while (or nt-loop nt-popup)
               (setq nt-loop nil
                     out     nil)
@@ -144,7 +146,7 @@ list of semantic tokens found."
                       ;; In this case, we have an EMPTY match!  Make
                       ;; stuff up.
                       (setq cvl (list nil))))
-            
+
                 (while (and lte
                             (not (byte-code-function-p (car lte)))
                             (not (listp (car lte))))
@@ -168,11 +170,11 @@ list of semantic tokens found."
 
 			      )))
                   ;; END GRAMMAR SOURCE DEBUGGING!
-              
+
                   (cond
                    ;; We have a nonterminal symbol.  Recurse inline.
                    ((setq nt-loop (assq (car lte) table))
-          
+
                     (setq
                      ;; push state into the nt-stack
                      nt-stack (cons (vector matchlist cvl lte stream end
@@ -182,7 +184,7 @@ list of semantic tokens found."
                      matchlist   (cdr nt-loop)
                      ;; new non-terminal stream
                      stream      s)
-               
+
                     (throw 'push-non-terminal t)
 
                     )
@@ -191,8 +193,8 @@ list of semantic tokens found."
                     (setq lse (car s)   ;Get the local stream element
                           s   (cdr s))  ;update stream.
                     ;; Do the compare
-                    (if (eq (car lte) (car lse)) ;syntactic match
-                        (let ((valdot (cdr lse)))
+                    (if (eq (car lte) (semantic-lex-token-class lse)) ;syntactic match
+                        (let ((valdot (semantic-lex-token-bounds lse)))
                           (setq val (semantic-lex-token-text lse))
                           (setq lte (cdr lte))
                           (if (stringp (car lte))
@@ -201,22 +203,22 @@ list of semantic tokens found."
                                       lte (cdr lte))
                                 (if (string-match tev val)
                                     (setq cvl (cons
-                                               (if (memq (car lse)
+                                               (if (memq (semantic-lex-token-class lse)
                                                          '(comment semantic-list))
                                                    valdot val)
                                                cvl)) ;append this value
                                   (setq lte nil cvl nil))) ;clear the entry (exit)
                             (setq cvl (cons
-                                       (if (memq (car lse)
+                                       (if (memq (semantic-lex-token-class lse)
                                                  '(comment semantic-list))
                                            valdot val) cvl))) ;append unchecked value.
-                          (setq end (cdr (cdr lse)))
+                          (setq end (semantic-lex-token-end lse))
                           )
                       (setq lte nil cvl nil)) ;No more matches, exit
                     )))
                 (if (not cvl)           ;lte=nil;  there was no match.
                     (setq matchlist (cdr matchlist)) ;Move to next matchlist entry
-                  (let ((start (car (cdr (car stream)))))
+                  (let ((start (semantic-lex-token-start (car stream))))
                     (setq out (cond
                                ((car lte)
                                 (funcall (car lte) ;call matchlist fn on values
@@ -252,7 +254,7 @@ list of semantic tokens found."
                           end         (aref state 4)
                           ;; update the stack
                           nt-stack    (cdr nt-stack))
-                
+
                     (if out
                         (let ((len (length out))
                               (strip (nreverse (cdr (cdr (reverse out))))))

@@ -1,10 +1,10 @@
 ;;; semantic-sb.el --- Semantic tag display for speedbar
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-sb.el,v 1.49 2004/03/21 07:46:16 ponced Exp $
+;; X-RCS: $Id: semantic-sb.el,v 1.62 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,15 +20,18 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; Convert a tag table into speedbar buttons.
 
-;;; History:
-;; 
+;;; TODO:
+;;
+;; Use semanticdb to find which semanticdb-table is being used for each
+;; file/tag.  Replace `semantic-sb-with-tag-buffer' to instead call
+;; children with the new `with-mode-local' instead.
 
 (require 'semantic)
 (require 'semantic-util)
@@ -38,7 +41,7 @@
 
 (defcustom semantic-sb-autoexpand-length 1
   "*Length of a semantic bucket to autoexpand in place.
-This will replace the named bucket that would have usually occured here."
+This will replace the named bucket that would have usually occurred here."
   :group 'speedbar
   :type 'integer)
 
@@ -53,6 +56,24 @@ This will replace the named bucket that would have usually occured here."
   :type semantic-format-tag-custom-list)
 
 ;;; Code:
+;;
+
+;;; Buffer setting for correct mode manipulation.
+(defun semantic-sb-tag-set-buffer (tag)
+  "Set the current buffer to something associated with TAG.
+use the `speedbar-line-file' to get this info if needed."
+  (if (semantic-tag-buffer tag)
+      (set-buffer (semantic-tag-buffer tag))
+    (let ((f (speedbar-line-file)))
+      (set-buffer (find-file-noselect f)))))
+
+(defmacro semantic-sb-with-tag-buffer (tag &rest forms)
+  "Set the current buffer to the origin of TAG and execute FORMS.
+Restore the old current buffer when completed."
+  `(save-excursion
+     (semantic-sb-tag-set-buffer ,tag)
+     ,@forms))
+(put 'semantic-sb-with-tag-buffer 'lisp-indent-function 1)
 
 ;;; Button Generation
 ;;
@@ -73,36 +94,23 @@ This will replace the named bucket that would have usually occured here."
 ;;
 ;;  +>  -> click to see additional information
 
-(define-overload semantic-sb-tag-children-to-expand (tag)
+(define-overloadable-function semantic-sb-tag-children-to-expand (tag)
   "For TAG, return a list of children that TAG expands to.
 If this returns a value, then a +> icon is created.
 If it returns nil, then a => icon is created.")
 
 (defun semantic-sb-tag-children-to-expand-default (tag)
   "For TAG, the children for type, variable, and function classes."
-  (let ((class (semantic-tag-class tag)))
-    (cond ((eq class 'type)
-	   (semantic-tag-type-members tag))
-	  ((eq class 'variable)
-	   (semantic-tag-variable-default tag))
-	  ((eq class 'function)
-	   (semantic-tag-function-arguments tag))
-	  )))
+  (semantic-sb-with-tag-buffer tag
+    (semantic-tag-components tag)))
 
 (defun semantic-sb-one-button (tag depth &optional prefix)
   "Insert TAG as a speedbar button at DEPTH.
 Optional PREFIX is used to specify special marker characters."
   (let* ((class (semantic-tag-class tag))
-	 (edata (save-excursion
-		   (when (and (semantic-tag-overlay tag)
-			      (semantic-tag-buffer tag))
-		     (set-buffer (semantic-tag-buffer tag)))
-		   (semantic-sb-tag-children-to-expand tag)))
+	 (edata (semantic-sb-tag-children-to-expand tag))
 	 (type (semantic-tag-type tag))
-	 (abbrev (save-excursion
-		   (when (and (semantic-tag-overlay tag)
-			      (semantic-tag-buffer tag))
-		     (set-buffer (semantic-tag-buffer tag)))
+	 (abbrev (semantic-sb-with-tag-buffer tag
 		   (funcall semantic-sb-button-format-tag-function tag)))
 	 (start (point))
 	 (end (progn
@@ -137,7 +145,7 @@ Optional PREFIX is used to specify special marker characters."
     ;; version of Emacs 21 CVS
     (put-text-property start end 'invisible t)
     ))
-  
+
 (defun semantic-sb-speedbar-data-line (depth button text &optional
 					     text-fun text-data)
   "Insert a semantic token data element.
@@ -190,7 +198,8 @@ Optional MODIFIERS is additional text needed for variables."
 	     ;; or variable tokens.
 	     (when (semantic-tag-p (car parts))
 	       ;; Bucketize into groups
-	       (setq newparts (semantic-bucketize parts))
+	       (semantic-sb-with-tag-buffer (car parts)
+		 (setq newparts (semantic-bucketize parts)))
 	       (when (> (length newparts) semantic-sb-autoexpand-length)
 		 ;; More than one bucket, insert inline
 		 (semantic-sb-insert-tag-table (1- indent) newparts)
@@ -248,7 +257,7 @@ Optional MODIFIERS is additional text needed for variables."
   (save-excursion
     (beginning-of-line)
     (let ((dep (if (looking-at "[0-9]+:")
-		   (1- (string-to-int (match-string 0)))
+		   (1- (string-to-number (match-string 0)))
 		 0)))
       (re-search-backward (concat "^"
 				  (int-to-string dep)
@@ -286,18 +295,26 @@ TEXT TOKEN and INDENT are the details."
   "Jump to the location specified in token.
 TEXT TOKEN and INDENT are the details."
   (let ((file
-	 (cond ((fboundp 'speedbar-line-path)
-		(speedbar-line-path indent))
-	       ((fboundp 'speedbar-line-directory)
-		(speedbar-line-directory indent))))
+	 (or
+	  (cond ((fboundp 'speedbar-line-path)
+		 (speedbar-line-directory indent))
+		((fboundp 'speedbar-line-directory)
+		 (speedbar-line-directory indent)))
+	  ;; If speedbar cannot figure this out, extract the filename from
+	  ;; the token.  True for Analysis mode.
+	  (semantic-tag-file-name token)))
 	(parent (semantic-sb-detail-parent)))
     (let ((f (selected-frame)))
       (dframe-select-attached-frame speedbar-frame)
       (run-hooks 'speedbar-before-visiting-tag-hook)
       (select-frame f))
+    ;; Sometimes FILE may be nil here.  If you are debugging a problem
+    ;; when this happens, go back and figure out why FILE is nil and try
+    ;; and fix the source.
     (speedbar-find-file-in-frame file)
     (save-excursion (speedbar-stealthy-updates))
     (semantic-go-to-tag token parent)
+    (switch-to-buffer (current-buffer))
     ;; Reset the timer with a new timeout when cliking a file
     ;; in case the user was navigating directories, we can cancel
     ;; that other timer.
@@ -340,7 +357,7 @@ TEXT TOKEN and INDENT are the details."
       (setq sordid (cdr sordid)))))
 
 (defun semantic-sb-insert-tag-table (level table)
-  "At LEVEL, insert the tag table TABLD.
+  "At LEVEL, insert the tag table TABLE.
 Use arcane knowledge about the semantic tokens in the tagged elements
 to create much wiser decisions about how to sort and group these items."
   (semantic-sb-buttons level table))
@@ -374,8 +391,7 @@ Returns the tag list, or t for an error."
 	;; Successful DB query.
 	nil
       ;; No database, do it the old way.
-      (save-excursion
-	(set-buffer (find-file-noselect file))
+      (with-current-buffer (find-file-noselect file)
 	(if (or (not (featurep 'semantic))
 		(not semantic--parse-table))
 	    (setq out t)
@@ -389,7 +405,8 @@ Returns the tag list, or t for an error."
 	      ;; orphans.
 	      (setq out (semantic-adopt-external-members out))
 	      ;; Dump all the tokens into buckets.
-	      (semantic-bucketize out))
+	      (semantic-sb-with-tag-buffer (car out)
+		(semantic-bucketize out)))
 	  (error t))
       t)))
 

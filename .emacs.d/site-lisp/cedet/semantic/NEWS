@@ -1,4 +1,6 @@
-Semantic 2.0 is a major new version.
+Semantic 2.0 is a major new version.  This NEWS file covers changes
+since Semantic 1.4, which was many years ago.  See the ChangeLog for
+differences between various beta and prerelease versions.
 
 * Versioning
 
@@ -122,9 +124,22 @@ A `semantic-simple-lexer' that ignores comments and whitespace, and
 returns tokens corresponding to syntax as specified by the syntax
 table.
 
+*** Lexical support for a pre-processor
+
+semantic-lex-spp.el is a new library for handling preprocessor style
+commands at lexical analysis time.  You can create ifdef/else/end
+style blocks which will cut out lexical tokens that aren't to be
+processed, and also substitue named symbols with other lexical values.
+
 *** `semantic-lex' core "overload" function.
 
 Called to lexically analyze text in an area of the current buffer.
+
+*** debugging bad syntax
+
+Using `semantic-lex-debug-analyzers' combined with `debug-on-error'
+allows you to debug analyzers inside usually protected parsing
+routines.
 
 ** Parsing
 
@@ -308,6 +323,19 @@ automatically.
 A file FOO.wy will create the file FOO-wy.el, and FOO-wy.elc
 automatically.
 
+* Decorations.
+
+** secondary overlays
+An API for adding secondary overlays onto a tag has been added.
+This allows you to add/remove arbitrary visual effects onto a tag.
+Uses tag link hooks to make sure the overlays are added/removed
+safely.
+
+** folded tags
+New functions `semantic-set-tag-folded' and `semantic-tag-folded-p'
+allow you to put a tag into a 'folded' state where only the 1st line
+is showing. 
+
 * Database.
 
 ** semanticdb.el
@@ -327,6 +355,10 @@ Depends on `inversion' for save file compatibility tests.
 
 *** `semanticdb-project-database-file'
 File based project database type.
+
+*** `semanticdb-cleanup-cache-files'
+New command to tidy up cache files against directories that no longer
+exist.
 
 ** semanticdb-search.el
 All old search routines have been moved into this file.
@@ -394,6 +426,10 @@ Representation of a database belonging to system libraries.
 These databases may not come from source code, and can represent
 object files, header file libraries and the like.
 
+*** `semanticdb-create-system-database'
+Interactive command to create a system database, and bind it into
+your search space.
+
 *** `semanticdb-project-database-system'
 Baseclass for any system database.
 
@@ -410,13 +446,21 @@ Table representing search results for Emacs Lisp symbols.
 *** `semanticdb-project-database-emacs-lisp'
 Database representing Emacs' internal symbol obarray.
 
+** semanticdb-ebrowse.el
+Special system database using ebrowse as a backend for providing C/C++
+tagging information.
+
+*** `semanticdb-create-ebrowse-database'
+Interactive command to create an ebrowse database, and bind it into
+your search space.
+
 ** semanticdb-mk
 Routines for building semantic.cache files from a command line script.
 
 * Utilities.
 
-** `semantic-find-nonterminal-parent-by-overlay'
-Find the parent of a nonterminal token by overlays.
+** `semantic-find-tag-parent-by-overlay'
+Find the parent of a tag by overlays.
     
 * Minor modes.
 
@@ -451,6 +495,10 @@ tags.  It absorbs the duties of:
 
 ** `semantic-show-tag-boundaries-mode': obsolete
 ** `semantic-highlight-by-attribute-mode': obsolete
+
+** `semantic-mru-bookmark-mode'
+Track tags you've edited, and provide C-x B keybinding to jump back to
+previously edited tags.
 
 * Hooks.
 
@@ -490,8 +538,18 @@ to .by format.
 The regexp based parser was copied from the texinfo example
 and modified for semantic 2.0.
 
-** Makefile parser
+** Makefile parser improved.
 There is now excellent smart completion support.
+
+** Emacs lisp parser improved.
+The Emacs Lisp parser is now more flexible.  Using the new macros
+`semantic-elisp-setup-form-parser' and
+`semantic-elisp-reuse-form-parser', it is easy to parse all kind of
+Lisp forms to produce semantic tags.
+
+** Texinfo parser improved
+The texinfo parser was updated, and supports the new
+analysis engine.
 
 
 Local variables:

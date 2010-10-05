@@ -1,10 +1,10 @@
 ;;; semantic-sort.el --- Utilities for sorting and re-arranging tag tables.
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-sort.el,v 1.17 2004/03/10 19:29:19 ponced Exp $
+;; X-RCS: $Id: semantic-sort.el,v 1.29 2010/01/07 02:23:15 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -35,6 +35,7 @@
 
 (require 'assoc)
 (require 'semantic)
+(require 'semanticdb)
 (eval-when-compile
   (require 'semantic-find)
   (require 'semanticdb-find))
@@ -62,6 +63,36 @@ Argument S1 and S2 are the strings to compare."
 	  ((listp ty)
 	   (or (car ty) ""))
 	  (t ""))))
+
+(defun semantic-tag-lessp-name-then-type (A B)
+  "Return t if tag A is < tag B.
+First sorts on name, then sorts on the name of the :type of
+each tag."
+  (let ((na (semantic-tag-name A))
+	(nb (semantic-tag-name B))
+	)
+    (if (string-lessp na nb)
+	t ; a sure thing.
+      (if (string= na nb)
+	  ;; If equal, test the :type which might be different.
+	  (let* ((ta (semantic-tag-type A))
+		 (tb (semantic-tag-type B))
+		 (tas (cond ((stringp ta)
+			     ta)
+			    ((semantic-tag-p ta)
+			     (semantic-tag-name ta))
+			    (t nil)))
+		 (tbs (cond ((stringp tb)
+			     tb)
+			    ((semantic-tag-p tb)
+			     (semantic-tag-name tb))
+			    (t nil))))
+	    (if (and (stringp tas) (stringp tbs))
+		(string< tas tbs)
+	      ;; This is if A == B, and no types in A or B
+	      nil))
+	;; This nil is if A > B, but not =
+	nil))))
 
 ;;;###autoload
 (defun semantic-sort-tags-by-name-increasing (tags)
@@ -127,6 +158,19 @@ Return the sorted list."
 	       (semantic-string-lessp-ci (semantic-sort-tag-type b)
 					 (semantic-sort-tag-type a)))))
 
+;;;###autoload
+(defun semantic-sort-tags-by-name-then-type-increasing (tags)
+  "Sort TAGS by name, then type in increasing order with side effects.
+Return the sorted list."
+  (sort tags (lambda (a b) (semantic-tag-lessp-name-then-type a b))))
+
+;;;###autoload
+(defun semantic-sort-tags-by-name-then-type-decreasing (tags)
+  "Sort TAGS by name, then type in increasing order with side effects.
+Return the sorted list."
+  (sort tags (lambda (a b) (semantic-tag-lessp-name-then-type b a))))
+
+
 (semantic-alias-obsolete 'semantic-sort-tokens-by-name-increasing
 			 'semantic-sort-tags-by-name-increasing)
 (semantic-alias-obsolete 'semantic-sort-tokens-by-name-decreasing
@@ -156,9 +200,10 @@ Return the sorted list."
 ;;;###autoload
 (defun semantic-unique-tag-table-by-name (tags)
   "Scan a list of TAGS, removing duplicate names.
-This must first sort the tags by name alphabetically ascending."
-  (let ((copy (copy-sequence tags))
-	(sorted (semantic-sort-tags-by-name-increasing
+This must first sort the tags by name alphabetically ascending.
+For more complex uniqueness testing used by the semanticdb
+typecaching system, see `semanticdb-typecache-merge-streams'."
+  (let ((sorted (semantic-sort-tags-by-name-increasing
 		 (copy-sequence tags)))
 	(uniq nil))
     (while sorted
@@ -175,9 +220,10 @@ This must first sort the tags by name alphabetically ascending."
   "Scan a list of TAGS, removing duplicates.
 This must first sort the tags by position ascending.
 TAGS are removed only if they are equivalent, as can happen when
-multiple tag sources are scanned."
-  (let ((copy (copy-sequence tags))
-	(sorted (sort (copy-sequence tags)
+multiple tag sources are scanned.
+For more complex uniqueness testing used by the semanticdb
+typecaching system, see `semanticdb-typecache-merge-streams'."
+  (let ((sorted (sort (copy-sequence tags)
 		      (lambda (a b)
 			(cond ((not (semantic-tag-with-position-p a))
 			       t)
@@ -407,24 +453,24 @@ buckets with the bucket function."
     (while parent-buckets
       (if (car (car parent-buckets))
 	  (let* ((tmp (car parent-buckets))
-		 (fauxtok (semantic-tag-new-type
+		 (fauxtag (semantic-tag-new-type
 			   (car tmp)
 			   semantic-orphaned-member-metaparent-type
 			   nil ;; Part list
 			   nil ;; parents (unknown)
 			   ))
 		 (bucketkids (cdr tmp)))
-	    (semantic--tag-put-property fauxtok 'faux t) ;; properties
+	    (semantic-tag-set-faux fauxtag) ;; properties
 	    (if semantic-mark-external-member-function
 		(setq bucketkids
 		      (mapcar (lambda (tok)
 				(funcall semantic-mark-external-member-function
-					 tok fauxtok))
+					 tok fauxtag))
 			      bucketkids)))
-	    (semantic-tag-put-attribute fauxtok :members bucketkids)
+	    (semantic-tag-put-attribute fauxtag :members bucketkids)
 	    ;; We have a bunch of methods with no parent in this file.
 	    ;; Create a meta-type to hold it.
-	    (setq out (cons fauxtok out))
+	    (setq out (cons fauxtag out))
 	    ))
       (setq parent-buckets (cdr parent-buckets)))
     ;; Return the new list.
@@ -437,14 +483,14 @@ buckets with the bucket function."
 ;; to enable the feature.
 ;;
 ;;;###autoload
-(define-overload semantic-tag-external-member-parent (tag)
+(define-overloadable-function semantic-tag-external-member-parent (tag)
   "Return a parent for TAG when TAG is an external member.
 TAG is an external member if it is defined at a toplevel and
 has some sort of label defining a parent.  The parent return will
 be a string.
 
 The default behavior, if not overridden with
-`tag-tag-member-parent' is get the 'parent extra
+`tag-member-parent' gets the 'parent extra
 specifier of TAG.
 
 If this function is overridden, use
@@ -453,7 +499,7 @@ include the default behavior, and merely extend your own."
   )
 
 (defun semantic-tag-external-member-parent-default (tag)
-  "Return the name of TAGs parent iff TAG is not defined in it's parent."
+  "Return the name of TAGs parent only if TAG is not defined in it's parent."
   ;; Use only the extra spec because a type has a parent which
   ;; means something completely different.
   (let ((tp (semantic-tag-get-attribute tag :parent)))
@@ -465,10 +511,10 @@ include the default behavior, and merely extend your own."
 			 'semantic-tag-external-member-parent)
 
 ;;;###autoload
-(define-overload semantic-tag-external-member-p (parent tag)
+(define-overloadable-function semantic-tag-external-member-p (parent tag)
   "Return non-nil if PARENT is the parent of TAG.
 TAG is an external member of PARENT when it is somehow tagged
-as having PARENT as it's parent.
+as having PARENT as its parent.
 PARENT and TAG must both be semantic tags.
 
 The default behavior, if not overridden with
@@ -493,7 +539,7 @@ include the default behavior, and merely extend your own."
 			 'semantic-tag-external-member-p)
 
 ;;;###autoload
-(define-overload semantic-tag-external-member-children (tag &optional usedb)
+(define-overloadable-function semantic-tag-external-member-children (tag &optional usedb)
   "Return the list of children which are not *in* TAG.
 If optional argument USEDB is non-nil, then also search files in
 the Semantic Database.  If USEDB is a list of databases, search those
@@ -530,6 +576,34 @@ See `semantic-tag-external-member-children' for details."
 	;; tag into the generated lambda.
        (semantic-tag-external-member-p ',tag tok))
      (current-buffer))
+    ))
+
+;;;###autoload
+(define-overloadable-function semantic-tag-external-class (tag)
+  "Return a list of real tags that faux TAG might represent.
+
+In some languages, a method can be defined on an object which is
+not in the same file.  In this case,
+`semantic-adopt-external-members' will create a faux-tag.  If it
+is necessary to get the tag from which for faux TAG was most
+likely derived, then this function is needed."
+  (unless (semantic-tag-faux-p tag)
+    (signal 'wrong-type-argument (list tag 'semantic-tag-faux-p)))
+  (:override)
+  )
+
+(defun semantic-tag-external-class-default (tag)
+  "Return a list of real tags that faux TAG might represent.
+See `semantic-tag-external-class' for details."
+  (if (and (fboundp 'semanticdb-minor-mode-p)
+	   (semanticdb-minor-mode-p))
+      (let* ((semanticdb-search-system-databases nil)
+	     (m (semanticdb-find-tags-by-class
+		 (semantic-tag-class tag)
+		 (semanticdb-find-tags-by-name (semantic-tag-name tag)))))
+	(semanticdb-strip-find-results m 'name))
+    ;; Presumably, if the tag is faux, it is not local.
+    nil
     ))
 
 (semantic-alias-obsolete 'semantic-nonterminal-external-member-children

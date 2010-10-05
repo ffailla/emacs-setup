@@ -1,9 +1,9 @@
 ;;; wisent-calc-wy.el --- Generated parser support file
 
-;; Copyright (C) 2002, 2003 David Ponce
+;; Copyright (C) 2002, 2003, 2009 David Ponce
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:32-0400
+;; Created: 2010-08-22 20:55:17-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file wisent-calc.wy.
-
-;;; History:
-;;
 
 ;;; Code:
 
@@ -60,6 +57,8 @@
 	(left 45 43)
 	(left 42 47)
 	(left NEG)
+	(left FACT)
+	(left NOT)
 	(right 94))
        (input
 	((line))
@@ -76,7 +75,10 @@
 	((NUM)
 	 (string-to-number $1))
 	((exp 61 exp)
-	 (= $1 $3))
+	 (wisent-calc-= $1 $3))
+	((126 exp)
+	 [NOT]
+	 (wisent-calc-not $2))
 	((exp 43 exp)
 	 (+ $1 $3))
 	((exp 45 exp)
@@ -88,6 +90,9 @@
 	((45 exp)
 	 [NEG]
 	 (- $2))
+	((33 exp)
+	 [FACT]
+	 (wisent-calc-factorial $2))
 	((exp 94 exp)
 	 (expt $1 $3))
 	((40 exp 41)
@@ -128,7 +133,8 @@
         semantic-lex-syntax-modifications
         '((?\; ".") (?\= ".") (?\+ ".")
           (?\- ".") (?\* ".") (?\/ ".")
-          (?\^ ".") (?\( ".") (?\) ".")
+          (?^ ".") (?\( ".") (?\) ".")
+	  (?! ".") (?~ ".")
           )
         )
   )

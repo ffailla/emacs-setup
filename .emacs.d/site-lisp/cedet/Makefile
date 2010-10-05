@@ -1,11 +1,12 @@
 ## Makefile --- Definition file for building CEDET
 ##
-## Copyright (C) 2003, 2004 by David Ponce
+## Copyright (C) 2005, 2007, 2008, 2009, 2010 by Eric M. Ludlam
+## Copyright (C) 2003, 2004  by David Ponce
 ##
 ## Author: David Ponce <david@dponce.com>
 ## Maintainer: CEDET developers <http://sf.net/projects/cedet>
 ## Created: 12 Sep 2003
-## X-RCS: $Id: Makefile,v 1.8 2004/07/13 14:55:34 zappo Exp $
+## X-RCS: $Id: Makefile,v 1.27 2010/04/23 00:04:39 zappo Exp $
 ##
 ## This program is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -19,26 +20,32 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with GNU Emacs; see the file COPYING.  If not, write to the
-## Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-## Boston, MA 02111-1307, USA.
+## Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+## Boston, MA 02110-1301, USA.
 
 ######## You can customize this part of the Makefile ########
 
 ## The directory where CEDET is installed
-CEDET_HOME=$(CURDIR)
+CEDET_HOME="$(CURDIR)"
 
 ## The CEDET's packages installed
-CEDET_PACKAGES=\
+CEDET_ELISP_PACKAGES=\
 common \
-ede \
 speedbar \
 eieio \
 semantic \
+srecode \
+ede \
 cogre \
 contrib
 
+CEDET_PACKAGES=\
+$(CEDET_ELISP_PACKAGES) \
+tests
+
 ## Path to your Emacs
-EMACS=emacs
+EMACS?=emacs
+EMACSFLAGS=-batch --no-site-file
 
 ## Your shell (On Windows/Cygwin I recommend to use bash)
 #SHELL=bash
@@ -47,16 +54,24 @@ EMACS=emacs
 FIND=find
 #RM = rm -f
 
+## INSTALL PATHS
+PREFIX=/usr/local
+
+INFO_DIR=$(PREFIX)/share/info
+
+INSTALL_INFO=ginstall-info
+
 ############### Internal part of the Makefile ###############
-CEDET_VERSION=1.0beta3b
-CEDET_FILES=Makefile INSTALL
+CEDET_VERSION=$(shell grep "defconst cedet-version" common/cedet.el | cut -d " " -f 3)
+
+CEDET_FILES=Makefile INSTALL cedet-build.el cedet-update-version.el PRERELEASE_CHECKLIST USING_CEDET_FROM_CVS
 DIST_ROOT=cedet-$(CEDET_VERSION)
 DIST_DIR=$(CEDET_HOME)/$(DIST_ROOT)
 DIST_FILE=$(DIST_DIR).tar.gz
 
-__BUILD_AUTOLOADS=$(patsubst %,%-autoloads,$(CEDET_PACKAGES))
+__BUILD_AUTOLOADS=$(patsubst %,%-autoloads,$(CEDET_ELISP_PACKAGES))
 __CLEAN_AUTOLOADS=$(patsubst %,clean-%,$(__BUILD_AUTOLOADS))
-__DOMAKE=$(MAKE) $(MFLAGS) EMACS="$(EMACS)" SHELL="$(SHELL)"
+__DOMAKE=$(MAKE) $(MFLAGS) EMACS="$(EMACS)" EMACSFLAGS="$(EMACSFLAGS)" SHELL="$(SHELL)"
 
 ## Build
 ##
@@ -71,6 +86,10 @@ packages: $(CEDET_PACKAGES)
 $(CEDET_PACKAGES):
 	cd $(CEDET_HOME)/$@ && $(__DOMAKE)
 
+.PHONY: ebuild
+ebuild:
+	$(EMACS) -q -batch --no-site-file -l cedet-build.el -f cedet-build
+
 ## Update
 ##
 
@@ -83,7 +102,7 @@ $(__BUILD_AUTOLOADS):
 
 recompile: autoloads
 	cd $(CEDET_HOME) && \
-	$(EMACS) -batch -q --no-site-file -l common/cedet.el \
+	"$(EMACS)" $(EMACSFLAGS) -l common/cedet.el \
 	-f batch-byte-recompile-directory $(CEDET_PACKAGES)
 
 ## Cleanup
@@ -120,6 +139,39 @@ clean:
 
 clean-all: clean clean-elc clean-info clean-grammars clean-autoloads
 
+### UNIT TEST Harness
+## Run the master CEDET unit-test suite.
+.PHONY: utest itest
+utest:
+	$(EMACS) $(EMACSFLAGS) -l "common/cedet.el" -f cedet-utest-batch
+
+itest:
+	cd tests; ./cit-test.sh Make
+	cd tests; ./cit-test.sh Automake
+	cd tests; ./cit-test.sh GNUStep
+
+### Install info files
+## Thanks Stefano Sabatini for the info install patch.
+INFO_FILES=$(shell $(FIND) $(CEDET_HOME) -type f -name '*.info')
+
+.PHONY: install-info
+install-info:
+	for file in $(INFO_FILES); do \
+	    cp $$file $(INFO_DIR); \
+	    $(INSTALL_INFO) $$file $(INFO_DIR)/dir ;\
+	done 
+
+## Uninstall info files 
+INSTALLED_INFO_FILES=$(shell find . -name *.info | sed -e 's|.*/\(.*\.info$$\)|$(INFO_DIR)/\1|')
+
+.PHONY: uninstall-info
+uninstall-info:
+	for file in $(INSTALLED_INFO_FILES); do \
+	    $(INSTALL_INFO) --delete $$file $(INFO_DIR)/dir ;\
+	    rm -f $$file;\
+	done
+
+
 ## Build a distribution file.
 dist: # $(CEDET_PACKAGES)
 	rm -rf $(DIST_DIR)
@@ -130,5 +182,8 @@ dist: # $(CEDET_PACKAGES)
 	done;
 	tar -cvzf $(DIST_FILE) $(DIST_ROOT)
 	rm -rf $(DIST_DIR)
+
+testvar:
+	@echo "$(TESTVAR)=$($(TESTVAR))"
 
 # Makefile ends here

@@ -1,9 +1,9 @@
 ;;; semantic-html.el --- Semantic details for html files
 
-;;; Copyright (C) 2004 Eric M. Ludlam
+;;; Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
-;; X-RCS: $Id: semantic-html.el,v 1.6 2004/07/30 17:58:48 zappo Exp $
+;; X-RCS: $Id: semantic-html.el,v 1.15 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -19,8 +19,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -34,20 +34,21 @@
 
 (require 'semantic)
 (require 'semantic-format)
-(require 'sgml-mode) ;; html-mode is in here.
+(condition-case nil
+    ;; This is not installed in all versions of Emacs.
+    (require 'sgml-mode) ;; html-mode is in here.
+  (error
+   (require 'psgml-mode) ;; XEmacs uses psgml, and html-mode is in here.
+   ))
 
 ;;; Code:
 (eval-when-compile
-  (require 'semanticdb)
-  (require 'semanticdb-find)
   (require 'semantic-ctxt)
   (require 'semantic-imenu)
-  (require 'semantic-doc)
-  (require 'document)
   (require 'senator))
 
 (defvar semantic-html-super-regex
-  "<\\(h[1-9]\\|title\\|script\\|body\\|a\\)\\>"
+  "<\\(h[1-9]\\|title\\|script\\|body\\|a +href\\)\\>"
   "Regular expression used to find special sections in an HTML file.")
 
 (defvar semantic-html-section-list
@@ -125,14 +126,19 @@ html parser.  PNT is the new point to set."
       (setcar (nthcdr (1- (length metatag)) metatag) pnt)
       metatag)))
 
-(defsubst semantic-html-new-section-tag (name members start end)
+(defsubst semantic-html-new-section-tag (name members level start end)
   "Create a semantic tag of class section.
 NAME is the name of this section.
 MEMBERS is a list of semantic tags representing the elements that make
 up this section.
+LEVEL is the levelling level.
 START and END define the location of data described by the tag."
-  (append (semantic-tag name 'section :members members)
-          (list start end)))
+  (let ((anchorp (eq level 11)))
+    (append (semantic-tag name
+			  (cond (anchorp 'anchor)
+				(t 'section))
+			  :members members)
+	    (list start (if anchorp (point) end)) )))
 
 (defun semantic-html-extract-section-name ()
   "Extract a section name from the current buffer and point.
@@ -150,11 +156,13 @@ need the name from."
       )
     (let ((start (point))
 	  (end nil))
-      (re-search-forward "</")
-      (goto-char (match-beginning 0))
-      (skip-chars-backward " \n\t")
-      (setq end (point))
-      (buffer-substring-no-properties start end))
+      (if (re-search-forward "</" nil t)
+	  (progn
+	    (goto-char (match-beginning 0))
+	    (skip-chars-backward " \n\t")
+	    (setq end (point))
+	    (buffer-substring-no-properties start end))
+	""))
     ))
 
 (defun semantic-html-recursive-combobulate-list (sectionlist level)
@@ -198,7 +206,7 @@ tag with greater section value than LEVEL is found."
 			   (cdr oldl) (car (cdr levelmatch))))
 		;; Build a tag
 		(setq tag (semantic-html-new-section-tag
-			   text (car tmp) begin (point)))
+			   text (car tmp) (car (cdr levelmatch)) begin (point-max)))
 		;; Before appending the newtag, update the previous tag
 		;; if it is a section tag.
 		(when newl
@@ -211,12 +219,18 @@ tag with greater section value than LEVEL is found."
 	    (error "Problem finding section in semantic/html parser"))
 	  ;; (setq oldl (cdr oldl))
 	  )))
+    ;; Return the list
     (cons (nreverse newl) oldl)))
 
 (define-mode-local-override semantic-sb-tag-children-to-expand
   html-mode (tag)
   "The children TAG expands to."
   (semantic-html-components tag))
+
+;; In semantic-imenu.el, not part of Emacs.
+(defvar semantic-imenu-expandable-tag-classes)
+(defvar semantic-imenu-bucketize-file)
+(defvar semantic-imenu-bucketize-type-members)
 
 ;;;###autoload
 (defun semantic-default-html-setup ()
@@ -228,12 +242,12 @@ tag with greater section value than LEVEL is found."
 	semantic-command-separation-character ">"
 	semantic-type-relation-separator-character '(":")
 	semantic-symbol->name-assoc-list '((section . "Section")
-					   
 					   )
-	semantic-imenu-expandable-tag-class 'section
+	semantic-imenu-expandable-tag-classes '(section)
 	semantic-imenu-bucketize-file nil
 	semantic-imenu-bucketize-type-members nil
 	senator-step-at-start-end-tag-classes '(section)
+	senator-step-at-tag-classes '(section)
 	semantic-stickyfunc-sticky-classes '(section)
 	)
   (semantic-install-function-overrides

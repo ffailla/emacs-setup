@@ -1,10 +1,10 @@
 ;;; chart.el --- Draw charts (bar charts, etc)
 
-;;; Copyright (C) 1996, 1998, 1999, 2001 Eric M. Ludlam
+;;; Copyright (C) 1996, 1998, 1999, 2001, 2004, 2005, 2007, 2008, 2009 Eric M. Ludlam
 ;;
 ;; Author: <zappo@gnu.org>
 ;; Version: 0.2
-;; RCS: $Id: chart.el,v 1.14 2001/10/03 01:59:06 zappo Exp $
+;; RCS: $Id: chart.el,v 1.20 2010/02/27 03:44:25 zappo Exp $
 ;; Keywords: OO, chart, graph
 ;;                                                                          
 ;; This program is free software; you can redistribute it and/or modify
@@ -18,12 +18,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's author (see below) or write to:
-;;
-;;              The Free Software Foundation, Inc.
-;;              675 Mass Ave.
-;;              Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;; Please send bug reports, etc. to zappo@gnu.org
 
@@ -130,6 +127,9 @@ Useful if new Emacs is used on B&W display")
   (use-local-map chart-map)
   (setq major-mode 'chart-mode
 	mode-name "CHART")
+  (buffer-disable-undo)
+  (set (make-local-variable 'font-lock-global-modes) nil)
+  (font-lock-mode -1)
   (run-hooks 'chart-mode-hook)
   )
 
@@ -141,6 +141,16 @@ Returns the newly created buffer"
     (chart-mode)
     (setq chart-local-object obj)
     (current-buffer)))
+
+(defun chart-width ()
+  "Return the width of a chart for the current buffer.
+It is either `window-width', or a minimum of 20 chars."
+  (max (window-width) 30))
+
+(defun chart-height ()
+  "Return the height of a chart for the current buffer.
+It is either `window-height', or a minimum of 20 chars."
+  (max (window-height) 20))
 
 (defclass chart ()
   ((title :initarg :title
@@ -169,8 +179,8 @@ Returns the newly created buffer"
 (defmethod initialize-instance :AFTER ((obj chart) &rest fields)
   "Initialize the chart OBJ being created with FIELDS.
 Make sure the width/height is correct."
-  (oset obj x-width (- (window-width) 10))
-  (oset obj y-width (- (window-height) 12)))
+  (oset obj x-width (- (chart-width) 10))
+  (oset obj y-width (- (chart-height) 12)))
 
 (defclass chart-axis ()
   ((name :initarg :name
@@ -234,7 +244,7 @@ Erases current contents of buffer"
 (defmethod chart-draw-title ((c chart))
   "Draw a title upon the chart.
 Argument C is the chart object."
-  (chart-display-label (oref c title) 'horizontal 0 0 (window-width)
+  (chart-display-label (oref c title) 'horizontal 0 0 (chart-width)
 		       (oref c title-face)))
 
 (defmethod chart-size-in-dir ((c chart) dir)
@@ -611,6 +621,7 @@ SORT-PRED if desired."
 
 ;;; Test code
 
+;;;###autoload
 (defun chart-test-it-all ()
   "Test out various charting features."
   (interactive)
@@ -664,7 +675,7 @@ SORT-PRED if desired."
     (erase-buffer)
     (insert "cd " d ";du -sk * \n")
     (message "Running `cd %s;du -sk *'..." d)
-    (call-process-region (point-min) (point-max) "csh" t
+    (call-process-region (point-min) (point-max) shell-file-name t
 			 (current-buffer) nil)
     (goto-char (point-min))
     (message "Scanning output ...")
@@ -673,7 +684,7 @@ SORT-PRED if desired."
 	     (num (buffer-substring (match-beginning 1) (match-end 1))))
 	(setq nmlst (cons nam nmlst)
 	      ;; * 1000 to put it into bytes
-	      cntlst (cons (* (string-to-int num) 1000) cntlst))))
+	      cntlst (cons (* (string-to-number num) 1000) cntlst))))
     (if (not nmlst)
 	(error "No files found!"))
     (chart-bar-quickie 'vertical (format "Largest files in %s" d)

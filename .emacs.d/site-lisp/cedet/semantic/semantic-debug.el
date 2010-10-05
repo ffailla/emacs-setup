@@ -1,9 +1,9 @@
 ;;; semantic-debug.el --- Language Debugger framework
 
-;;; Copyright (C) 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 2003, 2004, 2005, 2008 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
-;; X-RCS: $Id: semantic-debug.el,v 1.11 2004/03/19 23:46:30 zappo Exp $
+;; X-RCS: $Id: semantic-debug.el,v 1.19 2010/03/15 13:40:54 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -19,9 +19,9 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
-;; 
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+;;
 ;;; Commentary:
 ;;
 ;; To provide better support for debugging parsers, this framework
@@ -29,21 +29,23 @@
 ;; controlling and stepping through the parsing work must be implemented
 ;; by the parser.
 ;;
-;; Fortunatly, the nature of language support files means that the parser
+;; Fortunately, the nature of language support files means that the parser
 ;; may not need to be instrumented first.
 ;;
 ;; The debugger uses EIEIO objects.  One object controls the user
 ;; interface, including stepping, data-view, queries.  A second
-;; object implemented here represents the parser itself. A third represents
+;; object implemented here represents the parser itself.  A third represents
 ;; a parser independent frame which knows how to highlight the parser buffer.
 ;; Each parser must implement the interface and override any methods as needed.
 ;;
 
+(eval-when-compile (require 'cl))
 (require 'semantic)
 (require 'inversion)
 (inversion-require 'eieio "0.18beta1")
 
 ;;; Code:
+
 ;;;###autoload
 (defvar semantic-debug-parser-source nil
   "For any buffer, the file name (no path) of the parser.
@@ -120,8 +122,7 @@ These buffers are brought into view when layout occurs.")
 
 (defmethod semantic-debug-set-parser-location ((iface semantic-debug-interface) point)
   "Set the parser location in IFACE to POINT."
-  (save-excursion
-    (set-buffer (oref iface parser-buffer))
+  (with-current-buffer (oref iface parser-buffer)
     (if (not (slot-boundp iface 'parser-location))
 	(oset iface parser-location (make-marker)))
     (move-marker (oref iface parser-location) point))
@@ -129,8 +130,7 @@ These buffers are brought into view when layout occurs.")
 
 (defmethod semantic-debug-set-source-location ((iface semantic-debug-interface) point)
   "Set the source location in IFACE to POINT."
-  (save-excursion
-    (set-buffer (oref iface source-buffer))
+  (with-current-buffer (oref iface source-buffer)
     (if (not (slot-boundp iface 'source-location))
 	(oset iface source-location (make-marker)))
     (move-marker (oref iface source-location) point))
@@ -142,13 +142,12 @@ These buffers are brought into view when layout occurs.")
   ;; Deal with the data buffer
   (when (slot-boundp iface 'data-buffer)
     (let ((lines (/ (frame-height (selected-frame)) 3))
-	  (cnt (save-excursion
-		 (set-buffer (oref iface data-buffer))
+	  (cnt (with-current-buffer (oref iface data-buffer)
 		 (count-lines (point-min) (point-max))))
 	  )
       ;; Set the number of lines to 1/3, or the size of the data buffer.
       (if (< cnt lines) (setq cnt lines))
-      
+
       (split-window-vertically cnt)
       (switch-to-buffer (oref iface data-buffer))
       )
@@ -182,7 +181,7 @@ NONTERM is the name of the rule currently being processed that shows up
 as a nonterminal (or tag) in the source buffer.
 If RULE and MATCH indicies are specified, highlight those also."
   (set-buffer (oref iface :parser-buffer))
-  
+
   (let* ((rules (semantic-find-tags-by-class 'nonterminal (current-buffer)))
 	 (nt (semantic-find-first-tag-by-name nonterm rules))
 	 (o nil)
@@ -190,7 +189,7 @@ If RULE and MATCH indicies are specified, highlight those also."
     (when nt
       ;; I know it is the first symbol appearing in the body of this token.
       (goto-char (semantic-tag-start nt))
-	
+
       (setq o (semantic-make-overlay (point) (progn (forward-sexp 1) (point))))
       (semantic-overlay-put o 'face 'highlight)
 
@@ -203,7 +202,7 @@ If RULE and MATCH indicies are specified, highlight those also."
 	;; Rule, an int, is the rule inside the nonterminal we are following.
 	(re-search-forward ":\\s-*")
 	(while (/= 0 rule)
-	  (re-search-forward "\\s-*|\\s-*")
+	  (re-search-forward "^\\s-*|\\s-*")
 	  (setq rule (1- rule)))
 
 	;; Now find the match inside the rule
@@ -218,11 +217,15 @@ If RULE and MATCH indicies are specified, highlight those also."
 
 	(object-add-to-list iface 'overlays o)
 
+	;; If we have a match for a sub-rule, have the parser position
+	;; move so we can see it in the output window for very long rules.
+	(semantic-debug-set-parser-location iface (semantic-overlay-start o))
+
 	))))
 
 (defmethod semantic-debug-unhighlight ((iface semantic-debug-interface))
   "Remove all debugging overlays."
-  (mapcar 'semantic-overlay-delete (oref iface overlays))
+  (mapc 'semantic-overlay-delete (oref iface overlays))
   (oset iface overlays nil))
 
 ;; Call from the parser at a breakpoint
@@ -268,12 +271,12 @@ on different types of return values."
 
 (defmethod semantic-debug-frame-highlight ((frame semantic-debug-frame))
   "Highlight one parser frame."
-  
+
   )
 
 (defmethod semantic-debug-frame-info ((frame semantic-debug-frame))
   "Display info about this one parser frame."
-  
+
   )
 
 ;;; Major Mode
@@ -295,7 +298,7 @@ on different types of return values."
     (define-key km "b" 'semantic-debug-set-breakpoint)
     ;; Some boring bindings.
     (define-key km "e" 'eval-expression)
-   
+
     km)
   "Keymap used when in semantic-debug-node.")
 
@@ -306,13 +309,12 @@ Argument ONOFF is non-nil when we are entering debug mode.
   (let ((iface semantic-debug-current-interface))
     (if onoff
 	;; Turn it on
-	(save-excursion
-	  (set-buffer (oref iface parser-buffer))
+	(with-current-buffer (oref iface parser-buffer)
 	  ;; Install our map onto this buffer
 	  (use-local-map semantic-debug-mode-map)
 	  ;; Make the buffer read only
 	  (toggle-read-only 1)
-	  
+
 	  (set-buffer (oref iface source-buffer))
 	  ;; Use our map in the source buffer also
 	  (use-local-map semantic-debug-mode-map)
@@ -322,18 +324,16 @@ Argument ONOFF is non-nil when we are entering debug mode.
 	  (run-hooks 'semantic-debug-mode-hooks)
 	  )
       ;; Restore old mode information
-      (save-excursion
-	(set-buffer
-	 (oref semantic-debug-current-interface parser-buffer))
-	(use-local-map
-	 (oref semantic-debug-current-interface parser-local-map))
-	)
-      (save-excursion
-	(set-buffer
-	 (oref semantic-debug-current-interface source-buffer))
-	(use-local-map
-	 (oref semantic-debug-current-interface source-local-map))
-	)
+      (with-current-buffer
+          (oref semantic-debug-current-interface parser-buffer)
+        (use-local-map
+         (oref semantic-debug-current-interface parser-local-map))
+        )
+      (with-current-buffer
+          (oref semantic-debug-current-interface source-buffer)
+        (use-local-map
+         (oref semantic-debug-current-interface source-local-map))
+        )
       (run-hooks 'semantic-debug-exit-hooks)
       )))
 
@@ -355,9 +355,8 @@ Argument ONOFF is non-nil when we are entering debug mode.
 	   (semantic-debug-interface
 	    "Debug Interface"
 	    :parser-buffer parserb
-	    :parser-local-map (save-excursion
-				(set-buffer parserb)
-				(current-local-map))
+        :parser-local-map (with-current-buffer parserb
+                            (current-local-map))
 	    :source-buffer (current-buffer)
 	    :source-local-map (current-local-map)
 	    )))
@@ -379,7 +378,8 @@ The parser needs to be on the load path, or this routine returns nil."
       (error "No parser is associated with this buffer"))
   (let ((parser (locate-library semantic-debug-parser-source t)))
     (if parser
-	(find-file-noselect parser))))
+	(find-file-noselect parser)
+      (error "Cannot find parser source.  It should be on the load-path"))))
 
 ;;; Debugger commands
 ;;
@@ -497,7 +497,7 @@ Do not update any tokens already parsed."
 	)
     (if location
 	(semantic-debug-parser-break parser location)
-      (error "Not on a rule."))
+      (error "Not on a rule"))
     )
   )
 
@@ -556,12 +556,12 @@ down to your parser later."
   )
 
 ;; Stack stuff
-(defmethod semantic-debug-parser-fames ((parser semantic-debug-parser))
+(defmethod semantic-debug-parser-frames ((parser semantic-debug-parser))
   "Return a list of frames for the current parser.
 A frame is of the form:
   ( .. .what ? .. )
 "
-  (error "Parser has not implemented frame values.")
+  (error "Parser has not implemented frame values")
   )
 
 

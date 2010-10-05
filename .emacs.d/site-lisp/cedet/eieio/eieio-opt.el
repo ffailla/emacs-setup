@@ -1,9 +1,9 @@
 ;;; eieio-opt.el -- eieio optional functions (debug, printing, speedbar)
 
-;;; Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 Eric M. Ludlam
+;;; Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003, 2005, 2008, 2009, 2010 Eric M. Ludlam
 ;;
 ;; Author: <zappo@gnu.org>
-;; RCS: $Id: eieio-opt.el,v 1.25 2003/12/11 00:53:39 zappo Exp $
+;; RCS: $Id: eieio-opt.el,v 1.40 2010/04/09 02:11:42 zappo Exp $
 ;; Keywords: OO, lisp
 ;;                                                                          
 ;; This program is free software; you can redistribute it and/or modify
@@ -17,12 +17,9 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; if not, you can either send email to this
-;; program's author (see below) or write to:
-;;
-;;              The Free Software Foundation, Inc.
-;;              675 Mass Ave.
-;;              Cambridge, MA 02139, USA.
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 ;;
 ;; Please send bug reports, etc. to zappo@gnu.org
 
@@ -74,14 +71,21 @@ Argument CH-PREFIX is another character prefix to display."
 	(eieio-browse-tree (car chl) fprefix lprefix))
     ))
 
+;;; CLASS COMPLETION / DOCUMENTATION
 ;;;###autoload
 (defalias 'describe-class 'eieio-describe-class)
 ;;;###autoload
-(defun eieio-describe-class (class)
+(defun eieio-describe-class (class &optional headerfcn)
   "Describe a CLASS defined by a string or symbol.
-If CLASS is actually an object, then also display current values of that obect."
+If CLASS is actually an object, then also display current values of that obect.
+Optional HEADERFCN should be called to insert a few bits of info first."
   (interactive (list (eieio-read-class "Class: ")))
-  (with-output-to-temp-buffer "*Help*"
+  (with-output-to-temp-buffer (help-buffer) ;"*Help*"
+    (help-setup-xref (list #'eieio-describe-class class headerfcn)
+		     (cedet-called-interactively-p))
+
+    (when headerfcn (funcall headerfcn))
+
     (if (class-option class :abstract)
 	(princ "Abstract "))
     (princ "Class ")
@@ -158,7 +162,9 @@ If CLASS is actually an object, then also display current values of that obect."
 		  (princ (cdr (car doc)))))
 	    (terpri)
 	    (terpri))
-	  (setq methods (cdr methods)))))
+	  (setq methods (cdr methods))))))
+  (save-excursion
+    (set-buffer (help-buffer))
     (buffer-string)))
 
 (defun eieio-describe-class-slots (class)
@@ -169,6 +175,7 @@ Outputs to the standard output."
 	 (names  (aref cv class-public-a))
 	 (deflt  (aref cv class-public-d))
 	 (types  (aref cv class-public-type))
+	 (publp (aref cv class-public-printer))
 	 (i      0)
 	 (prot   (aref cv class-protection))
 	 )
@@ -185,6 +192,9 @@ Outputs to the standard output."
       (unless (eq (car deflt) eieio-unbound)
 	(princ "    default = ")
 	(prin1 (car deflt)))
+      (when (car publp)
+	(princ "    printer = ")
+	(prin1 (car publp)))
       (when (car docs)
 	(terpri)
 	(princ "  ")
@@ -194,6 +204,7 @@ Outputs to the standard output."
       (setq names (cdr names)
 	    docs (cdr docs)
 	    deflt (cdr deflt)
+	    publp (cdr publp)
 	    prot (cdr prot)
 	    i (1+ i)))
     (setq docs  (aref cv class-class-allocation-doc)
@@ -214,6 +225,11 @@ Outputs to the standard output."
       (unless (eq (aref types i) t)
 	(princ "    type = ")
 	(prin1 (aref types i)))
+      (condition-case nil
+	  (let ((value (eieio-oref class (car names))))
+	    (princ "   value = ")
+	    (prin1 value))
+	  (error nil))
       (when (car docs)
 	(terpri)
 	(princ "  ")
@@ -225,6 +241,29 @@ Outputs to the standard output."
 	    prot (cdr prot)
 	    i (1+ i)))))
 
+;;;###autoload
+(defun eieio-describe-constructor (fcn)
+  "Describe the constructor function FCN.
+Uses `eieio-describe-class' to describe the class being constructed."
+  (interactive
+   ;; Use eieio-read-class since all constructors have the same name as
+   ;; the class they create.
+   (list (eieio-read-class "Class: ")))
+  (eieio-describe-class
+   fcn (lambda ()
+	 ;; Describe the constructor part.
+	 (princ "Object Constructor Function: ")
+	 (prin1 fcn)
+	 (terpri)
+	 (princ "Creates an object of class ")
+	 (prin1 fcn)
+	 (princ ".")
+	 (terpri)
+	 (terpri)
+	 ))
+  )
+
+;;;###autoload
 (defun eieio-build-class-alist (&optional class instantiable-only buildlist)
   "Return an alist of all currently active classes for completion purposes.
 Optional argument CLASS is the class to start with.
@@ -249,7 +288,8 @@ Optional argument BUILDLIST is more list to attach and is used internally."
 Optional argument HISTVAR is a variable to use as history.
 If INSTANTIABLE-ONLY is non nil, only allow names of classes which
 are not abstract."
-  (intern (completing-read prompt (eieio-build-class-alist) nil t nil
+  (intern (completing-read prompt (eieio-build-class-alist nil instantiable-only)
+			   nil t nil
 			   (or histvar 'eieio-read-class))))
 
 (defun eieio-read-subclass (prompt class &optional histvar instantiable-only)
@@ -263,7 +303,7 @@ are not abstract."
 			   nil t nil
 			   (or histvar 'eieio-read-class))))
 
-;;; Collect all the generic functions created so far, and do cool stuff.
+;;; METHOD COMPLETION / DOC
 ;;
 ;;;###autoload
 (defalias 'describe-method 'eieio-describe-generic)
@@ -278,9 +318,21 @@ Also extracts information about all methods specific to this generic."
   (interactive (list (eieio-read-generic "Generic Method: ")))
   (if (not (generic-p generic))
       (signal 'wrong-type-argument '(generic-p generic)))
-  (with-output-to-temp-buffer "*Help*"
+  (with-output-to-temp-buffer (help-buffer) ; "*Help*"
+    (help-setup-xref (list #'eieio-describe-generic generic)
+		     (cedet-called-interactively-p))
+
     (prin1 generic)
-    (princ " is a generic function.")
+    (princ " is a generic function")
+    (when (generic-primary-only-p generic)
+      (princ " with only ")
+      (when (generic-primary-only-one-p generic)
+	(princ "one "))
+      (princ "primary method")
+      (when (not (generic-primary-only-one-p generic))
+	(princ "s"))
+      )
+    (princ ".")
     (terpri)
     (terpri)
     (let ((d (documentation generic)))
@@ -330,7 +382,9 @@ Also extracts information about all methods specific to this generic."
 	    (setq gm (cdr gm))
 	    (terpri)
 	    (terpri)))
-	(setq i (1+ i))))
+	(setq i (1+ i)))))
+  (save-excursion
+    (set-buffer (help-buffer))
     (buffer-string)))
 
 (defun eieio-lambda-arglist (func)
@@ -404,7 +458,105 @@ Optional argument HISTORYVAR is the variable to use as history."
   (intern (completing-read prompt obarray 'eieio-read-generic-p
 			   t nil (or historyvar 'eieio-read-generic))))
 
-;;; Help system augmentation
+;;; METHOD STATS
+;;
+;; Dump out statistics about all the active methods in a session.
+(defun eieio-display-method-list ()
+  "Display a list of all the methods and what features are used."
+  (interactive)
+  (let* ((meth1 (eieio-all-generic-functions))
+	 (meth (sort meth1 (lambda (a b)
+			     (string< (symbol-name a)
+				      (symbol-name b)))))
+	 (buff (get-buffer-create "*EIEIO Method List*"))
+	 (methidx 0)
+	 (standard-output buff)
+	 (slots '(method-static
+		  method-before
+		  method-primary
+		  method-after
+		  method-generic-before
+		  method-generic-primary
+		  method-generic-after))
+	 (slotn '("static"
+		  "before"
+		  "primary"
+		  "after"
+		  "G bef"
+		  "G prim"
+		  "G aft"))
+	 (idxarray (make-vector (length slots) 0))
+	 (primaryonly 0)
+	 (oneprimary 0)
+	 )
+    (switch-to-buffer-other-window buff)
+    (erase-buffer)
+    (dolist (S slotn)
+      (princ S)
+      (princ "\t")
+      )
+    (princ "Method Name")
+    (terpri)
+    (princ "--------------------------------------------------------------------")
+    (terpri)
+    (dolist (M meth)
+      (let ((mtree (get M 'eieio-method-tree))
+	    (P nil) (numP)
+	    (!P nil))
+	(dolist (S slots)
+	  (let ((num (length (aref mtree (symbol-value S)))))
+	    (aset idxarray (symbol-value S)
+		  (+ num (aref idxarray (symbol-value S))))
+	    (prin1 num)
+	    (princ "\t")
+	    (when (< 0 num)
+	      (if (eq S 'method-primary)
+		  (setq P t numP num)
+		(setq !P t)))
+	    ))
+	;; Is this a primary-only impl method?
+	(when (and P (not !P))
+	  (setq primaryonly (1+ primaryonly))
+	  (when (= numP 1)
+	    (setq oneprimary (1+ oneprimary))
+	    (princ "*"))
+	  (princ "* ")
+	  )
+	(prin1 M)
+	(terpri)
+	(setq methidx (1+ methidx))
+	)
+      )
+    (princ "--------------------------------------------------------------------")
+    (terpri)
+    (dolist (S slots)
+      (prin1 (aref idxarray (symbol-value S)))
+      (princ "\t")
+      )
+    (prin1 methidx)
+    (princ " Total symbols")
+    (terpri)
+    (dolist (S slotn)
+      (princ S)
+      (princ "\t")
+      )
+    (terpri)
+    (terpri)
+    (princ "Methods Primary Only: ")
+    (prin1 primaryonly)
+    (princ "\t")
+    (princ (format "%d" (* (/ (float primaryonly) (float methidx)) 100)))
+    (princ "% of total methods")
+    (terpri)
+    (princ "Only One Primary Impl: ")
+    (prin1 oneprimary)
+    (princ "\t")
+    (princ (format "%d" (* (/ (float oneprimary) (float primaryonly)) 100)))
+    (princ "% of total primary methods")
+    (terpri)
+    ))
+
+;;; HELP AUGMENTATION
 ;;
 (defun eieio-help-mode-augmentation-maybee (&rest unused)
   "For buffers thrown into help mode, augment for eieio.
@@ -423,7 +575,7 @@ Arguments UNUSED are not used."
 	  (when pos
 	    (goto-char pos)
 	    (let* ((help-data (get-text-property (point) 'help-xref))
-		   (method (car help-data))
+		   ;(method (car help-data))
 		   (args (cdr help-data)))
 	      (when (symbolp (car args))
 		(cond ((class-p (car args))
@@ -450,16 +602,7 @@ Arguments UNUSED are not used."
 	    (put-text-property (match-beginning 0) (match-end 0) 'face 'bold))
 	))))
 
-(defun eieio-help-augment-keymap ()
-  "Augment the help keymap for cool EIEIO stuff."
-  (define-key help-map "g" 'describe-generic)
-  (define-key help-map "C" 'describe-class))
-
-(if (and (boundp 'help-map) help-map)
-    (eieio-help-augment-keymap)
-  (eval-after-load 'help 'eieio-help-augment-keymap))
-
-;;; How about showing the hierarchy in speedbar?  Cool!
+;;; SPEEDBAR SUPPORT
 ;;
 (eval-when-compile
   (condition-case nil

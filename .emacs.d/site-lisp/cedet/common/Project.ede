@@ -2,9 +2,13 @@
 ;; EDE project file.
 (ede-proj-project "common"
   :name "common"
-  :version "1.0beta3"
   :file "Project.ede"
   :targets (list 
+   (ede-proj-target-makefile-info "Doc"
+    :name "Doc"
+    :path ""
+    :source '("cedet.texi")
+    )
    (ede-proj-target-aux "misc"
     :name "misc"
     :path ""
@@ -29,7 +33,14 @@
    (ede-proj-target-elisp "common"
     :name "common"
     :path ""
-    :source '("cedet-autogen.el" "cedet-compat.el" "ezimage.el" "inversion.el" "pprint.el" "sformat.el" "working.el" "cedet-edebug.el" "mode-local.el")
+    :source '("cedet-autogen.el" "cedet-compat.el" "ezimage.el" "inversion.el" "pprint.el" "fame.el" "working.el" "cedet-edebug.el" "mode-local.el" "cedet-files.el" "pulse.el" "data-debug.el" "cedet-global.el" "cedet-idutils.el" "cedet-cscope.el" "cedet-graphviz.el")
+    :compiler 'ede-emacs-preload-compiler
+    :pre-load-packages '("cedet-compat.el")
+    )
+   (ede-proj-target-elisp "tests"
+    :name "tests"
+    :path ""
+    :source '("cedet-utests.el")
     )
    )
   :web-site-url "http://cedet.sourceforge.net/"

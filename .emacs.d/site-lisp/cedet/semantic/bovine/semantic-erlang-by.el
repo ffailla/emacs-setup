@@ -3,7 +3,7 @@
 ;; Copyright (C) 2002, 2003 Vladimir G. Sekissov
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:47-0400
+;; Created: 2010-08-22 20:55:25-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file erlang.by.
-
-;;; History:
-;;
 
 ;;; Code:
 
@@ -118,22 +115,22 @@
       (ATOM1 . "[a-z][a-zA-Z0-9_@]*"))
      ("punctuation"
       (SIGN . "[-+]")
-      (VDEL . "\\b[|]\\b")
-      (COMA . "\\b[,]\\b")
-      (GREATER . "\\b[>]\\b")
-      (LESS . "\\b[<]\\b")
-      (EQUAL . "\\b[=]\\b")
-      (WHY . "\\b[?]\\b")
-      (BANG . "\\b[!]\\b")
-      (MINUS . "\\b[-]\\b")
-      (PLUS . "\\b[+]\\b")
-      (DIVIDE . "\\b[/]\\b")
-      (AMPERSAND . "\\b[&]\\b")
-      (STAR . "\\b[*]\\b")
-      (SEMICOLON . "\\b[;]\\b")
-      (COLON . "\\b[:]\\b")
-      (PERIOD . "\\b[.]\\b")
-      (HASH . "\\b[#]\\b")))
+      (VDEL . "\\`[|]\\'")
+      (COMA . "\\`[,]\\'")
+      (GREATER . "\\`[>]\\'")
+      (LESS . "\\`[<]\\'")
+      (EQUAL . "\\`[=]\\'")
+      (WHY . "\\`[?]\\'")
+      (BANG . "\\`[!]\\'")
+      (MINUS . "\\`[-]\\'")
+      (PLUS . "\\`[+]\\'")
+      (DIVIDE . "\\`[/]\\'")
+      (AMPERSAND . "\\`[&]\\'")
+      (STAR . "\\`[*]\\'")
+      (SEMICOLON . "\\`[;]\\'")
+      (COLON . "\\`[:]\\'")
+      (PERIOD . "\\`[.]\\'")
+      (HASH . "\\`[#]\\'")))
    'nil)
   "Table of lexical tokens.")
 
@@ -145,9 +142,9 @@
 
     (add-op
      (punctuation
-      "\\b[+]\\b")
+      "\\`[+]\\'")
      (punctuation
-      "\\b[-]\\b")
+      "\\`[-]\\'")
      (BOR)
      (BXOR)
      (BSL)
@@ -156,72 +153,72 @@
 
     (list-conc-op
      (punctuation
-      "\\b[+]\\b"
+      "\\`[+]\\'"
       punctuation
-      "\\b[+]\\b")
+      "\\`[+]\\'")
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       punctuation
-      "\\b[-]\\b")
+      "\\`[-]\\'")
      ) ;; end list-conc-op
 
     (comp-op
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda
 	(list
 	 "=="))
       )
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda
 	(list
 	 "=:="))
       )
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       punctuation
-      "\\b[/]\\b"
+      "\\`[/]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda
 	(list
 	 "=/="))
       )
      (punctuation
-      "\\b[/]\\b"
+      "\\`[/]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda
 	(list
 	 "/="))
       )
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       ,(semantic-lambda
 	(list
 	 "=<"))
       )
      (punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       ,(semantic-lambda
 	(list
 	 ">="))
       )
      (punctuation
-      "\\b[<]\\b")
+      "\\`[<]\\'")
      (punctuation
-      "\\b[>]\\b")
+      "\\`[>]\\'")
      (OR)
      (ORELSE)
      (XOR)
@@ -231,9 +228,9 @@
 
     (multi-op
      (punctuation
-      "\\b[*]\\b")
+      "\\`[*]\\'")
      (punctuation
-      "\\b[/]\\b")
+      "\\`[/]\\'")
      (DIV)
      (REM)
      (BAND)
@@ -241,9 +238,9 @@
 
     (prefix-op
      (punctuation
-      "\\b[+]\\b")
+      "\\`[+]\\'")
      (punctuation
-      "\\b[-]\\b")
+      "\\`[-]\\'")
      (BNOT)
      (NOT)
      ) ;; end prefix-op
@@ -277,12 +274,12 @@
      (symbol
       "[0-9]+"
       punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       symbol
       "[0-9]+"
       exp-part)
      (punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       symbol
       "[0-9]+"
       exp-part)
@@ -309,7 +306,7 @@
      (symbol
       "[0-9]\\{1,2\\}"
       punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       symbol
       "[0-9a-eA-E]+")
      ) ;; end integer-literal
@@ -340,27 +337,27 @@
 
     (binary
      (punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       ,(semantic-lambda
 	(semantic-tag
 	 "<<>>"
 	 'binary))
       )
      (punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       binary-segments
       punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       ,(semantic-lambda
 	(semantic-tag
 	 "<<Binary>>"
@@ -375,7 +372,7 @@
 
     (binary-segments-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       binary-segments
       ,(semantic-lambda
 	(nth 1 vals))
@@ -393,16 +390,16 @@
 
     (binary-segment-rest
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       basic-type
       punctuation
-      "\\b[/]\\b"
+      "\\`[/]\\'"
       binary-type-spec-list)
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       basic-type)
      (punctuation
-      "\\b[/]\\b"
+      "\\`[/]\\'"
       binary-type-spec-list)
      ( ;;EMPTY
       )
@@ -435,7 +432,7 @@
      (symbol
       "unit"
       punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       basic-type)
      ) ;; end binary-unit
 
@@ -449,7 +446,7 @@
     (binary-type-spec-list
      (binary-type-spec
       punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       binary-type-spec-list)
      (binary-type-spec)
      ) ;; end binary-type-spec-list
@@ -464,7 +461,7 @@
 
     (module-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       MODULE
       semantic-list
       "^("
@@ -515,7 +512,7 @@
 
     (module-name-rest
      (punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       atom
       module-name-rest
       ,(semantic-lambda
@@ -553,7 +550,7 @@
 
     (export-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       EXPORT
       semantic-list
       "^("
@@ -569,7 +566,7 @@
 
     (import-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       IMPORT
       semantic-list
       "^("
@@ -591,7 +588,7 @@
      (open-paren
       module-name
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       semantic-list
       "^\\["
       close-paren
@@ -631,7 +628,7 @@
     (function-names
      (function-arity
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       function-names
       ,(semantic-lambda
 	(list
@@ -648,7 +645,7 @@
     (function-arity
      (atom
       punctuation
-      "\\b[/]\\b"
+      "\\`[/]\\'"
       integer-literal
       ,(semantic-lambda
 	(nth 0 vals)
@@ -660,7 +657,7 @@
 
     (compile-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       COMPILE
       semantic-list
       "^("
@@ -669,7 +666,7 @@
 
     (file-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       symbol
       "file"
       semantic-list
@@ -681,7 +678,7 @@
      (open-paren
       string
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       integer-literal
       close-paren
       ,(semantic-lambda
@@ -695,7 +692,7 @@
 
     (whild-attr
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       atom
       semantic-list
       "^("
@@ -720,7 +717,7 @@
 
     (function-clauses-rest
      (punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       function-clauses)
      ( ;;EMPTY
       )
@@ -745,7 +742,7 @@
 
     (record-decl
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       RECORD
       semantic-list
       "^("
@@ -766,7 +763,7 @@
      (open-paren
       atom
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       semantic-list
       "^{"
       close-paren
@@ -824,7 +821,7 @@
 	(list nil))
       )
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       ,(semantic-lambda
 	(list nil))
       )
@@ -905,7 +902,7 @@
 
     (list-pattern-tail
      (punctuation
-      "\\b[|]\\b"
+      "\\`[|]\\'"
       pattern)
      ( ;;EMPTY
       ,(semantic-lambda
@@ -928,7 +925,7 @@
 
     (patterns-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       patterns
       ,(semantic-lambda
 	(nth 1 vals))
@@ -939,7 +936,7 @@
 
     (record-pattern
      (punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       atom
       semantic-list
       "^{"
@@ -968,7 +965,7 @@
     (record-field-patterns
      (record-field-patterns
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       record-field-pattern)
      (record-field-pattern)
      ) ;; end record-field-patterns
@@ -976,7 +973,7 @@
     (record-field-pattern
      (atom
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       pattern)
      ) ;; end record-field-pattern
 
@@ -991,7 +988,7 @@
 
     (exprs-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       exprs)
      ( ;;EMPTY
       )
@@ -1006,7 +1003,7 @@
     (match-expr
      (pattern
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       match-expr)
      (send-expr)
      ) ;; end match-expr
@@ -1018,7 +1015,7 @@
 
     (send-expr-rest
      (punctuation
-      "\\b[!]\\b"
+      "\\`[!]\\'"
       send-expr)
      ( ;;EMPTY
       )
@@ -1080,7 +1077,7 @@
 
     (record-expr
      (punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       record-expr-field)
      (application-expr
       record-expr-rest)
@@ -1088,7 +1085,7 @@
 
     (record-expr-rest
      (punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       record-expr-field)
      ( ;;EMPTY
       )
@@ -1097,7 +1094,7 @@
     (record-expr-field
      (atom
       punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       atom)
      (atom
       semantic-list
@@ -1120,7 +1117,7 @@
 
     (record-field-updates-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       record-field-updates)
      ( ;;EMPTY
       )
@@ -1133,7 +1130,7 @@
 
     (record-field-value
      (punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       expr)
      ( ;;EMPTY
       )
@@ -1142,7 +1139,7 @@
     (application-expr
      (module-name
       punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       primary-expr
       semantic-list
       "^(")
@@ -1154,7 +1151,7 @@
      (semantic-list
       "^(")
      (punctuation
-      "\\b[:]\\b"
+      "\\`[:]\\'"
       primary-expr
       semantic-list
       "^(")
@@ -1215,7 +1212,7 @@
 
     (list-skel-tail
      (punctuation
-      "\\b[|]\\b"
+      "\\`[|]\\'"
       expr)
      ( ;;EMPTY
       )
@@ -1225,9 +1222,9 @@
      (open-paren
       expr
       punctuation
-      "\\b[|]\\b"
+      "\\`[|]\\'"
       punctuation
-      "\\b[|]\\b"
+      "\\`[|]\\'"
       list-compr-exprs
       close-paren)
      ) ;; end list-compr
@@ -1239,7 +1236,7 @@
 
     (list-compr-exprs-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       list-compr-exprs)
      ( ;;EMPTY
       )
@@ -1253,9 +1250,9 @@
     (generator
      (pattern
       punctuation
-      "\\b[<]\\b"
+      "\\`[<]\\'"
       punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       expr)
      ) ;; end generator
 
@@ -1278,7 +1275,7 @@
     (if-clauses
      (if-clause
       punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       if-clauses)
      (if-clause)
      ) ;; end if-clauses
@@ -1292,9 +1289,9 @@
 
     (clause-body
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       punctuation
-      "\\b[>]\\b"
+      "\\`[>]\\'"
       body)
      ) ;; end clause-body
 
@@ -1309,7 +1306,7 @@
     (cr-clauses
      (cr-clause
       punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       cr-clauses)
      (cr-clause)
      ) ;; end cr-clauses
@@ -1366,7 +1363,7 @@
 
     (fun-clauses-rest
      (punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       fun-clauses)
      ( ;;EMPTY
       )
@@ -1413,7 +1410,7 @@
 
     (clause-patterns-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       clause-patterns
       ,(semantic-lambda
 	(nth 1 vals))
@@ -1430,14 +1427,14 @@
     (match-pattern
      (var
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       pattern
       ,(semantic-lambda
 	(nth 0 vals))
       )
      (pattern
       punctuation
-      "\\b[=]\\b"
+      "\\`[=]\\'"
       var
       ,(semantic-lambda
 	(nth 0 vals))
@@ -1469,10 +1466,10 @@
 
     (guard-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       guard)
      (punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       guard)
      ( ;;EMPTY
       )
@@ -1494,7 +1491,7 @@
      (open-paren
       guard-expr
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       symbol
       close-paren)
      ) ;; end guard-record-test
@@ -1514,7 +1511,7 @@
     (guard-term-op
      (comp-op)
      (punctuation
-      "\\b[=]\\b")
+      "\\`[=]\\'")
      ) ;; end guard-term-op
 
     (paren-guard-test
@@ -1580,10 +1577,10 @@
 
     (guard-exprs-rest
      (punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       guard-exprs)
      (punctuation
-      "\\b[;]\\b"
+      "\\`[;]\\'"
       guard-exprs)
      ( ;;EMPTY
       )
@@ -1591,17 +1588,17 @@
 
     (guard-record-expr
      (punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       atom
       punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       atom)
      (guard-primary-expr
       punctuation
-      "\\b[#]\\b"
+      "\\`[#]\\'"
       atom
       punctuation
-      "\\b[.]\\b"
+      "\\`[.]\\'"
       atom)
      ) ;; end guard-record-expr
 
@@ -1635,7 +1632,7 @@
 
     (guard-list-skel-tail
      (punctuation
-      "\\b[|]\\b"
+      "\\`[|]\\'"
       guard-expr)
      ( ;;EMPTY
       )
@@ -1660,7 +1657,7 @@
 
     (macro-def
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       DEFINE
       semantic-list
       "^("
@@ -1680,7 +1677,7 @@
       symbol
       macro-def-opt
       punctuation
-      "\\b[,]\\b"
+      "\\`[,]\\'"
       macro-def-opt
       close-paren
       ,(semantic-lambda
@@ -1699,7 +1696,7 @@
 
     (macro-undef
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       UNDEF
       semantic-list
       "^("
@@ -1708,18 +1705,18 @@
 
     (macro-app
      (punctuation
-      "\\b[?]\\b"
+      "\\`[?]\\'"
       symbol
       semantic-list
       "^(")
      (punctuation
-      "\\b[?]\\b"
+      "\\`[?]\\'"
       symbol)
      ) ;; end macro-app
 
     (include-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       INCLUDE
       semantic-list
       "^("
@@ -1738,7 +1735,7 @@
 
     (include-lib-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       INCLUDE_LIB
       semantic-list
       "^("
@@ -1768,7 +1765,7 @@
 
     (ifdef-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       IFDEF
       semantic-list
       "^("
@@ -1777,7 +1774,7 @@
 
     (ifndef-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       IFNDEF
       semantic-list
       "^("
@@ -1786,21 +1783,21 @@
 
     (else-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       ELSE
       full-stop)
      ) ;; end else-dir
 
     (endif-dir
      (punctuation
-      "\\b[-]\\b"
+      "\\`[-]\\'"
       ENDIF
       full-stop)
      ) ;; end endif-dir
 
     (full-stop
      (punctuation
-      "\\b[.]\\b")
+      "\\`[.]\\'")
      ) ;; end full-stop
     )
   "Parser table.")

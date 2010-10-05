@@ -1,10 +1,10 @@
 ;;; semantic-ia-sb.el --- Speedbar analysis display interactor
 
-;;; Copyright (C) 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 2002, 2003, 2004, 2006, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-ia-sb.el,v 1.15 2004/04/28 15:38:39 ponced Exp $
+;; X-RCS: $Id: semantic-ia-sb.el,v 1.26 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -41,7 +41,7 @@
 
   ;; Basic featuers.
   (define-key semantic-ia-sb-key-map "\C-m" 'speedbar-edit-line)
-  (define-key semantic-ia-sb-key-map "I" 'semantic-ia-show-sb-tag-info)
+  (define-key semantic-ia-sb-key-map "I" 'semantic-ia-sb-show-tag-info)
   )
 
 (defvar semantic-ia-sb-easymenu-definition
@@ -81,70 +81,92 @@ list of possible completions."
   "Create buttons in speedbar which define the current analysis at POINT.
 DIRECTORY is the current directory, which is ignored, and ZERO is 0."
   (let ((analysis nil)
+	(scope nil)
 	(buffer nil)
 	(completions nil)
-	(fnargs nil)
 	(cf (selected-frame))
 	(cnt nil)
+	(mode-local-active-mode nil)
 	)
     ;; Try and get some sort of analysis
     (condition-case nil
 	(progn
 	  (speedbar-select-attached-frame)
 	  (setq buffer (current-buffer))
+	  (setq mode-local-active-mode major-mode)
 	  (save-excursion
-	    ;; We usd to cache the last analysis, but the analyzer
-	    ;; now has a newer and improved analysis cache system.
+	    ;; Get the current scope
+	    (setq scope (semantic-calculate-scope (point)))
+	    ;; Get the analysis
 	    (setq analysis (semantic-analyze-current-context (point)))
 	    (setq cnt (semantic-find-tag-by-overlay))
 	    (when analysis
 	      (setq completions (semantic-analyze-possible-completions analysis))
-	      (setq fnargs (semantic-get-local-arguments (point)))
 	      )
 	    ))
       (error nil))
     (select-frame cf)
-    (set-buffer speedbar-buffer)
-    ;; If we have something, do something spiff with it.
-    (erase-buffer)
-    (speedbar-insert-separator "Buffer/Function")
-    ;; Note to self: Turn this into an expandable file name.
-    (speedbar-make-tag-line 'bracket ?  nil nil
-			    (buffer-name buffer)
-			    nil nil 'speedbar-file-face 0)
-    (when analysis
-      ;; Now insert information about the context
-      ;;     (insert "Context:\n")
-      ;;     (speedbar-insert-button (object-name-string analysis)
-      ;; 			    'speedbar-tag-face
-      ;; 			    nil nil nil nil)
+    (with-current-buffer speedbar-buffer
+      ;; If we have something, do something spiff with it.
+      (erase-buffer)
+      (speedbar-insert-separator "Buffer/Function")
+      ;; Note to self: Turn this into an expandable file name.
+      (speedbar-make-tag-line 'bracket ?  nil nil
+			      (buffer-name buffer)
+			      nil nil 'speedbar-file-face 0)
+
       (when cnt
 	(semantic-ia-sb-string-list cnt
 				    'speedbar-tag-face
 				    'semantic-sb-token-jump))
-      (when fnargs
-	(speedbar-insert-separator "Arguments")
-	(semantic-ia-sb-string-list fnargs
-				    'speedbar-tag-face
-				    'semantic-sb-token-jump))
-      ;; Let different classes draw more buttons.
-      (semantic-ia-sb-more-buttons analysis)
-      (when completions
-	(speedbar-insert-separator "Completions")
-	(semantic-ia-sb-completion-list completions
-					'speedbar-tag-face
-					'semantic-ia-sb-complete))
+      (when analysis
+	;; If this analyzer happens to point at a complete symbol, then
+	;; see if we can dig up some documentation for it.
+	(semantic-ia-sb-show-doc analysis))
+
+      (when analysis
+	;; Let different classes draw more buttons.
+	(semantic-ia-sb-more-buttons analysis)
+	(when completions
+	  (speedbar-insert-separator "Completions")
+	  (semantic-ia-sb-completion-list completions
+					  'speedbar-tag-face
+					  'semantic-ia-sb-complete))
+	)
+
+      ;; Show local variables
+      (when scope
+	(semantic-ia-sb-show-scope scope))
+
       )))
 
-(defmethod semantic-ia-sb-more-buttons ((context semantic-analyze-context))
-  "Show a set of speedbar buttons specific to CONTEXT."
-  (let ((localvars (oref context localvariables)))
+(defmethod semantic-ia-sb-show-doc ((context semantic-analyze-context))
+  "Show documentation about CONTEXT iff CONTEXT points at a complete symbol."
+  (let ((sym (car (reverse (oref context prefix))))
+	(doc nil))
+    (when (semantic-tag-p sym)
+      (setq doc (semantic-documentation-for-tag sym))
+      (when doc
+	(speedbar-insert-separator "Documentation")
+	(insert doc)
+	(insert "\n")
+	))
+    ))
+
+(defun semantic-ia-sb-show-scope (scope)
+  "Show SCOPE information."
+  (let ((localvars (when scope
+		     (oref scope localvar)))
+	)
     (when localvars
       (speedbar-insert-separator "Local Variables")
       (semantic-ia-sb-string-list localvars
 				  'speedbar-tag-face
 				  ;; This is from semantic-sb
-				  'semantic-sb-token-jump)))
+				  'semantic-sb-token-jump))))
+
+(defmethod semantic-ia-sb-more-buttons ((context semantic-analyze-context))
+  "Show a set of speedbar buttons specific to CONTEXT."
   (let ((prefix (oref context prefix)))
     (when prefix
       (speedbar-insert-separator "Prefix")
@@ -173,36 +195,54 @@ DIRECTORY is the current directory, which is ignored, and ZERO is 0."
 				  'speedbar-tag-face
 				  'semantic-sb-token-jump)
       ;; An index for the argument the prefix is in:
-      (let ((arg (oref context argument)))
-	(when arg
-	  (speedbar-insert-separator
-	   (format "Argument # %d" (oref context index)))
+      (let ((arg (oref context argument))
+	    (args (semantic-tag-function-arguments (car func)))
+	    (idx 0)
+	    )
+	(speedbar-insert-separator
+	 (format "Argument #%d" (oref context index)))
+	(if args
+	    (semantic-ia-sb-string-list args
+					'speedbar-tag-face
+					'semantic-sb-token-jump
+					(oref context index)
+					'speedbar-selected-face)
+	  ;; Else, no args list, so use what the context had.
 	  (semantic-ia-sb-string-list arg
 				      'speedbar-tag-face
-				      'semantic-sb-token-jump))))))
+				      'semantic-sb-token-jump))
+	))))
 
-(defun semantic-ia-sb-string-list (list face function)
+(defun semantic-ia-sb-string-list (list face function &optional idx idxface)
   "Create some speedbar buttons from LIST.
-Each button will use FACE, and be activated with FUNCTION."
-  (while list
-    (let* ((usefn nil)
-	   (string (cond ((stringp (car list))
-			  (car list))
-			 ((semantic-tag-p (car list))
-			  (setq usefn (semantic-tag-with-position-p (car list)))
-			  (semantic-format-tag-uml-concise-prototype (car list)))
-			 (t "foo"))))
-      (if (semantic-tag-p (car list))
-	  (speedbar-make-tag-line 'angle ?i
-				  'semantic-ia-sb-tag-info (car list)
-				  string (if usefn function) (car list) face
-				  0)
-	(speedbar-make-tag-line 'statictag ??
-				nil nil
-				string (if usefn function) (car list) face
-				0))
-      (setq list (cdr list)))))
-		 
+Each button will use FACE, and be activated with FUNCTION.
+Optional IDX is an index into LIST to apply IDXFACE instead."
+  (let ((count 1))
+    (while list
+      (let* ((usefn nil)
+	     (string (cond ((stringp (car list))
+			    (car list))
+			   ((semantic-tag-p (car list))
+			    (setq usefn (semantic-tag-with-position-p (car list)))
+			    (semantic-format-tag-uml-concise-prototype (car list)))
+			   (t "<No Tag>")))
+	     (localface (if (or (not idx) (/= idx count))
+			    face
+			  idxface))
+	     )
+	(if (semantic-tag-p (car list))
+	    (speedbar-make-tag-line 'angle ?i
+				    'semantic-ia-sb-tag-info (car list)
+				    string (if usefn function) (car list) localface
+				    0)
+	  (speedbar-make-tag-line 'statictag ??
+				  nil nil
+				  string (if usefn function) (car list) localface
+				  0))
+	(setq list (cdr list)
+	      count (1+ count)))
+      )))
+
 (defun semantic-ia-sb-completion-list (list face function)
   "Create some speedbar buttons from LIST.
 Each button will use FACE, and be activated with FUNCTION."
@@ -242,45 +282,47 @@ See `semantic-ia-sb-tag-info' for more."
 Show the information in a shrunk split-buffer and expand
 out as many details as possible.
 TEXT, TAG, and INDENT are speedbar function arguments."
-  (unwind-protect
-      (let ((ob nil))
-	(speedbar-select-attached-frame)
-	(setq ob (current-buffer))
-	(with-output-to-temp-buffer "*Tag Information*"
-	  ;; Output something about this tag:
-	  (save-excursion
-	    (set-buffer "*Tag Information*")
-	    (goto-char (point-max))
-	    (insert
-	     (semantic-format-tag-prototype tag nil t)
-	     "\n")
-	    (let ((typetok
-		   (save-excursion
-		     (set-buffer ob)
-		     (semantic-analyze-tag-type tag))))
-	      (if typetok
-		  (insert (semantic-format-tag-prototype
-			   typetok nil t))
-		;; No type found by the analyzer
-		(let ((type (semantic-tag-type tag)))
-		  (save-excursion
-		    (set-buffer
-		     (marker-buffer (car semantic-ia-sb-last-analysis)))
- 		    (cond ((semantic-tag-p type)
- 			   (setq type (semantic-tag-name type)))
- 			  ((listp type)
- 			   (setq type (car type))))
+  (when (semantic-tag-p tag)
+    (unwind-protect
+	(let ((ob nil))
+	  (speedbar-select-attached-frame)
+	  (setq ob (current-buffer))
+	  (with-output-to-temp-buffer "*Tag Information*"
+	    ;; Output something about this tag:
+	    (with-current-buffer "*Tag Information*"
+	      (goto-char (point-max))
+	      (insert
+	       (semantic-format-tag-prototype tag nil t)
+	       "\n")
+	      (let ((typetok
+		     (condition-case nil
+			 (with-current-buffer ob
+			   ;; @todo - We need a context to derive a scope from.
+			   (semantic-analyze-tag-type tag nil))
+		       (error nil))))
+		(if typetok
+		    (insert (semantic-format-tag-prototype
+			     typetok nil t))
+		  ;; No type found by the analyzer
+		  ;; The below used to try and select the buffer from the last
+		  ;; analysis, but since we are already in the correct buffer, I
+		  ;; don't think that is needed.
+		  (let ((type (semantic-tag-type tag)))
+		    (cond ((semantic-tag-p type)
+			   (setq type (semantic-tag-name type)))
+			  ((listp type)
+			   (setq type (car type))))
 		    (if (semantic-lex-keyword-p type)
 			(setq typetok
 			      (semantic-lex-keyword-get type 'summary))))
 		  (if typetok
-		      (insert typetok)))
-		))
-	    ))
-	;; Make it small
-	(shrink-window-if-larger-than-buffer
-	 (get-buffer-window "*Tag Information*")))
-    (select-frame speedbar-frame)))
+		      (insert typetok))
+		  ))
+	      ))
+	  ;; Make it small
+	  (shrink-window-if-larger-than-buffer
+	   (get-buffer-window "*Tag Information*")))
+      (select-frame speedbar-frame))))
 
 (defun semantic-ia-sb-line-path (&optional depth)
   "Return the file name associated with DEPTH."
@@ -288,38 +330,37 @@ TEXT, TAG, and INDENT are speedbar function arguments."
     (let* ((tok (speedbar-line-token))
 	   (buff (if (semantic-tag-buffer tok)
 		     (semantic-tag-buffer tok)
-		   ;; Local variables are deoverlayed.  We should assume
-		   ;; that they are in the buffer deriving the context.
-		   (marker-buffer (car semantic-ia-sb-last-analysis)))))
+		   (current-buffer))))
       (buffer-file-name buff))))
 
 (defun semantic-ia-sb-complete (text tag indent)
   "At point in the attached buffer, complete the symbol clicked on.
 TEXT TAG and INDENT are the details."
   ;; Find the specified bounds from the current analysis.
-  (let* ((a (cdr semantic-ia-sb-last-analysis))
-	 (pnt (car semantic-ia-sb-last-analysis))
-	 (bounds (oref a bounds))
-	 (movepoint nil)
-	 )
-    (save-excursion
-      (set-buffer (marker-buffer pnt))
-      (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
-	  (setq movepoint t))
-      (goto-char (car bounds))
-      (delete-region (car bounds) (cdr bounds))
-      (insert (semantic-tag-name tag))
-      (if movepoint (setq movepoint (point)))
-      ;; I'd like to use this to add fancy () or what not at the end
-      ;; but we need the parent file whih requires an upgrade to the
-      ;; analysis tool.
-      ;;(semantic-insert-foreign-tag tag ??))
-      )
-    (if movepoint
-	(let ((cf (selected-frame)))
-	  (speedbar-select-attached-frame)
-	  (goto-char movepoint)
-	  (select-frame cf)))))
+  (speedbar-select-attached-frame)
+  (unwind-protect
+      (let* ((a (semantic-analyze-current-context (point)))
+	     (bounds (oref a bounds))
+	     (movepoint nil)
+	     )
+	(save-excursion
+	  (if (and (<= (point) (cdr bounds)) (>= (point) (car bounds)))
+	      (setq movepoint t))
+	  (goto-char (car bounds))
+	  (delete-region (car bounds) (cdr bounds))
+	  (insert (semantic-tag-name tag))
+	  (if movepoint (setq movepoint (point)))
+	  ;; I'd like to use this to add fancy () or what not at the end
+	  ;; but we need the parent file whih requires an upgrade to the
+	  ;; analysis tool.
+	  ;;(semantic-insert-foreign-tag tag ??))
+	  )
+	(if movepoint
+	    (let ((cf (selected-frame)))
+	      (speedbar-select-attached-frame)
+	      (goto-char movepoint)
+	      (select-frame cf))))
+    (select-frame speedbar-frame)))
 
 (provide 'semantic-ia-sb)
 

@@ -26,8 +26,8 @@
 This manual documents Semantic, a new intrastructure for parser
 based text analysis for Emacs.
 
-Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
-Copyright @copyright{} 2001, 2002, 2003 David Ponce
+Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 Eric M. Ludlam
+Copyright @copyright{} 2001, 2002, 2003, 2005 David Ponce
 Copyright @copyright{} 2002, 2003 Richard Y. Kim
 
 @quotation
@@ -44,7 +44,7 @@ License''.
 @ifinfo
 @dircategory Emacs
 @direntry
-* Semantic: (semantic).	Infrastructure for parser based text analysis.
+* Semantic: (semantic). Infrastructure for parser based text analysis.
 @end direntry
 @end ifinfo
 
@@ -59,7 +59,7 @@ License''.
 This file documents Semantic.
 @emph{Infrastructure for parser based text analysis in Emacs}
 
-Copyright @copyright{} 2002 @value{AUTHOR}
+Copyright @copyright{} 2007 @value{AUTHOR}
 @end ifinfo
 
 @titlepage
@@ -67,7 +67,8 @@ Copyright @copyright{} 2002 @value{AUTHOR}
 @title @value{TITLE}
 @author by @value{AUTHOR}
 @vskip 0pt plus 1 fill
-Copyright @copyright{} 1999, 2000, 2001, 2002, 2003 @value{AUTHOR}
+Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+2007 @value{AUTHOR}
 @page
 @vskip 0pt plus 1 fill
 @insertcopying
@@ -101,7 +102,7 @@ use the mailing list cedet-semantic@@sourceforge.net via the URL:
 
 @menu
 * Overview::                    
-* Installation::                
+* Installation/Basic Configuration::                
 * Semantic manuals::            
 * Semantic Internals::          
 * Glossary::                    
@@ -114,8 +115,8 @@ use the mailing list cedet-semantic@@sourceforge.net via the URL:
 
 @include overview.texi
 
-@node Installation
-@chapter Installation
+@node Installation/Basic Configuration
+@chapter Installation and Basic Configuration
 
 @include installation.texi
 

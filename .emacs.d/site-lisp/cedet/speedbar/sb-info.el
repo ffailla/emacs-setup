@@ -1,11 +1,11 @@
 ;;; sb-info --- Speedbar support for Info
 
-;; Copyright (C) 1997, 1998, 2000, 2001, 2002 Free Software Foundation
+;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2005, 2009 Free Software Foundation
 ;;
 ;; Author: Eric M. Ludlam <zappo@gnu.ai.mit.edu>
 ;; Version: 0.3
 ;; Keywords: file, tags, tools
-;; X-RCS: $Id: sb-info.el,v 1.18 2002/03/16 20:07:19 zappo Exp $
+;; X-RCS: $Id: sb-info.el,v 1.21 2009/03/12 22:48:07 zappo Exp $
 ;;
 ;; This file is patch of GNU Emacs.
 ;;
@@ -107,12 +107,12 @@ This will add a speedbar major display mode."
   )
 
 (defvar Info-speedbar-image-button-alist
-  '(("<+>" . speedbar-document-plus)
-    ("<->" . speedbar-document-minus)
-    ("[+]" . speedbar-page-plus)
-    ("[-]" . speedbar-page-minus)
-    ("[?]" . speedbar-page)
-    ("[ ]" . speedbar-page)
+  '(("<+>" . ezimage-document-plus)
+    ("<->" . ezimage-document-minus)
+    ("[+]" . ezimage-page-plus)
+    ("[-]" . ezimage-page-minus)
+    ("[?]" . ezimage-page)
+    ("[ ]" . ezimage-page)
     )
   "Image buttons used for Info mode.")
 
@@ -245,7 +245,12 @@ BUFFER is the buffer speedbar is requesting buttons for."
 		      (not (looking-at "Info Nodes:")))
       (erase-buffer))
   (Info-speedbar-hierarchy-buttons nil 0)
+  (goto-char (point-min))
   )
 
 (provide 'sb-info)
+
+;;; Overriding preinstalled code.
+;;;###autoload
+(eval-after-load "info" '(require 'sb-info))
 ;;; sb-info.el ends here

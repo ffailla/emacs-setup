@@ -1,10 +1,10 @@
 ;;; semanto-example.el --- Examples using the semantic API
 
-;;; Copyright (C) 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 2002, 2003, 2004, 2005 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-example.el,v 1.4 2004/03/19 23:47:01 zappo Exp $
+;; X-RCS: $Id: semantic-example.el,v 1.6 2005/09/30 20:20:07 zappo Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,13 +20,14 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; Simplified example programs that use the semantic API.
 
+;;; Code:
 (defun se-jump (name)
   "Jump to the token with NAME.
 Shows how to:

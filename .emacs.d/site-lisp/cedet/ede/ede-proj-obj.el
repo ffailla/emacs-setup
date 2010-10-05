@@ -1,10 +1,10 @@
 ;;; ede-proj-obj.el --- EDE Generic Project Object code generation support
 
-;;;  Copyright (C) 1998, 1999, 2000  Eric M. Ludlam
+;;;  Copyright (C) 1998, 1999, 2000, 2005, 2008, 2009, 2010  Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
-;; RCS: $Id: ede-proj-obj.el,v 1.10 2000/10/14 02:54:06 zappo Exp $
+;; RCS: $Id: ede-proj-obj.el,v 1.22 2010/07/24 13:54:53 zappo Exp $
 
 ;; This software is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,14 +18,15 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
-;; Handles a supperclass of target types which create object code in
+;; Handles a superclass of target types which create object code in
 ;; and EDE Project file.
 
+(eval-when-compile (require 'cl))
 (require 'ede-proj)
 ;; (require 'ede-pmake)
 ;; The above require is needed for ede-pmake-varname, but introduces
@@ -39,22 +40,33 @@
   (;; Give this a new default
    (configuration-variables :initform ("debug" . (("CFLAGS" . "-g")
 						  ("LDFLAGS" . "-g"))))
-   (availablecompilers :initform (ede-gcc-compiler
-				  ede-g++-compiler
-				  ;; More C and C++ compilers, plus
-				  ;; fortran or pascal can be added here
-				  ))
-   (availablelinkers :initform (ede-g++-linker
-				;; Add more linker thingies here.
-				ede-ld-linker
-				))
-   (sourcetype :initform (ede-source-c 
-			  ede-source-c++
-			  ;; ede-source-other
-			  ;; This object should take everything that
-			  ;; gets compiled into objects like fortran
-			  ;; and pascal.
-			  ))
+   ;; @TODO - add an include path.
+   (availablecompilers :initform '(ede-gcc-compiler
+				   ede-g++-compiler
+				   ede-gfortran-compiler
+				   ede-gfortran-module-compiler
+				   ede-lex-compiler
+				   ede-yacc-compiler
+				   ;; More C and C++ compilers, plus
+				   ;; fortran or pascal can be added here
+				   ))
+   (availablelinkers :initform '(ede-g++-linker
+				 ede-cc-linker
+				 ede-ld-linker
+				 ede-gfortran-linker
+				 ;; Add more linker thingies here.
+				 ))
+   (sourcetype :initform '(ede-source-c
+			   ede-source-c++
+			   ede-source-f77
+			   ede-source-f90
+			   ede-source-lex
+			   ede-source-yacc
+			   ;; ede-source-other
+			   ;; This object should take everything that
+			   ;; gets compiled into objects like fortran
+			   ;; and pascal.
+			   ))
    )
   "Abstract class for Makefile based object code generating targets.
 Belonging to this group assumes you could make a .o from an element source
@@ -70,6 +82,8 @@ file.")
 		  "A variable dedicated to dependency generation."))
   "Ede compiler class for source which must compiler, and link.")
 
+;;; C/C++ Compilers and Linkers
+;;
 (defvar ede-source-c
   (ede-sourcecode "ede-source-c"
 		  :name "C"
@@ -101,11 +115,21 @@ file.")
    :uselinker t)
   "Compiler for C sourcecode.")
 
+(defvar ede-cc-linker
+  (ede-linker
+   "ede-cc-linker"
+   :name "cc"
+   :sourcetype '(ede-source-c)
+   :variables  '(("C_LINK" . "$(CC) $(CFLAGS) $(LDFLAGS) -L."))
+   :commands '("$(C_LINK) -o $@ $^ $(LDDEPS)")
+   :objectextention "")
+   "Linker for C sourcecode.")
+
 (defvar ede-source-c++
   (ede-sourcecode "ede-source-c++"
 		  :name "C++"
-		  :sourcepattern "\\.cpp$"
-		  :auxsourcepattern "\\.hpp$"
+		  :sourcepattern "\\.\\(c\\(pp?\\|c\\|xx\\|++\\)\\|C\\\(PP\\)?\\)$"
+		  :auxsourcepattern "\\.\\(hpp?\\|hh?\\|hxx\\|H\\)$"
 		  :garbagepattern '("*.o" "*.obj" ".deps/*.P" ".lo"))
   "C++ source code definition.")
 
@@ -139,23 +163,115 @@ file.")
    :name "g++"
    ;; Only use this linker when c++ exists.
    :sourcetype '(ede-source-c++)
-   :variables  '(("CXX_LINK" .
-		  "$(CXX) $(CFLAGS) $(LDFLAGS) -L. -o $@ $^")
-		 )
-   :commands '("$(CXX_LINK) $^")
+   :variables  '(("CXX_LINK" . "$(CXX) $(CFLAGS) $(LDFLAGS) -L."))
+   :commands '("$(CXX_LINK) -o $@ $^ $(LDDEPS)")
    :autoconf '("AC_PROG_CXX")
    :objectextention "")
   "Linker needed for c++ programs.")
 
+;;; LEX
+(defvar ede-source-lex
+  (ede-sourcecode "ede-source-lex"
+		  :name "lex"
+		  :sourcepattern "\\.l\\(l\\|pp\\|++\\)")
+  "Lex source code definition.
+No garbage pattern since it creates C or C++ code.")
+
+(defvar ede-lex-compiler
+  (ede-object-compiler
+   "ede-lex-compiler"
+   ;; Can we support regular makefiles too??
+   :autoconf '("AC_PROG_LEX")
+   :sourcetype '(ede-source-lex))
+  "Compiler used for Lexical source.")
+
+;;; YACC
+(defvar ede-source-yacc
+  (ede-sourcecode "ede-source-yacc"
+		  :name "yacc"
+		  :sourcepattern "\\.y\\(y\\|pp\\|++\\)")
+  "Yacc source code definition.
+No garbage pattern since it creates C or C++ code.")
+
+(defvar ede-yacc-compiler
+  (ede-object-compiler
+   "ede-yacc-compiler"
+   ;; Can we support regular makefiles too??
+   :autoconf '("AC_PROG_YACC")
+   :sourcetype '(ede-source-yacc))
+  "Compiler used for yacc/bison grammar files source.")
+
+;;; Fortran Compiler/Linker
+;;
+;; Contributed by David Engster
+(defvar ede-source-f90
+  (ede-sourcecode "ede-source-f90"
+		  :name "Fortran 90/95"
+		  :sourcepattern "\\.[fF]9[05]$"
+		  :auxsourcepattern "\\.incf$"
+		  :garbagepattern '("*.o" "*.mod" ".deps/*.P"))
+  "Fortran 90/95 source code definition.")
+
+(defvar ede-source-f77
+  (ede-sourcecode "ede-source-f77"
+		  :name "Fortran 77"
+		  :sourcepattern "\\.\\([fF]\\|for\\)$"
+		  :auxsourcepattern "\\.incf$"
+		  :garbagepattern '("*.o" ".deps/*.P"))
+  "Fortran 77 source code definition.")
+
+(defvar ede-gfortran-compiler
+  (ede-object-compiler
+   "ede-f90-compiler-gfortran"
+   :name "gfortran"
+   :dependencyvar '("F90_DEPENDENCIES" . "-Wp,-MD,.deps/$(*F).P")
+   :variables '(("F90" . "gfortran")
+		("F90_COMPILE" .
+		 "$(F90) $(DEFS) $(INCLUDES) $(F90FLAGS)"))
+   :rules (list (ede-makefile-rule
+		 "f90-inference-rule"
+		 :target "%.o"
+		 :dependencies "%.f90"
+		 :rules '("@echo '$(F90_COMPILE) -c $<'; \\"
+			  "$(F90_COMPILE) $(F90_DEPENDENCIES) -o $@ -c $<"
+			  )
+		 ))
+   :sourcetype '(ede-source-f90 ede-source-f77)
+   :objectextention ".o"
+   :makedepends t
+   :uselinker t)
+  "Compiler for Fortran sourcecode.")
+
+(defvar ede-gfortran-module-compiler
+  (clone ede-gfortran-compiler
+	 "ede-f90-module-compiler-gfortran"
+	 :name "gfortranmod"
+	 :sourcetype '(ede-source-f90)
+	 :commands '("$(F90_COMPILE) -c $^")
+	 :objectextention ".mod"
+	 :uselinker nil)
+  "Compiler for Fortran 90/95 modules.")
+
+
+(defvar ede-gfortran-linker
+  (ede-linker
+   "ede-gfortran-linker"
+   :name "gfortran"
+   :sourcetype '(ede-source-f90 ede-source-f77)
+   :variables  '(("F90_LINK" . "$(F90) $(CFLAGS) $(LDFLAGS) -L."))
+   :commands '("$(F90_LINK) -o $@ $^")
+   :objectextention "")
+  "Linker needed for Fortran programs.")
+
+;;; Generic Linker
+;;
 (defvar ede-ld-linker
   (ede-linker
    "ede-ld-linker"
    :name "ld"
    :variables  '(("LD" . "ld")
-		 ("LD_LINK" .
-		  "$(LD) $(LDFLAGS) -L. -o $@ $^")
-		 )
-   :commands '("$(LD_LINK) $^")
+		 ("LD_LINK" . "$(LD) $(LDFLAGS) -L."))
+   :commands '("$(LD_LINK) -o $@ $^ $(LDDEPS)")
    :objectextention "")
   "Linker needed for c++ programs.")
 
@@ -164,7 +280,7 @@ file.")
 (defmethod ede-proj-makefile-insert-variables ((this ede-object-compiler))
   "Insert variables needed by the compiler THIS."
   (call-next-method)
-  (if (slot-boundp this 'dependencyvar)
+  (if (eieio-instance-inheritor-slot-boundp this 'dependencyvar)
       (with-slots (dependencyvar) this
 	  (insert (car dependencyvar) "=")
 	  (let ((cd (cdr dependencyvar)))

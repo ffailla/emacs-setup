@@ -1,10 +1,10 @@
 ;;; semantic-format.el --- Routines for formatting tags
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
-;; X-RCS: $Id: semantic-format.el,v 1.18 2004/06/24 00:50:32 zappo Exp $
+;; X-RCS: $Id: semantic-format.el,v 1.37 2010/03/15 13:40:54 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,8 +20,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -45,8 +45,11 @@
 ;;;###autoload
 (defvar semantic-format-tag-functions
   '(semantic-format-tag-name
+    semantic-format-tag-canonical-name
     semantic-format-tag-abbreviate
     semantic-format-tag-summarize
+    semantic-format-tag-summarize-with-file
+    semantic-format-tag-short-doc
     semantic-format-tag-prototype
     semantic-format-tag-concise-prototype
     semantic-format-tag-uml-abbreviate
@@ -65,18 +68,18 @@ COLOR indicates that the generated text should be colored using
 
 ;;;###autoload
 (semantic-varalias-obsolete 'semantic-token->text-functions
-                            'semantic-format-tag-functions)
+			    'semantic-format-tag-functions)
 ;;;###autoload
 (defvar semantic-format-tag-custom-list
   (append '(radio)
 	  (mapcar (lambda (f) (list 'const f))
 		  semantic-format-tag-functions)
 	  '(function))
-  "A List used by customizeable variables to choose a tag to text function.
+  "A List used by customizable variables to choose a tag to text function.
 Use this variable in the :type field of a customizable variable.")
 
 (semantic-varalias-obsolete 'semantic-token->text-custom-list
-                            'semantic-format-tag-custom-list)
+			    'semantic-format-tag-custom-list)
 
 (defcustom semantic-format-use-images-flag ezimage-use-images
   "Non-nil means semantic format functions use images.
@@ -88,32 +91,9 @@ Images can be used as icons instead of some types of text strings."
   "Text used to separate arguments when creating text from tags.")
 (make-variable-buffer-local 'semantic-function-argument-separator)
 
-(defun semantic-test-all-format-tag-functions ()
-  "Test all outputs from `semantic-format-tag-functions'.
-Output is generated from the function under `point'."
-  (interactive)
-  (semantic-fetch-tags)
-  (let* ((tag (semantic-current-tag))
-	 (par (or (semantic-current-tag-parent)
-		  (if (semantic-tag-function-parent tag)
-		      (semantic-find-first-tag-by-name
-		       (semantic-tag-function-parent tag)
-		       (current-buffer)))
-		  ))
-	 (fns semantic-format-tag-functions))
-    (with-output-to-temp-buffer "*format-tag*"
-      (princ "Tag->format function tests:")
-      (while fns
-	(princ "\n")
-	(princ (car fns))
-	(princ ":\n ")
-	(let ((s (funcall (car fns) tag par t)))
-	  (save-excursion
-	    (set-buffer "*format-tag*")
-	    (goto-char (point-max))
-	    (insert s)))
-	(setq fns (cdr fns))))
-      ))
+(defvar semantic-format-parent-separator "::"
+  "Text used to separate names when between namespaces/classes and functions.")
+(make-variable-buffer-local 'semantic-format-parent-separator)
 
 (defvar semantic-format-face-alist
   `( (function . font-lock-function-name-face)
@@ -132,6 +112,7 @@ Output is generated from the function under `point'."
      (keyword . font-lock-keyword-face)
      (abstract . italic)
      (static . underline)
+     (documentation . font-lock-doc-face)
      )
   "Face used to colorize tags of different types.
 Override the value locally if a language supports other tag types.
@@ -144,7 +125,7 @@ Faces used are generated in `font-lock' for consistency, and will not
 be used unless font lock is a feature.")
 
 (semantic-varalias-obsolete 'semantic-face-alist
-                            'semantic-format-face-alist)
+			    'semantic-format-face-alist)
 
 
 
@@ -154,15 +135,15 @@ be used unless font lock is a feature.")
   "Apply onto TEXT a color associated with FACE-CLASS.
 FACE-CLASS is a tag type found in `semantic-face-alist'.  See this variable
 for details on adding new types."
-  (when (featurep 'font-lock)
-    (let ((face (cdr-safe (assoc face-class semantic-format-face-alist)))
-	  (newtext (concat text)))
-      (put-text-property 0 (length text) 'face face newtext)
-      newtext)
-    ))
+  (if (featurep 'font-lock)
+      (let ((face (cdr-safe (assoc face-class semantic-format-face-alist)))
+	    (newtext (concat text)))
+	(put-text-property 0 (length text) 'face face newtext)
+	newtext)
+    text))
 
 (make-obsolete 'semantic-colorize-text
-               'semantic--format-colorize-text)
+	       'semantic--format-colorize-text)
 
 (defun semantic--format-colorize-merge-text (precoloredtext face-class)
   "Apply onto PRECOLOREDTEXT a color associated with FACE-CLASS.
@@ -199,16 +180,14 @@ FORMATTER is a function used to format a tag.
 COLOR specifies if color should be used."
   (let ((out nil))
     (while args
-      (cond ((stringp (car args))
-	     (let ((a (car args)))
-	       (if color
-		   (setq a (semantic--format-colorize-text a 'variable)))
-	       (setq out (cons a out))
-	       ))
-	    ((semantic-tag-p (car args))
-	     (setq out
-		   (cons (funcall formatter (car args) nil color)
-			 out))))
+      (push (if (and formatter
+		     (semantic-tag-p (car args))
+		     (not (string= (semantic-tag-name (car args)) ""))
+		     )
+		(funcall formatter (car args) nil color)
+	      (semantic-format-tag-name-from-anything
+	       (car args) nil color 'variable))
+	    out)
       (setq args (cdr args)))
     (mapconcat 'identity (nreverse out) semantic-function-argument-separator)
     ))
@@ -216,7 +195,7 @@ COLOR specifies if color should be used."
 ;;; Data Type
 ;;
 ;;;###autoload
-(define-overload semantic-format-tag-type (tag color)
+(define-overloadable-function semantic-format-tag-type (tag color)
   "Convert the data type of TAG to a string usable in tag formatting.
 It is presumed that TYPE is a string or semantic tag.")
 
@@ -225,13 +204,16 @@ It is presumed that TYPE is a string or semantic tag.")
 Argument COLOR specifies to colorize the text."
   (let* ((type (semantic-tag-type tag))
 	 (out (cond ((semantic-tag-p type)
-		     (let ((typetype (semantic-tag-type type))
-			   (name (semantic-tag-name type)))
-		       (semantic--format-colorize-text
-			(if typetype
-			    (concat typetype " " name)
-			  name)
-			'type)))
+		     (let* ((typetype (semantic-tag-type type))
+			    (name (semantic-tag-name type))
+			    (str (if typetype
+				     (concat typetype " " name)
+				   name)))
+		       (if color
+			   (semantic--format-colorize-text
+			    str
+			    'type)
+			 str)))
 		    ((and (listp type)
 			  (stringp (car type)))
 		     (car type))
@@ -253,8 +235,33 @@ Argument COLOR specifies to colorize the text."
 PARENT and COLOR are ignored."
   (format "%S" tag))
 
+(defun semantic-format-tag-name-from-anything (anything &optional
+							parent color
+							colorhint)
+  "Convert just about anything into a name like string.
+Argument ANYTHING is the thing to be converted.
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors.
+Optional COLORHINT is the type of color to use if ANYTHING is not a tag
+with a tag class.  See `semantic--format-colorize-text' for a definition
+of FACE-CLASS for which this is used."
+  (cond ((stringp anything)
+	 (semantic--format-colorize-text anything colorhint))
+	((semantic-tag-p anything)
+	 (let ((ans (semantic-format-tag-name anything parent color)))
+	   ;; If ANS is empty string or nil, then the name wasn't
+	   ;; supplied.  The implication is as in C where there is a data
+	   ;; type but no name for a prototype from an include file, or
+	   ;; an argument just wasn't used in the body of the fcn.
+	   (if (or (null ans) (string= ans ""))
+	       (setq ans (semantic-format-tag-type anything color)))
+	   ans))
+	((and (listp anything)
+	      (stringp (car anything)))
+	 (semantic--format-colorize-text (car anything) colorhint))))
+
 ;;;###autoload
-(define-overload semantic-format-tag-name (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-name (tag &optional parent color)
   "Return the name string describing TAG.
 The name is the shortest possible representation.
 Optional argument PARENT is the parent type if TAG is a detail.
@@ -274,8 +281,72 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
 	(setq name (semantic--format-colorize-text name (semantic-tag-class tag))))
     name))
 
+(defun semantic--format-tag-parent-tree (tag parent)
+  "Under Consideration.
+
+Return a list of parents for TAG.
+PARENT is the first parent, or nil.  If nil, then an attempt to
+determine PARENT is made.
+Once PARENT is identified, additional parents are looked for.
+The return list first element is the nearest parent, and the last
+item is the first parent which may be a string.  The root parent may
+not be the actual first parent as there may just be a failure to find
+local definitions."
+  ;; First, validate the PARENT argument.
+  (unless parent
+    ;; All mechanisms here must be fast as often parent
+    ;; is nil because there isn't one.
+    (setq parent (or (semantic-tag-function-parent tag)
+		     (save-excursion
+		       (semantic-go-to-tag tag)
+		       (semantic-current-tag-parent)))))
+  (when (stringp parent)
+    (setq parent (semantic-find-first-tag-by-name
+		  parent (current-buffer))))
+  ;; Try and find a trail of parents from PARENT
+  (let ((rlist (list parent))
+	)
+    ;; IMPLELEMENT ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    (reverse rlist)))
+
+(define-overloadable-function semantic-format-tag-canonical-name (tag &optional parent color)
+  "Return a canonical name for TAG.
+A canonical name includes the names of any parents or namespaces preceding
+the tag.
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors.")
+
+(defun semantic-format-tag-canonical-name-default (tag &optional parent color)
+  "Return a canonical name for TAG.
+A canonical name includes the names of any parents or namespaces preceding
+the tag with colons separating them.
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors."
+  (let ((parent-input-str
+	 (if (and parent
+		  (semantic-tag-p parent)
+		  (semantic-tag-of-class-p parent 'type))
+	     (concat
+	      ;; Choose a class of 'type as the default parent for something.
+	      ;; Just a guess though.
+	      (semantic-format-tag-name-from-anything parent nil color 'type)
+	      ;; Default separator between class/namespace and others.
+	      semantic-format-parent-separator)
+	   ""))
+	(tag-parent-str
+	 (or (when (and (semantic-tag-of-class-p tag 'function)
+			(semantic-tag-function-parent tag))
+	       (concat (semantic-tag-function-parent tag)
+		       semantic-format-parent-separator))
+	     ""))
+	)
+    (concat parent-input-str
+	    tag-parent-str
+	    (semantic-format-tag-name tag parent color))
+    ))
+
 ;;;###autoload
-(define-overload semantic-format-tag-abbreviate (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-abbreviate (tag &optional parent color)
   "Return an abbreviated string describing TAG.
 The abbreviation is to be short, with possible symbols indicating
 the type of tag, or other information.
@@ -290,7 +361,7 @@ Optional argument COLOR means highlight the prototype with font-lock colors.
 This is a simple C like default."
   ;; Do lots of complex stuff here.
   (let ((class (semantic-tag-class tag))
-	(name (semantic-format-tag-name tag parent color))
+	(name (semantic-format-tag-canonical-name tag parent color))
 	(suffix "")
 	(prefix "")
 	str)
@@ -310,11 +381,6 @@ This is a simple C like default."
 	   (setq suffix "{}"))
 	  )
     (setq str (concat prefix name suffix))
-    (if parent
-	(setq str
-	      (concat (semantic-format-tag-name parent color)
-		      (car semantic-type-relation-separator-character)
-		      str)))
     str))
 
 ;; Semantic 1.2.x had this misspelling.  Keep it for backwards compatibiity.
@@ -322,7 +388,7 @@ This is a simple C like default."
  'semantic-summerize-nonterminal 'semantic-format-tag-summarize)
 
 ;;;###autoload
-(define-overload semantic-format-tag-summarize (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-summarize (tag &optional parent color)
   "Summarize TAG in a reasonable way.
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors.")
@@ -332,20 +398,84 @@ Optional argument COLOR means highlight the prototype with font-lock colors.")
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors."
   (let* ((proto (semantic-format-tag-prototype tag nil color))
-         (names (if parent
-                    semantic-symbol->name-assoc-list-for-type-parts
-                  semantic-symbol->name-assoc-list))
-         (tsymb (semantic-tag-class tag))
-         (label (capitalize (or (cdr-safe (assoc tsymb names))
-                                (symbol-name tsymb)))))
+	 (names (if parent
+		    semantic-symbol->name-assoc-list-for-type-parts
+		  semantic-symbol->name-assoc-list))
+	 (tsymb (semantic-tag-class tag))
+	 (label (capitalize (or (cdr-safe (assoc tsymb names))
+				(symbol-name tsymb)))))
     (if color
-        (setq label (semantic--format-colorize-text label 'label)))
+	(setq label (semantic--format-colorize-text label 'label)))
     (concat label ": " proto)))
+
+;;;###autoload
+(define-overloadable-function semantic-format-tag-summarize-with-file (tag &optional parent color)
+  "Like `semantic-format-tag-summarize', but with the file name.
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors.")
+
+(defun semantic-format-tag-summarize-with-file-default (tag &optional parent color)
+  "Summarize TAG in a reasonable way.
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors."
+  (let* ((proto (semantic-format-tag-prototype tag nil color))
+	 (file (semantic-tag-file-name tag))
+	 )
+    ;; Nothing for tag?  Try parent.
+    (when (and (not file) (and parent))
+      (setq file (semantic-tag-file-name parent)))
+    ;; Don't include the file name if we can't find one, or it is the
+    ;; same as the current buffer.
+    (if (or (not file)
+	    (string= file (buffer-file-name (current-buffer))))
+	proto
+      (setq file (file-name-nondirectory file))
+      (when color
+	(setq file (semantic--format-colorize-text file 'label)))
+      (concat file ": " proto))))
+
+;;;###autoload
+(define-overloadable-function semantic-format-tag-short-doc (tag &optional parent color)
+  "Display a short form of TAG's documentation. (Comments, or docstring.)
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors.")
+
+(defun semantic-format-tag-short-doc-default (tag &optional parent color)
+  "Display a short form of TAG's documentation.  (Comments, or docstring.)
+Optional argument PARENT is the parent type if TAG is a detail.
+Optional argument COLOR means highlight the prototype with font-lock colors."
+  (let* ((fname (or (semantic-tag-file-name tag)
+		    (when parent (semantic-tag-file-name parent))))
+	 (buf (or (semantic-tag-buffer tag)
+		  (when parent (semantic-tag-buffer parent))))
+	 (doc (semantic-tag-docstring tag buf)))
+    (when (and (not doc) (not buf) fname)
+      ;; If there is no doc, and no buffer, but we have a filename,
+      ;; lets try again.
+      (save-match-data
+	(setq buf (find-file-noselect fname)))
+      (setq doc (semantic-tag-docstring tag buf)))
+    (when (not doc)
+      (setq doc (semantic-documentation-for-tag tag))
+      )
+    (setq doc
+	  (if (not doc)
+	      ;; No doc, use summarize.
+	      (semantic-format-tag-summarize tag parent color)
+	    ;; We have doc.  Can we devise a single line?
+	    (if (string-match "$" doc)
+		(substring doc 0 (match-beginning 0))
+	      doc)
+	    ))
+    (when color
+      (setq doc (semantic--format-colorize-text doc 'documentation)))
+    doc
+    ))
 
 ;;; Prototype generation
 ;;
 ;;;###autoload
-(define-overload semantic-format-tag-prototype (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-prototype (tag &optional parent color)
   "Return a prototype for TAG.
 This function should be overloaded, though it need not be used.
 This is because it can be used to create code by language independent
@@ -363,16 +493,22 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
 	 (type (if (member class '(function variable type))
 		   (semantic-format-tag-type tag color)))
 	 (args (if (member class '(function type))
-                   (semantic--format-tag-arguments
-                    (if (eq class 'function)
-                        (semantic-tag-function-arguments tag)
-                      (semantic-tag-type-members tag))
-                    #'semantic-format-tag-prototype
-                    color)))
+		   (semantic--format-tag-arguments
+		    (if (eq class 'function)
+			(semantic-tag-function-arguments tag)
+		      (list "")
+		      ;;(semantic-tag-type-members tag)
+		      )
+		    #'semantic-format-tag-prototype
+		    color)))
 	 (const (semantic-tag-get-attribute tag :constant-flag))
+	 (tm (semantic-tag-get-attribute tag :typemodifiers))
 	 (mods (append
 		(if const '("const") nil)
-		(semantic-tag-get-attribute tag :typemodifiers)))
+		(cond ((stringp tm) (list tm))
+		      ((consp tm) tm)
+		      (t nil))
+		))
 	 (array (if (eq class 'variable)
 		    (let ((deref
 			   (semantic-tag-get-attribute
@@ -398,7 +534,7 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
 	    (or array ""))))
 
 ;;;###autoload
-(define-overload semantic-format-tag-concise-prototype (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-concise-prototype (tag &optional parent color)
   "Return a concise prototype for TAG.
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors.")
@@ -422,14 +558,14 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
 	      ")"))
      ((eq class 'variable)
       (let* ((deref (semantic-tag-get-attribute
-                     tag :dereference))
-             (array "")
-             )
-        (while (and deref (/= deref 0))
-          (setq array (concat array "[]")
-                deref (1- deref)))
-        (concat (semantic-format-tag-name tag parent color)
-                array)))
+		     tag :dereference))
+	     (array "")
+	     )
+	(while (and deref (/= deref 0))
+	  (setq array (concat array "[]")
+		deref (1- deref)))
+	(concat (semantic-format-tag-name tag parent color)
+		array)))
      (t
       (semantic-format-tag-abbreviate tag parent color)))))
 
@@ -482,7 +618,7 @@ UML attribute strings are things like {abstract} or {leaf}."
   "Association list of the form (SYMBOL . \"STRING\") for protection symbols.
 This associates a symbol, such as 'public with the st ring \"+\".")
 
-(define-overload semantic-format-tag-uml-protection-to-string (protection-symbol color)
+(define-overloadable-function semantic-format-tag-uml-protection-to-string (protection-symbol color)
   "Convert PROTECTION-SYMBOL to a string for UML.
 By default, uses `semantic-format-tag-protection-symbol-to-string-assoc-list'
 to convert.
@@ -500,12 +636,12 @@ Uses `semantic-format-tag-protection-symbol-to-string-assoc-list' to convert.
 If PROTECTION-SYMBOL is unknown, then the return value is
 `semantic-uml-no-protection-string'.
 COLOR indicates if we should use an image on the text."
-  (let ((ezimage-use-images (and semantic-format-use-images-flag color))
-	(key (assoc protection-symbol
-		    semantic-format-tag-protection-symbol-to-string-assoc-list)))
+  (let* ((ezimage-use-images (and semantic-format-use-images-flag color))
+	 (key (assoc protection-symbol
+		     semantic-format-tag-protection-symbol-to-string-assoc-list))
+	 (str (or (cdr-safe key) semantic-uml-no-protection-string)))
     (ezimage-image-over-string
-     (or (cdr-safe key)
-	 semantic-uml-no-protection-string)
+     (copy-sequence str)  ; make a copy to keep the original pristine.
      semantic-format-tag-protection-image-alist)))
 
 (defsubst semantic-format-tag-uml-protection (tag parent color)
@@ -524,7 +660,7 @@ COLOR indicates if it should be colorized."
 	(concat semantic-uml-colon-string str))))
 
 ;;;###autoload
-(define-overload semantic-format-tag-uml-abbreviate (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-uml-abbreviate (tag &optional parent color)
   "Return a UML style abbreviation for TAG.
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors.")
@@ -547,7 +683,7 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
     text))
 
 ;;;###autoload
-(define-overload semantic-format-tag-uml-prototype (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-uml-prototype (tag &optional parent color)
   "Return a UML style prototype for TAG.
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors.")
@@ -579,7 +715,7 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
     ))
 
 ;;;###autoload
-(define-overload semantic-format-tag-uml-concise-prototype (tag &optional parent color)
+(define-overloadable-function semantic-format-tag-uml-concise-prototype (tag &optional parent color)
   "Return a UML style concise prototype for TAG.
 Optional argument PARENT is the parent type if TAG is a detail.
 Optional argument COLOR means highlight the prototype with font-lock colors.")
@@ -600,11 +736,34 @@ Optional argument COLOR means highlight the prototype with font-lock colors."
     ))
 
 
+;;; Test routines
+;;
+(defun semantic-test-all-format-tag-functions (&optional arg)
+  "Test all outputs from `semantic-format-tag-functions'.
+Output is generated from the function under `point'.
+Optional argument ARG specifies not to use color."
+  (interactive "P")
+  (semantic-fetch-tags)
+  (let* ((tag (semantic-current-tag))
+	 (par (semantic-current-tag-parent))
+	 (fns semantic-format-tag-functions))
+    (with-output-to-temp-buffer "*format-tag*"
+      (princ "Tag->format function tests:")
+      (while fns
+	(princ "\n")
+	(princ (car fns))
+	(princ ":\n ")
+	(let ((s (funcall (car fns) tag par (not arg))))
+	  (save-excursion
+	    (set-buffer "*format-tag*")
+	    (goto-char (point-max))
+	    (insert s)))
+	(setq fns (cdr fns))))
+      ))
+
+
 ;;; Compatibility and aliases
 ;;
-(semantic-alias-obsolete 'semantic-test-all-token->text-functions
-			 'semantic-test-all-format-tag-functions)
-
 (semantic-alias-obsolete 'semantic-prin1-nonterminal
 			 'semantic-format-tag-prin1)
 

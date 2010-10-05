@@ -1,8 +1,8 @@
 ;;; semantic-tag-ls.el --- Language Specific override functions for tags
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008 Eric M. Ludlam
 
-;; X-CVS: $Id: semantic-tag-ls.el,v 1.9 2004/04/29 10:14:32 ponced Exp $
+;; X-CVS: $Id: semantic-tag-ls.el,v 1.16 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -18,16 +18,16 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
-;; There are some features of tags that are too langauge dependent to
+;; There are some features of tags that are too language dependent to
 ;; put in the core `semantic-tag' functionality.  For instance, the
 ;; protection of a tag (as specified by UML) could be almost anything.
 ;; In Java, it is a type specifier.  In C, there is a label.  This
-;; informatin can be derived, and thus should not be stored in the tag
+;; information can be derived, and thus should not be stored in the tag
 ;; itself.  These are the functions that languages can use to derive
 ;; the information.
 
@@ -42,7 +42,7 @@
 ;; leaf, etc.  Learn about UML to catch onto the lingo.
 
 ;;;###autoload
-(define-overload semantic-tag-calculate-parent (tag)
+(define-overloadable-function semantic-tag-calculate-parent (tag)
   "Attempt to calculate the parent of TAG.
 The default behavior (if not overriden with `tag-calculate-parent')
 is to search a buffer found with TAG, and if externally defined,
@@ -50,15 +50,15 @@ search locally, then semanticdb for that tag (when enabled.)")
 
 (defun semantic-tag-calculate-parent-default (tag)
   "Attempt to calculate the parent of TAG."
-  (save-excursion
-    (set-buffer (semantic-tag-buffer tag))
-    (save-excursion
-      (goto-char (semantic-tag-start tag))
-      (semantic-current-tag-parent))
-    ))
+  (when (semantic-tag-in-buffer-p tag)
+    (with-current-buffer (semantic-tag-buffer tag)
+      (save-excursion
+	(goto-char (semantic-tag-start tag))
+	(semantic-current-tag-parent))
+      )))
 
 ;;;###autoload
-(define-overload semantic-tag-protection (tag &optional parent)
+(define-overloadable-function semantic-tag-protection (tag &optional parent)
   "Return protection information about TAG with optional PARENT.
 This function returns on of the following symbols:
    nil        - No special protection.  Language dependent.
@@ -72,7 +72,8 @@ to themselves.  Use of this function should allow for this.
 The default behavior (if not overridden with `tag-protection'
 is to return a symbol based on type modifiers."
   (and (not parent)
-       (semantic-tag-buffer tag)
+       (semantic-tag-overlay tag)
+       (semantic-tag-in-buffer-p tag)
        (setq parent (semantic-tag-calculate-parent tag)))
   (:override))
 
@@ -118,19 +119,20 @@ For these PROTECTIONs, true is returned if TAG is:
 @item public
   True if private, protected, or nil.
 @end table"
-  (let ((tagpro (semantic-tag-protection tag parent)))
-    (or (null protection)
-	(and (eq protection 'private)
-	     (null tagpro))
-	(and (eq protection 'protected)
-	     (or (null tagpro)
-		 (eq tagpro 'private)))
-	(and (eq protection 'public)
-	     (not (eq tagpro 'public))))
+  (if (null protection)
+      t
+    (let ((tagpro (semantic-tag-protection tag parent)))
+      (or (and (eq protection 'private)
+	       (null tagpro))
+	  (and (eq protection 'protected)
+	       (or (null tagpro)
+		   (eq tagpro 'private)))
+	  (and (eq protection 'public)
+	       (not (eq tagpro 'public)))))
     ))
 
 ;;;###autoload
-(define-overload semantic-tag-abstract-p (tag &optional parent)
+(define-overloadable-function semantic-tag-abstract-p (tag &optional parent)
   "Return non nil if TAG is abstract.
 Optional PARENT is the parent tag of TAG.
 In UML, abstract methods and classes have special meaning and behavior
@@ -155,7 +157,7 @@ See `semantic-tag-abstract-p'."
     abs))
 
 ;;;###autoload
-(define-overload semantic-tag-leaf-p (tag &optional parent)
+(define-overloadable-function semantic-tag-leaf-p (tag &optional parent)
   "Return non nil if TAG is leaf.
 Optional PARENT is the parent tag of TAG.
 In UML, leaf methods and classes have special meaning and behavior.
@@ -180,7 +182,7 @@ See `semantic-tag-leaf-p'."
     leaf))
 
 ;;;###autoload
-(define-overload semantic-tag-static-p (tag &optional parent)
+(define-overloadable-function semantic-tag-static-p (tag &optional parent)
   "Return non nil if TAG is static.
 Optional PARENT is the parent tag of TAG.
 In UML, static methods and attributes mean that they are allocated
@@ -198,6 +200,27 @@ See `semantic-tag-static-p'."
       (setq mods (cdr mods)))
     static))
 
+;;;###autoload
+(define-overloadable-function semantic-tag-prototype-p (tag)
+  "Return non nil if TAG is a prototype.
+For some laguages, such as C, a prototype is a declaration of
+something without an implementation."
+  )
+
+(defun semantic-tag-prototype-p-default (tag)
+  "Non-nil if TAG is a prototype."
+  (let ((p (semantic-tag-get-attribute tag :prototype-flag)))
+    (cond
+     ;; Trust the parser author.
+     (p p)
+     ;; Empty types might be a prototype.
+     ;; @todo - make this better.
+     ((eq (semantic-tag-class tag) 'type)
+      (not (semantic-tag-type-members tag)))
+     ;; No other heuristics.
+     (t nil))
+    ))
+
 ;;; FULL NAMES
 ;;
 ;; For programmer convenience, a full name is not specified in source
@@ -205,7 +228,7 @@ See `semantic-tag-static-p'."
 ;; will contain the info needed to determine the full name.
 
 ;;;###autoload
-(define-overload semantic-tag-full-name (tag &optional stream-or-buffer)
+(define-overloadable-function semantic-tag-full-name (tag &optional stream-or-buffer)
   "Return the fully qualified name of TAG in the package hierarchy.
 STREAM-OR-BUFFER can be anything convertable by `semantic-something-to-stream',
 but must be a toplevel semantic tag stream that contains TAG.

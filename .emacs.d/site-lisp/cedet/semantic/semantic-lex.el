@@ -1,8 +1,8 @@
 ;;; semantic-lex.el --- Lexical Analyzer builder
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Eric M. Ludlam
 
-;; X-CVS: $Id: semantic-lex.el,v 1.35 2004/04/06 12:12:19 ponced Exp $
+;; X-CVS: $Id: semantic-lex.el,v 1.57 2010/03/26 22:18:03 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -18,10 +18,164 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
+;;
+;; This file handles the creation of lexical analyzers for different
+;; languages in Emacs Lisp.  The purpose of a lexical analyzer is to
+;; convert a buffer into a list of lexical tokens.  Each token
+;; contains the token class (such as 'number, 'symbol, 'IF, etc) and
+;; the location in the buffer it was found.  Optionally, a token also
+;; contains a string representing what is at the designated buffer
+;; location.
+;;
+;; Tokens are pushed onto a token stream, which is basically a list of
+;; all the lexical tokens from the analyzed region.  The token stream
+;; is then handed to the grammar which parsers the file.
+;;
+;;; How it works
+;;
+;; Each analyzer specifies a condition and forms.  These conditions
+;; and forms are assembled into a function by `define-lex' that does
+;; the lexical analysis.
+;;
+;; In the lexical analyzer created with `define-lex', each condition
+;; is tested for a given point.  When the condition is true, the forms
+;; run.
+;;
+;; The forms can push a lexical token onto the token stream.  The
+;; analyzer forms also must move the current analyzer point.  If the
+;; analyzer point is moved without pushing a token, then the matched
+;; syntax is effectively ignored, or skipped.
+;;
+;; Thus, starting at the beginning of a region to be analyzed, each
+;; condition is tested.  One will match, and a lexical token might be
+;; pushed, and the point is moved to the end of the lexical token
+;; identified.  At the new position, the process occurs again until
+;; the end of the specified region is reached.
+;;
+;;; How to use semantic-lex
+;;
+;; To create a lexer for a language, use the `define-lex' macro.
+;;
+;; The `define-lex' macro accepts a list of lexical analyzers.  Each
+;; analyzer is created with `define-lex-analyzer', or one of the
+;; derivative macros.  A single analyzer defines a regular expression
+;; to match text in a buffer, and a short segment of code to create
+;; one lexical token.
+;;
+;; Each analyzer has a NAME, DOC, a CONDITION, and possibly some
+;; FORMS.  The NAME is the name used in `define-lex'.  The DOC
+;; describes what the analyzer should do.
+;;
+;; The CONDITION evaluates the text at the current point in the
+;; current buffer.  If CONDITION is true, then the FORMS will be
+;; executed.
+;;
+;; The purpose of the FORMS is to push new lexical tokens onto the
+;; list of tokens for the current buffer, and to move point after the
+;; matched text.
+;;
+;; Some macros for creating one analyzer are:
+;;
+;;   define-lex-analyzer - A generic analyzer associating any style of
+;;              condition to forms.
+;;   define-lex-regex-analyzer - Matches a regular expression.
+;;   define-lex-simple-regex-analyzer - Matches a regular expressions,
+;;              and pushes the match.
+;;   define-lex-block-analyzer - Matches list syntax, and defines
+;;              handles open/close delimiters.
+;;
+;; These macros are used by the grammar compiler when lexical
+;; information is specified in a grammar:
+;;   define-lex- * -type-analyzer - Matches syntax specified in
+;;              a grammar, and pushes one token for it.  The * would
+;;              be `sexp' for things like lists or strings, and
+;;              `string' for things that need to match some special
+;;              string, such as "\\." where a literal match is needed.
+;;
+;;; Lexical Tables
+;;
+;; There are tables of different symbols managed in semantic-lex.el.
+;; They are:
+;;
+;;   Lexical keyword table - A Table of symbols declared in a grammar
+;;           file with the %keyword declaration.
+;;           Keywords are used by `semantic-lex-symbol-or-keyword'
+;;           to create lexical tokens based on the keyword.
+;;
+;;   Lexical type table - A table of symbols declared in a grammar
+;;           file with the %type declaration.
+;;           The grammar compiler uses the type table to create new
+;;           lexical analyzers.  These analyzers are then used to when
+;;           a new lexical analyzer is made for a language.
+;;
+;;; Lexical Types
+;;
+;; A lexical type defines a kind of lexical analyzer that will be
+;; automatically generated from a grammar file based on some
+;; predetermined attributes.  For now these two attributes are
+;; recognized :
+;;
+;; * matchdatatype : define the kind of lexical analyzer.  That is :
+;;
+;;   - regexp : define a regexp analyzer (see
+;;     `define-lex-regex-type-analyzer')
+;;
+;;   - string : define a string analyzer (see
+;;     `define-lex-string-type-analyzer')
+;;
+;;   - block : define a block type analyzer (see
+;;     `define-lex-block-type-analyzer')
+;;
+;;   - sexp : define a sexp analyzer (see
+;;     `define-lex-sexp-type-analyzer')
+;;
+;;   - keyword : define a keyword analyzer (see
+;;     `define-lex-keyword-type-analyzer')
+;;
+;; * syntax : define the syntax that matches a syntactic
+;;   expression.  When syntax is matched the corresponding type
+;;   analyzer is entered and the resulting match data will be
+;;   interpreted based on the kind of analyzer (see matchdatatype
+;;   above).
+;;
+;; The following lexical types are predefined :
+;;
+;; +-------------+---------------+--------------------------------+
+;; | type        | matchdatatype | syntax                         |
+;; +-------------+---------------+--------------------------------+
+;; | punctuation | string        | "\\(\\s.\\|\\s$\\|\\s'\\)+"    |
+;; | keyword     | keyword       | "\\(\\sw\\|\\s_\\)+"           |
+;; | symbol      | regexp        | "\\(\\sw\\|\\s_\\)+"           |
+;; | string      | sexp          | "\\s\""                        |
+;; | number      | regexp        | semantic-lex-number-expression |
+;; | block       | block         | "\\s(\\|\\s)"                  |
+;; +-------------+---------------+--------------------------------+
+;;
+;; In a grammar you must use a %type expression to automatically generate
+;; the corresponding analyzers of that type.
+;;
+;; Here is an example to auto-generate punctuation analyzers
+;; with 'matchdatatype and 'syntax predefined (see table above)
+;;
+;; %type <punctuation> ;; will auto-generate this kind of analyzers
+;;
+;; It is equivalent to write :
+;;
+;; %type  <punctuation> syntax "\\(\\s.\\|\\s$\\|\\s'\\)+" matchdatatype string
+;;
+;; ;; Some punctuations based on the type defines above
+;;
+;; %token <punctuation> NOT         "!"
+;; %token <punctuation> NOTEQ       "!="
+;; %token <punctuation> MOD         "%"
+;; %token <punctuation> MODEQ       "%="
+;;
+
+;;; On the Semantic 1.x lexer
 ;;
 ;; In semantic 1.x, the lexical analyzer was an all purpose routine.
 ;; To boost efficiency, the analyzer is now a series of routines that
@@ -69,8 +223,11 @@ as a PROPERTY value.  FUN receives a symbol as argument."
                (funcall fun symbol)))
        table)))
 
-;;; Keyword table handling.
+;;; Lexical keyword table handling.
 ;;
+;; These keywords are keywords defined for using in a grammar with the
+;; %keyword declaration, and are not keywords used in Emacs Lisp.
+
 (defvar semantic-flex-keywords-obarray nil
   "Buffer local keyword obarray for the lexical analyzer.
 These keywords are matched explicitly, and converted into special symbols.")
@@ -81,8 +238,7 @@ These keywords are matched explicitly, and converted into special symbols.")
   `(signal 'wrong-type-argument '(semantic-lex-keyword-p ,name)))
 
 (defsubst semantic-lex-keyword-symbol (name)
-  "Return keyword symbol with NAME or nil if not found.
-Return nil otherwise."
+  "Return keyword symbol with NAME or nil if not found."
   (and (arrayp semantic-flex-keywords-obarray)
        (stringp name)
        (intern-soft name semantic-flex-keywords-obarray)))
@@ -145,14 +301,14 @@ PROPSPECS must be a list of (NAME PROPERTY VALUE) elements."
     semantic-flex-keywords-obarray))
 
 (defsubst semantic-lex-map-keywords (fun &optional property)
-  "Call function FUN on every semantic keyword.
+  "Call function FUN on every lexical keyword.
 If optional PROPERTY is non-nil, call FUN only on every keyword which
-as a PROPERTY value.  FUN receives a semantic keyword as argument."
+as a PROPERTY value.  FUN receives a lexical keyword as argument."
   (semantic-lex-map-symbols
    fun semantic-flex-keywords-obarray property))
 
 (defun semantic-lex-keywords (&optional property)
-  "Return a list of semantic keywords.
+  "Return a list of lexical keywords.
 If optional PROPERTY is non-nil, return only keywords which have a
 PROPERTY set."
   (let (keywords)
@@ -160,9 +316,45 @@ PROPERTY set."
      #'(lambda (symbol) (setq keywords (cons symbol keywords)))
      property)
     keywords))
+
+;;; Inline functions:
+
+(defsubst semantic-lex-token-bounds (token)
+  "Fetch the start and end locations of the lexical token TOKEN.
+Return a pair (START . END)."
+  (if (not (numberp (car (cdr token))))
+      (cdr (cdr token))
+    (cdr token)))
+
+(defsubst semantic-lex-token-start (token)
+  "Fetch the start position of the lexical token TOKEN.
+See also the function `semantic-lex-token'."
+  (car (semantic-lex-token-bounds token)))
+
+(defsubst semantic-lex-token-end (token)
+  "Fetch the end position of the lexical token TOKEN.
+See also the function `semantic-lex-token'."
+  (cdr (semantic-lex-token-bounds token)))
+
+(defsubst semantic-lex-unterminated-syntax-detected (syntax)
+  "Inside a lexical analyzer, use this when unterminated syntax was found.
+Argument SYNTAX indicates the type of syntax that is unterminated.
+The job of this function is to move (point) to a new logical location
+so that analysis can continue, if possible."
+  (goto-char
+   (funcall semantic-lex-unterminated-syntax-end-function
+	    syntax
+	    (car semantic-lex-analysis-bounds)
+	    (cdr semantic-lex-analysis-bounds)
+	    ))
+  (setq semantic-lex-end-point (point)))
 
 ;;; Type table handling.
 ;;
+;; The lexical type table manages types that occur in a grammar file
+;; with the %type declaration.  Types represent different syntaxes.
+;; See code for `semantic-lex-preset-default-types' for the classic
+;; types of syntax.
 (defvar semantic-lex-types-obarray nil
   "Buffer local types obarray for the lexical analyzer.")
 (make-variable-buffer-local 'semantic-lex-types-obarray)
@@ -298,6 +490,9 @@ PROPERTY set."
      property)
     types))
 
+;;; Lexical Analyzer framework settings
+;;
+
 ;;;###autoload
 (defvar semantic-lex-analyzer 'semantic-flex
   "The lexical analyzer used for a given buffer.
@@ -403,7 +598,7 @@ See also `semantic-lex-syntax-modifications'.")
 (defvar semantic-lex-comment-regex nil
   "Regular expression for identifying comment start during lexical analysis.
 This may be automatically set when semantic initializes in a mode, but
-may need to be overriden for some special languages.")
+may need to be overridden for some special languages.")
 (make-variable-buffer-local 'semantic-lex-comment-regex)
 
 (defvar semantic-lex-number-expression
@@ -479,19 +674,51 @@ when finding unterminated syntax.")
   "Test the semantic lexer in the current buffer.
 If universal argument ARG, then try the whole buffer."
   (interactive "P")
-  (let ((result (semantic-lex
-		 (if arg (point-min) (point))
-		 (point-max))))
-    (message "%s: %S" semantic-lex-analyzer result))
-  )
+  (let* ((start (current-time))
+	 (result (semantic-lex
+		  (if arg (point-min) (point))
+		  (point-max)))
+	 (end (current-time)))
+    (message "Elapsed Time: %.2f seconds."
+	     (semantic-elapsed-time start end))
+    (pop-to-buffer "*Lexer Output*")
+    (require 'pp)
+    (erase-buffer)
+    (insert (pp-to-string result))
+    (goto-char (point-min))
+    ))
+
+(defun semantic-lex-test-full-depth (arg)
+  "Test the semantic lexer in the current buffer parsing through lists.
+Usually the lexer parses
+If universal argument ARG, then try the whole buffer."
+  (interactive "P")
+  (let* ((start (current-time))
+	 (result (semantic-lex
+		  (if arg (point-min) (point))
+		  (point-max)
+		  100))
+	 (end (current-time)))
+    (message "Elapsed Time: %.2f seconds."
+	     (semantic-elapsed-time start end))
+    (pop-to-buffer "*Lexer Output*")
+    (require 'pp)
+    (erase-buffer)
+    (insert (pp-to-string result))
+    (goto-char (point-min))
+    ))
 
 (defun semantic-lex-test-region (beg end)
   "Test the semantic lexer in the current buffer.
 Analyze the area between BEG and END."
   (interactive "r")
   (let ((result (semantic-lex beg end)))
-    (message "%s: %S" semantic-lex-analyzer result))
-  )
+    (pop-to-buffer "*Lexer Output*")
+    (require 'pp)
+    (erase-buffer)
+    (insert (pp-to-string result))
+    (goto-char (point-min))
+    ))
 
 (defvar semantic-lex-debug nil
   "When non-nil, debug the local lexical analyzer.")
@@ -509,6 +736,7 @@ displayed in the minibuffer.  Press SPC to move to the next lexical token."
 
 (defun semantic-lex-highlight-token (token)
   "Highlight the lexical TOKEN.
+TOKEN is a lexical token with a START And END position.
 Return the overlay."
   (let ((o (semantic-make-overlay (semantic-lex-token-start token)
 				  (semantic-lex-token-end token))))
@@ -530,6 +758,16 @@ Return the overlay."
 	  (semantic-overlay-delete o))))))
 
 ;;; Lexical analyzer creation
+;;
+;; Code for creating a lex function from lists of analyzers.
+;;
+;; A lexical analyzer is created from a list of individual analyzers.
+;; Each individual analyzer specifies a single match, and code that
+;; goes with it.
+;;
+;; Creation of an analyzer assembles these analyzers into a new function
+;; with the behaviors of all the individual analyzers.
+;;
 (defmacro semantic-lex-one-token (analyzers)
   "Calculate one token from the current buffer at point.
 Uses locally bound variables from `define-lex'.
@@ -543,13 +781,29 @@ Argument ANALYZERS is the list of analyzers being used."
   "The current depth as tracked through lexical functions.")
 
 (defvar semantic-lex-maximum-depth nil
-  "The maximum depth of parenthisis as tracked through lexical functions.")
+  "The maximum depth of parenthesis as tracked through lexical functions.")
 
 (defvar semantic-lex-token-stream nil
   "The current token stream we are collecting.")
 
 (defvar semantic-lex-analysis-bounds nil
   "The bounds of the current analysis.")
+
+(defvar semantic-lex-block-streams nil
+  "Streams of tokens inside collapsed blocks.
+This is an alist of (ANCHOR . STREAM) elements where ANCHOR is the
+start position of the block, and STREAM is the list of tokens in that
+block.")
+
+(defvar semantic-lex-reset-hooks nil
+  "List of hooks major-modes use to reset lexical analyzers.
+Hooks are called with START and END values for the current lexical pass.
+Should be set with `add-hook'specifying a LOCAL option.")
+
+;; Stack of nested blocks.
+(defvar semantic-lex-block-stack nil)
+;;(defvar semantic-lex-timeout 5
+;;  "*Number of sections of lexing before giving up.")
 
 ;;;###autoload
 (defmacro define-lex (name doc &rest analyzers)
@@ -562,12 +816,19 @@ Each analyzer should be an analyzer created with `define-lex-analyzer'.
 Note: The order in which analyzers are listed is important.
 If two analyzers can match the same text, it is important to order the
 analyzers so that the one you want to match first occurs first.  For
-example, it is good to put a numbe analyzer in front of a symbol
+example, it is good to put a number analyzer in front of a symbol
 analyzer which might mistake a number for as a symbol."
   `(defun ,name  (start end &optional depth length)
      ,(concat doc "\nSee `semantic-lex' for more information.")
-     (let* ((starting-position (point))
+     ;; Make sure the state of block parsing starts over.
+     (setq semantic-lex-block-streams nil)
+     ;; Allow specialty reset items.
+     (run-hook-with-args 'semantic-lex-reset-hooks start end)
+     ;; Lexing state.
+     (let* (;(starttime (current-time))
+	    (starting-position (point))
             (semantic-lex-token-stream nil)
+            (semantic-lex-block-stack nil)
 	    (tmp-start start)
             (semantic-lex-end-point start)
             (semantic-lex-current-depth 0)
@@ -576,11 +837,16 @@ analyzer which might mistake a number for as a symbol."
 	     (or depth semantic-lex-depth))
 	    ;; Bounds needed for unterminated syntax
 	    (semantic-lex-analysis-bounds (cons start end))
+	    ;; This entry prevents text properties from
+	    ;; confusing our lexical analysis.  See Emacs 22 (CVS)
+	    ;; version of C++ mode with template hack text properties.
+	    (parse-sexp-lookup-properties nil)
 	    )
        ;; Maybe REMOVE THIS LATER.
        ;; Trying to find incremental parser bug.
-       (if (> end (point-max))
-	   (error "Lex: End = %d, but point-max = %d" end (point-max)))
+       (when (> end (point-max))
+         (error ,(format "%s: end (%%d) > point-max (%%d)" name)
+                end (point-max)))
        (with-syntax-table semantic-lex-syntax-table
          (goto-char start)
          (while (and (< (point) end)
@@ -588,14 +854,26 @@ analyzer which might mistake a number for as a symbol."
 			 (<= (length semantic-lex-token-stream) length)))
            (semantic-lex-one-token ,analyzers)
 	   (when (eq semantic-lex-end-point tmp-start)
-	     (error "Lexical Analyzer: hang detected LEX: %S : START: %d END: %d"
-		    (car semantic-lex-token-stream)
-		    tmp-start
-		    semantic-lex-end-point))
+	     (error ,(format "%s: endless loop at %%d, after %%S" name)
+                    tmp-start (car semantic-lex-token-stream)))
 	   (setq tmp-start semantic-lex-end-point)
            (goto-char semantic-lex-end-point)
+	   ;;(when (> (semantic-elapsed-time starttime (current-time))
+	   ;;	    semantic-lex-timeout)
+	   ;;  (error "Timeout during lex at char %d" (point)))
+	   (semantic-throw-on-input 'lex)
 	   (semantic-lex-debug-break (car semantic-lex-token-stream))
 	   ))
+       ;; Check that there is no unterminated block.
+       (when semantic-lex-block-stack
+         (let* ((last (pop semantic-lex-block-stack))
+                (blk last))
+           (while blk
+             (message
+              ,(format "%s: `%%s' block from %%S is unterminated" name)
+              (car blk) (cadr blk))
+             (setq blk (pop semantic-lex-block-stack)))
+           (semantic-lex-unterminated-syntax-detected (car last))))
        ;; Return to where we started.
        ;; Do not wrap in protective stuff so that if there is an error
        ;; thrown, the user knows where.
@@ -603,76 +881,197 @@ analyzer which might mistake a number for as a symbol."
        ;; Return the token stream
        (nreverse semantic-lex-token-stream))))
 
+;;; Collapsed block tokens delimited by any tokens.
+;;
+(defun semantic-lex-start-block (syntax)
+  "Mark the last read token as the beginning of a SYNTAX block."
+  (if (or (not semantic-lex-maximum-depth)
+          (< semantic-lex-current-depth semantic-lex-maximum-depth))
+      (setq semantic-lex-current-depth (1+ semantic-lex-current-depth))
+    (push (list syntax (car semantic-lex-token-stream))
+          semantic-lex-block-stack)))
+
+(defun semantic-lex-end-block (syntax)
+  "Process the end of a previously marked SYNTAX block.
+That is, collapse the tokens inside that block, including the
+beginning and end of block tokens, into a high level block token of
+class SYNTAX.
+The token at beginning of block is the one marked by a previous call
+to `semantic-lex-start-block'.  The current token is the end of block.
+The collapsed tokens are saved in `semantic-lex-block-streams'."
+  (if (null semantic-lex-block-stack)
+      (setq semantic-lex-current-depth (1- semantic-lex-current-depth))
+    (let* ((stream semantic-lex-token-stream)
+           (blk (pop semantic-lex-block-stack))
+           (bstream (cdr blk))
+           (first (car bstream))
+           (last (pop stream)) ;; The current token mark the EOBLK
+           tok)
+      (if (not (eq (car blk) syntax))
+          ;; SYNTAX doesn't match the syntax of the current block in
+          ;; the stack. So we encountered the end of the SYNTAX block
+          ;; before the end of the current one in the stack which is
+          ;; signaled unterminated.
+          (semantic-lex-unterminated-syntax-detected (car blk))
+        ;; Move tokens found inside the block from the main stream
+        ;; into a separate block stream.
+        (while (and stream (not (eq (setq tok (pop stream)) first)))
+          (push tok bstream))
+        ;; The token marked as beginning of block was not encountered.
+        ;; This should not happen!
+        (or (eq tok first)
+            (error "Token %S not found at beginning of block `%s'"
+                   first syntax))
+        ;; Save the block stream for future reuse, to avoid to redo
+        ;; the lexical analysis of the block content!
+        ;; Anchor the block stream with its start position, so we can
+        ;; use: (cdr (assq start semantic-lex-block-streams)) to
+        ;; quickly retrieve the lexical stream associated to a block.
+        (setcar blk (semantic-lex-token-start first))
+        (setcdr blk (nreverse bstream))
+        (push blk semantic-lex-block-streams)
+        ;; In the main stream, replace the tokens inside the block by
+        ;; a high level block token of class SYNTAX.
+        (setq semantic-lex-token-stream stream)
+        (semantic-lex-push-token
+         (semantic-lex-token
+          syntax (car blk) (semantic-lex-token-end last)))
+        ))))
+
 ;;; Lexical token API
 ;;
-(defmacro semantic-lex-token (symbol start end)
+;; Functions for accessing parts of a token.  Use these functions
+;; instead of accessing the list structure directly because the
+;; contents of the lexical may change.
+;;
+(defmacro semantic-lex-token (symbol start end &optional str)
   "Create a lexical token.
 SYMBOL is a symbol representing the class of syntax found.
-START and END define the bounds of the token in the current buffer."
-  `(cons ,symbol (cons ,start ,end)))
+START and END define the bounds of the token in the current buffer.
+Optional STR is the string for the token only if the bounds in
+the buffer do not cover the string they represent.  (As from
+macro expansion.)"
+  ;; This if statement checks the existence of a STR argument at
+  ;; compile time, where STR is some symbol or constant.  If the
+  ;; variable STr (runtime) is nil, this will make an incorrect decision.
+  ;;
+  ;; It is like this to maintain the original speed of the compiled
+  ;; code.
+  (if str
+      `(cons ,symbol (cons ,str (cons ,start ,end)))
+    `(cons ,symbol (cons ,start ,end))))
 
-(defmacro semantic-lex-push-token (token)
+(defun semantic-lex-token-p (thing)
+  "Return non-nil if THING is a semantic lex token.
+This is an exhaustively robust check."
+  (and (consp thing)
+       (symbolp (car thing))
+       (or (and (numberp (nth 1 thing))
+		(numberp (nthcdr 2 thing)))
+	   (and (stringp (nth 1 thing))
+		(numberp (nth 2 thing))
+		(numberp (nthcdr 3 thing)))
+	   ))
+  )
+
+(defun semantic-lex-token-with-text-p (thing)
+  "Return non-nil if THING is a semantic lex token.
+This is an exhaustively robust check."
+  (and (consp thing)
+       (symbolp (car thing))
+       (= (length thing) 4)
+       (stringp (nth 1 thing))
+       (numberp (nth 2 thing))
+       (numberp (nth 3 thing)))
+  )
+
+(defun semantic-lex-token-without-text-p (thing)
+  "Return non-nil if THING is a semantic lex token.
+This is an exhaustively robust check."
+  (and (consp thing)
+       (symbolp (car thing))
+       (= (length thing) 3)
+       (numberp (nth 1 thing))
+       (numberp (nth 2 thing)))
+  )
+
+(defun semantic-lex-expand-block-specs (specs)
+  "Expand block specifications SPECS into a Lisp form.
+SPECS is a list of (BLOCK BEGIN END) elements where BLOCK, BEGIN, and
+END are token class symbols that indicate to produce one collapsed
+BLOCK token from tokens found between BEGIN and END ones.
+BLOCK must be a non-nil symbol, and at least one of the BEGIN or END
+symbols must be non-nil too.
+When BEGIN is non-nil, generate a call to `semantic-lex-start-block'
+when a BEGIN token class is encountered.
+When END is non-nil, generate a call to `semantic-lex-end-block' when
+an END token class is encountered."
+  (let ((class (make-symbol "class"))
+        (form nil))
+    (dolist (spec specs)
+      (when (car spec)
+        (when (nth 1 spec)
+          (push `((eq ',(nth 1 spec) ,class)
+                  (semantic-lex-start-block ',(car spec)))
+                form))
+        (when (nth 2 spec)
+          (push `((eq ',(nth 2 spec) ,class)
+                  (semantic-lex-end-block ',(car spec)))
+                form))))
+    (when form
+      `((let ((,class (semantic-lex-token-class
+                       (car semantic-lex-token-stream))))
+          (cond ,@(nreverse form))))
+      )))
+
+(defmacro semantic-lex-push-token (token &rest blockspecs)
   "Push TOKEN in the lexical analyzer token stream.
-Return the updated token stream.
+Return the lexical analysis current end point.
+If optional arguments BLOCKSPECS is non-nil, it specifies to process
+collapsed block tokens.  See `semantic-lex-expand-block-specs' for
+more details.
 This macro should only be called within the bounds of
-`define-lex-analyzer'.  It changes the values of the lexical
-analyzer variables `token-stream' and `semantic-lex-end-point'.
-If you need to move `semantic-lex-end-point' somewhere else, just modify this
-variable after calling `semantic-lex-token'."
-  `(setq semantic-lex-token-stream
-         (cons ,token semantic-lex-token-stream)
-         semantic-lex-end-point
-         ;; Don't eval TOKEN twice!
-         (semantic-lex-token-end (car semantic-lex-token-stream))))
+`define-lex-analyzer'.  It changes the values of the lexical analyzer
+variables `token-stream' and `semantic-lex-end-point'.  If you need to
+move `semantic-lex-end-point' somewhere else, just modify this
+variable after calling `semantic-lex-push-token'."
+  `(progn
+     (push ,token semantic-lex-token-stream)
+     ,@(semantic-lex-expand-block-specs blockspecs)
+     (setq semantic-lex-end-point
+           (semantic-lex-token-end (car semantic-lex-token-stream)))
+     ))
 
 (defsubst semantic-lex-token-class (token)
   "Fetch the class of the lexical token TOKEN.
 See also the function `semantic-lex-token'."
   (car token))
 
-(defsubst semantic-lex-token-bounds (token)
-  "Fetch the start and end locations of the lexical token TOKEN.
-Return a pair (START . END)."
-  (cdr token))
-
-(defsubst semantic-lex-token-start (token)
-  "Fetch the start position of the lexical token TOKEN.
-See also the function `semantic-lex-token'."
-  (car (semantic-lex-token-bounds token)))
-
-(defsubst semantic-lex-token-end (token)
-  "Fetch the end position of the lexical token TOKEN.
-See also the function `semantic-lex-token'."
-  (cdr (semantic-lex-token-bounds token)))
-
 (defsubst semantic-lex-token-text (token)
   "Fetch the text associated with the lexical token TOKEN.
 See also the function `semantic-lex-token'."
-  (buffer-substring-no-properties
-   (semantic-lex-token-start token)
-   (semantic-lex-token-end   token)))
+  (if (stringp (car (cdr token)))
+      (car (cdr token))
+    (buffer-substring-no-properties
+     (semantic-lex-token-start token)
+     (semantic-lex-token-end   token))))
 
 ;;;###autoload
 (defun semantic-lex-init ()
   "Initialize any lexical state for this buffer."
-  (when (not semantic-lex-comment-regex)
+  (unless semantic-lex-comment-regex
     (setq semantic-lex-comment-regex
 	  (if comment-start-skip
 	      (concat "\\(\\s<\\|" comment-start-skip "\\)")
-	    (concat "\\(\\s<\\)"))
-	  ))
+	    "\\(\\s<\\)")))
   ;; Setup the lexer syntax-table
   (setq semantic-lex-syntax-table (copy-syntax-table (syntax-table)))
-  (let* ((mods semantic-lex-syntax-modifications)
-	 mod)
-	 (while mods
-	   (setq mod  (car mods)
-		 mods (cdr mods))
-	   (modify-syntax-entry
-	    (car mod) (nth 1 mod) semantic-lex-syntax-table))))
+  (dolist (mod semantic-lex-syntax-modifications)
+    (modify-syntax-entry
+     (car mod) (nth 1 mod) semantic-lex-syntax-table)))
 
 ;;;###autoload
-(define-overload semantic-lex (start end &optional depth length)
+(define-overloadable-function semantic-lex (start end &optional depth length)
   "Lexically analyze text in the current buffer between START and END.
 Optional argument DEPTH indicates at what level to scan over entire
 lists.  The last argument, LENGTH specifies that `semantic-lex'
@@ -700,30 +1099,33 @@ Optional argument DEPTH is the depth to scan into lists."
 
 ;;; Analyzer creation macros
 ;;
-(defsubst semantic-lex-unterminated-syntax-detected (syntax)
-  "Inside a lexical analyzer, use this when unterminated syntax was found.
-Argument SYNTAX indicates the type of syntax that is unterminated.
-The job of this function is to move (point) to a new logical location
-so that analysis can continue, if possible."
-  (goto-char
-   (funcall semantic-lex-unterminated-syntax-end-function
-	    syntax
-	    (car semantic-lex-analysis-bounds)
-	    (cdr semantic-lex-analysis-bounds)
-	    ))
-  (setq semantic-lex-end-point (point)))
+;; An individual analyzer is a condition and code that goes with it.
+;;
+;; Created analyzers become variables with the code associated with them
+;; as the symbol value.  These analyzers are assembled into a lexer
+;; to create new lexical analyzers.
+;;
+(defcustom semantic-lex-debug-analyzers nil
+  "Non nil means to debug analyzers with syntax protection.
+Only in effect if `debug-on-error' is also non-nil."
+  :group 'semantic
+  :type 'boolean)
 
 (defmacro semantic-lex-unterminated-syntax-protection (syntax &rest forms)
   "For SYNTAX, execute FORMS with protection for unterminated syntax.
 If FORMS throws an error, treat this as a syntax problem, and
 execute the unterminated syntax code.  FORMS should return a position.
-Irreguardless of an error, the cursor should be moved to the end of
-the desired syntax, and a position returned."
-  `(condition-case nil
+Irregardless of an error, the cursor should be moved to the end of
+the desired syntax, and a position returned.
+If `debug-on-error' is set, errors are not caught, so that you can
+debug them.
+Avoid using a large FORMS since it is duplicated."
+  `(if (and debug-on-error semantic-lex-debug-analyzers)
        (progn ,@forms)
-     (error
-      (semantic-lex-unterminated-syntax-detected ,syntax)))
-  )
+     (condition-case nil
+         (progn ,@forms)
+       (error
+        (semantic-lex-unterminated-syntax-detected ,syntax)))))
 (put 'semantic-lex-unterminated-syntax-protection
      'lisp-indent-function 1)
 
@@ -741,7 +1143,7 @@ While forms are running, the following variables will be locally bound:
   `semantic-lex-maximum-depth' - The maximum depth of semantic-list
                   for the current analysis.
   `semantic-lex-current-depth' - The current depth of `semantic-list' that has
-                  been decended.
+                  been descended.
   `semantic-lex-end-point' - End Point after match.
                    Analyzers should set this to a buffer location if their
                    match string does not represent the end of the matched text.
@@ -866,6 +1268,8 @@ symbols returned in open and close tokens."
 
 ;;; Analyzers
 ;;
+;; Pre-defined common analyzers.
+;;
 (define-lex-analyzer semantic-lex-default-action
   "The default action when no other lexical actions match text.
 This action will just throw an error."
@@ -894,9 +1298,12 @@ This action will just throw an error."
 Use this ONLY if newlines are not whitespace characters (such as when
 they are comment end characters) AND when you want whitespace tokens."
   "\\s-*\\(\n\\|\\s>\\)"
-  ;; Language wants whitespaces, link them together.
+  ;; Language wants whitespaces.  Create a token for it.
   (if (eq (semantic-lex-token-class (car semantic-lex-token-stream))
 	  'whitespace)
+      ;; Merge whitespace tokens together if they are adjacent.  Two
+      ;; whitespace tokens may be sperated by a comment which is not in
+      ;; the token stream.
       (setcdr (semantic-lex-token-bounds (car semantic-lex-token-stream))
               (match-end 0))
     (semantic-lex-push-token
@@ -904,7 +1311,7 @@ they are comment end characters) AND when you want whitespace tokens."
       'whitespace (match-beginning 0) (match-end 0)))))
 
 (define-lex-regex-analyzer semantic-lex-ignore-newline
-  "Detect and create newline tokens.
+  "Detect and ignore newline tokens.
 Use this ONLY if newlines are not whitespace characters (such as when
 they are comment end characters)."
   "\\s-*\\(\n\\|\\s>\\)"
@@ -914,9 +1321,12 @@ they are comment end characters)."
   "Detect and create whitespace tokens."
   ;; catch whitespace when needed
   "\\s-+"
-  ;; Language wants whitespaces, link them together.
+  ;; Language wants whitespaces.  Create a token for it.
   (if (eq (semantic-lex-token-class (car semantic-lex-token-stream))
 	  'whitespace)
+      ;; Merge whitespace tokens together if they are adjacent.  Two
+      ;; whitespace tokens may be sperated by a comment which is not in
+      ;; the token stream.
       (progn
         (setq semantic-lex-end-point (match-end 0))
         (setcdr (semantic-lex-token-bounds (car semantic-lex-token-stream))
@@ -929,7 +1339,7 @@ they are comment end characters)."
   "Detect and skip over whitespace tokens."
   ;; catch whitespace when needed
   "\\s-+"
-  ;; Skip over the detected whitespace.
+  ;; Skip over the detected whitespace, do not create a token for it.
   (setq semantic-lex-end-point (match-end 0)))
 
 (define-lex-simple-regex-analyzer semantic-lex-number
@@ -1083,6 +1493,9 @@ Return either a paren token or a semantic list token depending on
 
 ;;; Comment lexer
 ;;
+;; Predefined lexers that could be used instead of creating new
+;; analyers.
+
 (define-lex semantic-comment-lexer
   "A simple lexical analyzer that handles comments.
 This lexer will only return comment tokens.  It is the default lexer
@@ -1113,6 +1526,9 @@ syntax as specified by the syntax table."
 
 ;;; Analyzers generated from grammar.
 ;;
+;; Some analyzers are hand written.  Analyzers created with these
+;; functions are generated from the grammar files.
+
 (defmacro define-lex-keyword-type-analyzer (name doc syntax)
   "Define a keyword type analyzer NAME with DOC string.
 SYNTAX is the regexp that matches a keyword syntactic expression."
@@ -1329,25 +1745,32 @@ the error will be caught here without the buffer's cache being thrown
 out of date.
 If there is an error, the syntax that failed is returned.
 If there is no error, then the last value of FORMS is returned."
-  `(let ((semantic-lex-unterminated-syntax-end-function
-	  (lambda (syntax start end) (throw ',symbol syntax)))
-	 ;; Delete the below when semantic-flex is fully retired.
-	 (semantic-flex-unterminated-syntax-end-function
-	  (lambda (syntax start end) (throw ',symbol syntax)))
-	 ret)
-     (setq ret (catch ',symbol
-		 (save-excursion
-		   ,@forms
-		   nil)))
-     ;; Great Sadness.  Assume that FORMS execute within the
-     ;; confines of the current buffer only!  Mark this thing
-     ;; unparseable iff the special symbol was thrown.  This
-     ;; will prevent future calls from parsing, but will allow
-     ;; then to still return the cache.
-     (when ret
-       (message "Buffer not currently parsable.")
-       (semantic-parse-tree-unparseable))
-     ret))
+  (let ((ret (make-symbol "ret"))
+        (syntax (make-symbol "syntax"))
+        (start (make-symbol "start"))
+        (end (make-symbol "end")))
+    `(let* ((semantic-lex-unterminated-syntax-end-function
+             (lambda (,syntax ,start ,end)
+               (throw ',symbol ,syntax)))
+            ;; Delete the below when semantic-flex is fully retired.
+            (semantic-flex-unterminated-syntax-end-function
+             semantic-lex-unterminated-syntax-end-function)
+            (,ret (catch ',symbol
+                    (save-excursion
+                      ,@forms
+                      nil))))
+       ;; Great Sadness.  Assume that FORMS execute within the
+       ;; confines of the current buffer only!  Mark this thing
+       ;; unparseable iff the special symbol was thrown.  This
+       ;; will prevent future calls from parsing, but will allow
+       ;; then to still return the cache.
+       (when ,ret
+	 ;; Leave this message off.  If an APP using this fcn wants
+	 ;; a message, they can do it themselves.  This cleans up
+	 ;; problems with the idle scheduler obscuring useful data.
+         ;;(message "Buffer not currently parsable (%S)." ,ret)
+         (semantic-parse-tree-unparseable))
+       ,ret)))
 (put 'semantic-lex-catch-errors 'lisp-indent-function 1)
 
 
@@ -1356,7 +1779,7 @@ If there is no error, then the last value of FORMS is returned."
 (add-hook
  'edebug-setup-hook
  #'(lambda ()
-     
+
      (def-edebug-spec define-lex
        (&define name stringp (&rest symbolp))
        )
@@ -1375,11 +1798,12 @@ If there is no error, then the last value of FORMS is returned."
      (def-edebug-spec semantic-lex-catch-errors
        (symbolp def-body)
        )
-     
+
      ))
 
 ;;; Compatibility with Semantic 1.x lexical analysis
 ;;
+;; NOTE: DELETE THIS SOMEDAY SOON
 
 (semantic-alias-obsolete 'semantic-flex-start 'semantic-lex-token-start)
 (semantic-alias-obsolete 'semantic-flex-end 'semantic-lex-token-end)
@@ -1484,7 +1908,7 @@ end of the return token will be larger than END.  To truly restrict
 scanning, use `narrow-to-region'.
 The last argument, LENGTH specifies that `semantic-flex' should only
 return LENGTH tokens."
-  ;;(message "Flexing muscles...")
+  (message "`semantic-flex' is an obsolete function.  Use `define-lex' to create lexers.")
   (if (not semantic-flex-keywords-obarray)
       (setq semantic-flex-keywords-obarray [ nil ]))
   (let ((ts nil)

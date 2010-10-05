@@ -1,15 +1,9 @@
 ;;; inversion.el --- When you need something in version XX.XX
 
-;;; Copyright (C) 2002, 2003 Eric M. Ludlam
+;;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
-;; X-RCS: $Id: inversion.el,v 1.20 2003/09/23 15:13:28 ponced Exp $
-
-;;; Code:
-(defvar inversion-version "1.1"
-  "Current version of InVersion.")
-(defvar inversion-incompatible-version "0.1alpha1"
-  "An earlier release which is incompatible with this release.")
+;; X-RCS: $Id: inversion.el,v 1.37 2009/10/13 03:22:14 zappo Exp $
 
 ;; InVersion is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,8 +17,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -36,7 +30,7 @@
 ;; and (as side effect) have a flexible way of getting a desired feature set.
 ;;
 ;; If you would like to use this package to satisfy dependency replace this:
-;; 
+;;
 ;; (require 'spiffy)
 ;;
 ;; with this:
@@ -64,31 +58,45 @@
 ;;     (defun inversion-test (p v)
 ;;       (string= v (symbol-value
 ;; 		  (intern-soft (concat (symbol-string p) "-version"))))))
-;; 
+;;
 ;; Or modify to specify `inversion-require' instead.
 ;;
 ;; TODO:
 ;;  Offer to download newer versions of a package.
 
 ;;; History:
-;; 
+;;
 ;; Sept 3, 2002:  First general publication.
 
-(defvar inversion-decoder-ring
+;;; Code:
+
+(defvar inversion-version "1.3"
+  "Current version of InVersion.")
+(defvar inversion-incompatible-version "0.1alpha1"
+  "An earlier release which is incompatible with this release.")
+
+(defconst inversion-decoders
   '(
-    (alpha  "^\\([0-9]+\\)\\.\\([0-9]+\\)alpha\\([0-9]+\\)$" 3)
-    (beta   "^\\([0-9]+\\)\\.\\([0-9]+\\)beta\\([0-9]+\\)$" 3)
+    (alpha  "^\\([0-9]+\\)\\.\\([0-9]+\\)\\s-*\\.?alpha\\([0-9]+\\)?$" 3)
+    (beta   "^\\([0-9]+\\)\\.\\([0-9]+\\)\\s-*\\.?beta\\([0-9]+\\)?$" 3)
+    (beta   "^\\([0-9]+\\)\\.\\([0-9]+\\)\\s-*(beta\\([0-9]+\\)?)" 3)
+    (prerelease "^\\([0-9]+\\)\\.\\([0-9]+\\)\\s-*\\.?pre\\([0-9]+\\)?$" 3)
     (full   "^\\([0-9]+\\)\\.\\([0-9]+\\)$" 2)
+    (fullsingle "^\\([0-9]+\\)$" 1)
+    (patch  "^\\([0-9]+\\)\\.\\([0-9]+\\) (patch \\([0-9]+\\))" 3)
     (point  "^\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\)$" 3)
+    (build  "^\\([0-9]+\\)\\.\\([0-9]+\\)\\.\\([0-9]+\\).\\([0-9]+\\)$" 4)
     )
-  "List of regular expressions for version strings.
-Each element is of the form:
+  "List of decoders for version strings.
+Each decoder is of the form:
+
   ( RELEASE-TYPE REGEXP MAX )
-Where RELEASE-TYPE is a symbol specifying something like `beta'
-or `alpha'.  REGEXP is the regular expression to match.
+
+RELEASE-TYPE is a symbol specifying something like `beta' or `alpha'.
+REGEXP is the regular expression to match a version string.
 MAX is the maximum number of match-numbers in the release number.
-The order of the list is important.  Least stable versions should
-be first.  More stable version should be last.")
+Decoders must be ordered to decode least stable versions before the
+more stable ones.")
 
 ;;; Version Checking
 ;;
@@ -97,26 +105,25 @@ be first.  More stable version should be last.")
 Return value is of the form:
   (RELEASE MAJOR MINOR ...)
 where RELEASE is a symbol such as `full', or `beta'."
-  (let ((ring inversion-decoder-ring)
+  (let ((decoders inversion-decoders)
 	(result nil))
-    (while (and ring (not result))
-      (if (string-match (car (cdr (car ring))) version-string)
+    (while (and decoders (not result))
+      (if (string-match (nth 1 (car decoders)) version-string)
 	  (let ((ver nil)
-		(num-left (nth 2 (car ring)))
+		(num-left (nth 2 (car decoders)))
 		(count 1))
 	    (while (<= count num-left)
-	      (setq ver
-		    (cons (string-to-int
-			   (substring version-string
-				      (match-beginning count)
-				      (match-end count)))
-			  ver)
+	      (setq ver (cons
+			 (if (match-beginning count)
+			     (string-to-number
+			      (substring version-string
+					 (match-beginning count)
+					 (match-end count)))
+			   1)
+			 ver)
 		    count (1+ count)))
-	    (setq result
-		  (cons (car (car ring))
-			(nreverse ver)))
-	    ))
-      (setq ring (cdr ring)))
+	    (setq result (cons (caar decoders) (nreverse ver))))
+        (setq decoders (cdr decoders))))
     result))
 
 (defun inversion-package-version (package)
@@ -163,9 +170,9 @@ not an indication of new features or bug fixes."
 
 (defun inversion-release-to-number (release-symbol)
   "Convert RELEASE-SYMBOL into a number."
-  (let* ((ra (assoc release-symbol inversion-decoder-ring))
-	 (rn (- (length inversion-decoder-ring)
-		(length (member ra inversion-decoder-ring)))))
+  (let* ((ra (assoc release-symbol inversion-decoders))
+	 (rn (- (length inversion-decoders)
+		(length (member ra inversion-decoders)))))
     rn))
 
 (defun inversion-= (ver1 ver2)
@@ -178,12 +185,21 @@ not an indication of new features or bug fixes."
 	(v1-1 (nth 1 ver1))
 	(v1-2 (nth 2 ver1))
 	(v1-3 (nth 3 ver1))
+	(v1-4 (nth 4 ver1))
 	;; v2
 	(v2-0 (inversion-release-to-number (nth 0 ver2)))
 	(v2-1 (nth 1 ver2))
 	(v2-2 (nth 2 ver2))
-	(v2-3 (nth 3 ver2)))
+	(v2-3 (nth 3 ver2))
+	(v2-4 (nth 4 ver2))
+	)
     (or (and (= v1-0 v2-0)
+	     (= v1-1 v2-1)
+	     (= v1-2 v2-2)
+	     (= v1-3 v2-3)
+	     v1-4 v2-4		; all or nothin if elt - is =
+	     (< v1-4 v2-4))
+	(and (= v1-0 v2-0)
 	     (= v1-1 v2-1)
 	     (= v1-2 v2-2)
 	     v1-3 v2-3		; all or nothin if elt - is =
@@ -203,7 +219,7 @@ not an indication of new features or bug fixes."
 VERSION, INCOMPATIBLE-VERSION and MINIMUM are of similar format to
 return entries of `inversion-decode-version', or a classic version
 string.	 INCOMPATIBLE-VERSION can be nil.
-RESERVED arguments are kept for a later user.
+RESERVED arguments are kept for a later use.
 Return:
 - nil if everything is ok
 - 'outdated if VERSION is less than MINIMUM.
@@ -215,7 +231,6 @@ Return:
 	(req (if (stringp minimum)
 		 (inversion-decode-version minimum)
 	       minimum))
-	(count 0)
 	)
     ;; Perform a test.
     (cond
@@ -320,12 +335,27 @@ Optional argument RESERVED is saved for later use."
     (when err
       (if directory
 	  (inversion-download-package-ask err package directory version)
-	(error err)))))
-  
+	(error err)))
+    ;; Return the package symbol that was required.
+    package))
+
+;;;###autoload
+(defun inversion-require-emacs (emacs-ver xemacs-ver)
+  "Declare that you need either EMACS-VER, or XEMACS-VER.
+Only checks one based on which kind of Emacs is being run."
+  (let ((err (inversion-test 'emacs
+			     (if (featurep 'xemacs)
+				 xemacs-ver
+			       emacs-ver))))
+    (if err (error err)
+      ;; Something nice...
+      t)))
+
 (defconst inversion-find-data
   '("(def\\(var\\|const\\)\\s-+%s-%s\\s-+\"\\([^\"]+\\)" 2)
   "Regexp template and match data index of a version string.")
 
+;;;###autoload
 (defun inversion-find-version (package)
   "Search for the version and incompatible version of PACKAGE.
 Does not load PACKAGE nor requires that it has been previously loaded.
@@ -343,7 +373,10 @@ Return nil when VERSION-STRING was not found."
 	 version)
     (when file
       (with-temp-buffer
-	(insert-file-contents-literally file)
+	;; The 3000 is a bit arbitrary, but should cut down on
+	;; fileio as version info usually is at the very top
+	;; of a file.  AFter a long commentary could be bad.
+	(insert-file-contents-literally file nil 0 3000)
 	(goto-char (point-min))
 	(when (re-search-forward (format tag package 'version) nil t)
 	  (setq version (list (match-string idx)))
@@ -353,6 +386,7 @@ Return nil when VERSION-STRING was not found."
 	    (setcdr version (match-string idx))))))
     version))
 
+;;;###autoload
 (defun inversion-add-to-load-path (package minimum
 					   &optional installdir
 					   &rest subdirs)
@@ -366,22 +400,36 @@ INSTALLDIR path."
     ;; If PACKAGE not found or a bad version already in `load-path',
     ;; prepend the new PACKAGE path, so it will be loaded first.
     (when (or (not ver)
-	      (inversion-check-version (car ver) (cdr ver) minimum))
+              (and
+               (inversion-check-version (car ver) (cdr ver) minimum)
+               (message "Outdated %s %s shadowed to meet minimum version %s"
+                        package (car ver) minimum)
+               t))
       (let* ((default-directory
-	       (or installdir
-		   (expand-file-name (format "./%s" package))))
-	     subdir)
-	(when (file-directory-p default-directory)
-	  ;; Add SUBDIRS
-	  (while subdirs
-	    (setq subdir  (expand-file-name (car subdirs))
-		  subdirs (cdr subdirs))
-	    (when (file-directory-p subdir)
-	      (message "%S added to `load-path'" subdir)
-	      (add-to-list 'load-path subdir)))
-	  ;; Add the main path
-	  (message "%S added to `load-path'" default-directory)
-	  (add-to-list 'load-path default-directory))))))
+               (or installdir
+                   (expand-file-name (format "./%s" package))))
+             subdir)
+        (when (file-directory-p default-directory)
+          ;; Add SUBDIRS
+          (while subdirs
+            (setq subdir  (expand-file-name (car subdirs))
+                  subdirs (cdr subdirs))
+            (when (file-directory-p subdir)
+              ;;(message "%S added to `load-path'" subdir)
+              (add-to-list 'load-path subdir)))
+          ;; Add the main path
+          ;;(message "%S added to `load-path'" default-directory)
+          (add-to-list 'load-path default-directory))
+	;; We get to this point iff we do not accept or there is no
+	;; system file.  Lets check the version of what we just
+	;; installed... just to be safe.
+	(let ((newver (inversion-find-version package)))
+	  (if (not newver)
+	      (error "Failed to find version for newly installed %s"
+		     package))
+	  (if (inversion-check-version (car newver) (cdr newver) minimum)
+	      (error "Outdated %s %s just installed" package (car newver)))
+	  )))))
 
 ;;; Inversion tests
 ;;
@@ -390,11 +438,18 @@ INSTALLDIR path."
   (interactive)
   (let ((c1 (inversion-package-version 'inversion))
 	(c1i (inversion-package-incompatibility-version 'inversion))
-	(c2 (inversion-decode-version "1.3alpha2"))
-	(c3 (inversion-decode-version "1.3beta4"))
-	(c4 (inversion-decode-version "1.3beta5"))
-	(c5 (inversion-decode-version "1.3.4"))
-	(c6 (inversion-decode-version "2.3alpha1")))
+	(c2 (inversion-decode-version  "1.3alpha2"))
+	(c3 (inversion-decode-version  "1.3beta4"))
+	(c4 (inversion-decode-version  "1.3 beta5"))
+	(c5 (inversion-decode-version  "1.3.4"))
+	(c6 (inversion-decode-version  "2.3alpha"))
+	(c7 (inversion-decode-version  "1.3"))
+	(c8 (inversion-decode-version  "1.3pre1"))
+	(c9 (inversion-decode-version  "2.4 (patch 2)"))
+	(c10 (inversion-decode-version "2.4 (patch 3)"))
+	(c11 (inversion-decode-version "2.4.2.1"))
+	(c12 (inversion-decode-version "2.4.2.2"))
+	)
     (if (not (and
 	      (inversion-= c1 c1)
 	      (inversion-< c1i c1)
@@ -407,11 +462,24 @@ INSTALLDIR path."
 	      (inversion-< c2 c6)
 	      (inversion-< c3 c5)
 	      (inversion-< c3 c6)
+	      (inversion-< c7 c6)
+	      (inversion-< c4 c7)
+	      (inversion-< c2 c7)
+	      (inversion-< c8 c6)
+	      (inversion-< c8 c7)
+	      (inversion-< c4 c8)
+	      (inversion-< c2 c8)
+	      (inversion-< c9 c10)
+	      (inversion-< c10 c11)
+	      (inversion-< c11 c12)
 	      ;; Negatives
 	      (not (inversion-< c3 c2))
 	      (not (inversion-< c4 c3))
 	      (not (inversion-< c5 c4))
 	      (not (inversion-< c6 c5))
+	      (not (inversion-< c7 c2))
+	      (not (inversion-< c7 c8))
+	      (not (inversion-< c12 c11))
 	      ;; Test the tester on inversion
 	      (not (inversion-test 'inversion inversion-version))
 	      ;; Test that we throw an error
@@ -454,8 +522,6 @@ The return list is an alist with the version string in the CAR,
 and the full path name in the CDR."
   (if (symbolp package) (setq package (symbol-name package)))
   (let ((f (inversion-locate-package-files package directory version))
-	(prefix (concat (file-name-as-directory directory)
-			package "-"))
 	(out nil))
     (while f
       (let* ((file (car f))
@@ -521,9 +587,9 @@ The package should have VERSION available for download."
 		package directory))
 	(cver (inversion-package-version package))
 	(newer nil))
-    (mapcar (lambda (f)
-	      (if (inversion-< cver (inversion-decode-version (car f)))
-		  (setq newer (cons f newer))))
+    (mapc (lambda (f)
+	    (if (inversion-< cver (inversion-decode-version (car f)))
+		(setq newer (cons f newer))))
 	    files)
     newer
     ))

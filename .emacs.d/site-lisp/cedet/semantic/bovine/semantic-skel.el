@@ -1,9 +1,15 @@
+;; NOTE TO USERS OF THIS SKELETON:
+;;
+;; You may want to use the wisent parser generator instead.  It
+;; will generate more efficient parsers.
+
+
 ;;; semantic-skel.el --- Semantic details for skel
 
-;;; Copyright (C) 2001, 2003, 2004 Eric M. Ludlam
+;;; Copyright (C) 2001, 2003, 2004, 2008, 2009 Eric M. Ludlam
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
-;; X-RCS: $Id: semantic-skel.el,v 1.5 2004/03/03 03:12:35 zappo Exp $
+;; X-RCS: $Id: semantic-skel.el,v 1.9 2010/03/15 13:40:55 xscript Exp $
 
 ;; This file is not part of GNU Emacs.
 
@@ -19,8 +25,8 @@
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
@@ -36,7 +42,6 @@
 (eval-when-compile
   (require 'semantic-ctxt)
   (require 'semantic-imenu)
-  (require 'document)
   (require 'senator))
 
 ;;; Code:
@@ -78,6 +83,10 @@
 
 ;;; Override methods & Variables
 ;;
+(defcustom-mode-local-semantic-dependency-system-include-path
+  skel-mode semantic-makefile-dependency-system-include-path
+  nil
+  "The system include path used by skel language.")
 
 ;; Add methods to the override table here.  See
 ;; `semantic-install-function-overrides' for more details.
@@ -102,9 +111,6 @@
         imenu-create-index-function 'semantic-create-imenu-index
         semantic-type-relation-separator-character '(".")
         semantic-command-separation-character ";"
-        document-comment-start "/*"
-        document-comment-line-prefix " *"
-        document-comment-end " */"
         ;; Semantic navigation inside 'type children
         senator-step-at-tag-classes '(function variable)
         )

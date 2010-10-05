@@ -1,30 +1,37 @@
-This is speedbar.info, produced by makeinfo version 4.3 from
+This is speedbar.info, produced by makeinfo version 4.9 from
 speedbar.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Speedbar: (speedbar).        File/Tag summarizing utility.
 END-INFO-DIR-ENTRY
-   Copyright (C) 1999, 2000, 2001, 2002, 2003 Free Software Foundation,
-Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2005 Free Software
+Foundation, Inc.
 
-   Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1 or
-any later version published by the Free Software Foundation; with the
-Invariant Sections being "The GNU Manifesto", "Distribution" and "GNU
-GENERAL PUBLIC LICENSE", with the Front-Cover texts being "A GNU
-Manual", and with the Back-Cover Texts as in (a) below.  A copy of the
-license is included in the section entitled "GNU Free Documentation
-License" in the Emacs manual.
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.2 or any later version published by the Free Software
+     Foundation; with the Invariant Sections being "The GNU Manifesto",
+     "Distribution" and "GNU GENERAL PUBLIC LICENSE", with the
+     Front-Cover texts being "A GNU Manual", and with the Back-Cover
+     Texts as in (a) below.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License" in the Emacs
+     manual.
 
-   (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-modify this GNU Manual, like GNU software.  Copies published by the Free
-Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
+     modify this GNU Manual, like GNU software.  Copies published by
+     the Free Software Foundation raise funds for GNU development."
 
-   This document is part of a collection distributed under the GNU Free
-Documentation License.  If you want to distribute this document
-separately from the collection, you can do so by adding a copy of the
-license to the document, as described in section 6 of the license.
+     This document is part of a collection distributed under the GNU
+     Free Documentation License.  If you want to distribute this
+     document separately from the collection, you can do so by adding a
+     copy of the license to the document, as described in section 6 of
+     the license.
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Speedbar: (speedbar). File/Tag summarizing utility.
+END-INFO-DIR-ENTRY
 
 
 File: speedbar.info,  Node: Top,  Up: (dir)Top
@@ -50,7 +57,7 @@ allows authors of other packages to provide speedbar summaries
 customized to the needs of that mode.
 
    Throughout this manual, activities are defined as `clicking on', or
-`expanding' items.  Clicking means using using `Mouse-2' on a button.
+`expanding' items.  Clicking means using `Mouse-2' on a button.
 Expanding refers to clicking on an expansion button to display an
 expanded summary of the entry the expansion button is on.  *Note Basic
 Navigation::.
@@ -69,11 +76,11 @@ Navigation::.
 
 File: speedbar.info,  Node: Introduction,  Next: Basic Navigation,  Up: Top
 
-Introduction
-************
+1 Introduction
+**************
 
-   To start using speedbar use the command `M-x speedbar RET' or select
-it from the Tools menu in versions of Emacs with speedbar installed by
+To start using speedbar use the command `M-x speedbar RET' or select it
+from the Tools menu in versions of Emacs with speedbar installed by
 default.  This command will open a new frame to summarize the local
 files.  On X Window systems or on MS-Windows, speedbar's frame is twenty
 characters wide, and will mimic the height of the frame from which it
@@ -101,10 +108,10 @@ it's useful to bind it to a key in terminal mode.  *Note Customizing::.
 
 File: speedbar.info,  Node: Basic Navigation,  Next: File Mode,  Prev: Introduction,  Up: Top
 
-Basic Navigation
-****************
+2 Basic Navigation
+******************
 
-   Speedbar can display different types of data, and has several display
+Speedbar can display different types of data, and has several display
 and behavior modes.  These modes all have a common behavior, menu
 system, and look.  If one mode is learned, then the other modes are easy
 to use.
@@ -119,13 +126,10 @@ to use.
 
 File: speedbar.info,  Node: Basic Key Bindings,  Next: Basic Visuals,  Prev: Basic Navigation,  Up: Basic Navigation
 
-Basic Key Bindings
-==================
+2.1 Basic Key Bindings
+======================
 
-   These key bindings are common across all modes:
-
-`delete, SPC'
-     Scroll up and down one page.
+These key bindings are common across all modes:
 
 `Q'
      Quit speedbar, and kill the frame.
@@ -196,12 +200,12 @@ When these are available, some additional common bindings are available.
 
 File: speedbar.info,  Node: Basic Visuals,  Next: Mouse Bindings,  Prev: Basic Key Bindings,  Up: Basic Navigation
 
-Basic Visuals
-=============
+2.2 Basic Visuals
+=================
 
-   Speedbar has visual cues for indicating different types of data.
-These cues are used consistently across the different speedbar modes to
-make them easier to interpret.
+Speedbar has visual cues for indicating different types of data.  These
+cues are used consistently across the different speedbar modes to make
+them easier to interpret.
 
    At a high level, in File mode, there are directory buttons, sub
 directory buttons, file buttons, tag buttons, and expansion buttons.
@@ -217,12 +221,11 @@ Anything not highlighted by the mouse will not be clickable.
 how to read these textual elements will make it easier to navigate by
 identifying the types of data available.
 
-Groups
-......
+2.2.0.1 Groups
+..............
 
-   Groups summarize information in a single line, and provide a high
-level view of more complex systems, like a directory tree, or manual
-chapters.
+Groups summarize information in a single line, and provide a high level
+view of more complex systems, like a directory tree, or manual chapters.
 
    Groups appear at different indentation levels, and are prefixed with
 a `+' in some sort of `box'.  The group name will summarize the
@@ -252,38 +255,38 @@ extracting contents of that group.
 the `-' button to contract the group, or hide the contents currently
 displayed.
 
-Tags
-....
+2.2.0.2 Tags
+............
 
-   Tags are the leaf nodes of the tree system.  Tags are generally
-prefixed with a simple character, such as `>'.  Tags can only be jumped
-to using `RET' or `e'.
+Tags are the leaf nodes of the tree system.  Tags are generally prefixed
+with a simple character, such as `>'.  Tags can only be jumped to using
+`RET' or `e'.
 
-Boolean Flags
-.............
+2.2.0.3 Boolean Flags
+.....................
 
-   Sometimes a group or tag is given a boolean flag.  These flags
-appear as extra text characters at the end of the line.  File mode uses
-boolean flags, such as a `*' to indicate that a file has been checked
-out of a versioning system.
+Sometimes a group or tag is given a boolean flag.  These flags appear as
+extra text characters at the end of the line.  File mode uses boolean
+flags, such as a `*' to indicate that a file has been checked out of a
+versioning system.
 
    For additional flags, see *Note File Mode::, and *Note Version
 Control::.
 
-Unadorned Text
-..............
+2.2.0.4 Unadorned Text
+......................
 
-   Unadorned text generally starts in column 0, without any special
-symbols prefixing them.  In Buffers mode different buffer groups are
-prefixed with a description of what the following buffers are (Files,
-scratch buffers, and invisible buffers.)
+Unadorned text generally starts in column 0, without any special symbols
+prefixing them.  In Buffers mode different buffer groups are prefixed
+with a description of what the following buffers are (Files, scratch
+buffers, and invisible buffers.)
 
    Unadorned text will generally be colorless, and not clickable.
 
-Color Cues
-..........
+2.2.0.5 Color Cues
+..................
 
-   Each type of Group, item indicator, and label is given a different
+Each type of Group, item indicator, and label is given a different
 color.  The colors chosen are dependent on whether the background color
 is light or dark.  Of important note is that the `current item', which
 may be a buffer or file name, is highlighted red, and underlined.
@@ -299,10 +302,10 @@ entries.
 
 File: speedbar.info,  Node: Mouse Bindings,  Next: Displays Submenu,  Prev: Basic Visuals,  Up: Basic Navigation
 
-Mouse Bindings
-==============
+2.3 Mouse Bindings
+==================
 
-   The mouse has become a common information navigation tool.  Speedbar
+The mouse has become a common information navigation tool.  Speedbar
 will use the mouse to navigate file systems, buffer lists, and other
 data.  The different textual cues provide buttons which can be clicked
 on (*note Basic Visuals::).  Anything that highlights can be clicked on
@@ -345,12 +348,12 @@ location.
 
 File: speedbar.info,  Node: Displays Submenu,  Prev: Mouse Bindings,  Up: Basic Navigation
 
-Displays Submenu
-================
+2.4 Displays Submenu
+====================
 
-   You can display different data by using different display modes.
-These specialized modes make it easier to navigate the relevant pieces
-of information, such as files and directories, or buffers.
+You can display different data by using different display modes.  These
+specialized modes make it easier to navigate the relevant pieces of
+information, such as files and directories, or buffers.
 
    In the main menu, found by clicking `Mouse-3', there is a submenu
 labeled `Displays'.  This submenu lets you easily choose between
@@ -363,13 +366,13 @@ modes such as Info are loaded separately.
 
 File: speedbar.info,  Node: File Mode,  Next: Buffer Mode,  Prev: Basic Navigation,  Up: Top
 
-File Mode
-*********
+3 File Mode
+***********
 
-   File mode displays a summary of your current directory.  You can
-display files in the attached frame, or summarize the tags found in
-files.  You can even see if a file is checked out of a version control
-system, or has some associated object file.
+File mode displays a summary of your current directory.  You can display
+files in the attached frame, or summarize the tags found in files.  You
+can even see if a file is checked out of a version control system, or
+has some associated object file.
 
    Advanced behavior, like copying and renaming files, is also provided.
 
@@ -382,13 +385,13 @@ system, or has some associated object file.
 
 File: speedbar.info,  Node: Directory Display,  Next: Hidden Files,  Prev: File Mode,  Up: File Mode
 
-Directory Display
-=================
+3.1 Directory Display
+=====================
 
-   There are three major sections in the display.  The first line or
-two is the root directory speedbar is currently viewing.  You can jump
-to one of the parent directories by clicking on the name of the
-directory you wish to jump to.
+There are three major sections in the display.  The first line or two is
+the root directory speedbar is currently viewing.  You can jump to one
+of the parent directories by clicking on the name of the directory you
+wish to jump to.
 
    Next, directories are listed.  A directory starts with the group
 indicator button `<+>'.  Clicking the directory name makes speedbar
@@ -432,7 +435,7 @@ flags are:
 
 `*'
      This file has been checked out of a version control system.  *Note
-     Version Control::.
+     Version Control::.  
 
 `#'
      This file has an up to date object file associated with it.  The
@@ -464,12 +467,12 @@ sub-group.  *Note Tag Hierarchy Methods::.
 
 File: speedbar.info,  Node: Hidden Files,  Next: File Key Bindings,  Prev: Directory Display,  Up: File Mode
 
-Hidden Files
-============
+3.2 Hidden Files
+================
 
-   On GNU and Unix systems, a hidden file is a file whose name starts
-with a period.  They are hidden from a regular directory listing
-because the user is not generally interested in them.
+On GNU and Unix systems, a hidden file is a file whose name starts with
+a period.  They are hidden from a regular directory listing because the
+user is not generally interested in them.
 
    In speedbar, a hidden file is a file which isn't very interesting and
 might prove distracting to the user.  Any uninteresting files are
@@ -480,7 +483,7 @@ files are interesting with `speedbar-supported-extension-expressions'.
 The second level is any file that matches the same pattern used for
 completion in `find-file'.  This is derived from the variable
 `completion-ignored-extensions'.  This filter will override the
-supported extensions, so beif you add something to be supported, and it
+supported extensions, so if you add something to be supported, and it
 doesn't appear, check for this.
 
    You can toggle the display of uninteresting files from the toggle
@@ -495,13 +498,13 @@ Directory Display::.
 
 File: speedbar.info,  Node: File Key Bindings,  Prev: Hidden Files,  Up: File Mode
 
-File Key Bindings
-=================
+3.3 File Key Bindings
+=====================
 
-   File mode has key bindings permitting different file system
-operations such as copy or rename.  These commands all operate on the
-"current file".  In this case, the current file is the file at point,
-or clicked on when pulling up the menu.
+File mode has key bindings permitting different file system operations
+such as copy or rename.  These commands all operate on the "current
+file".  In this case, the current file is the file at point, or clicked
+on when pulling up the menu.
 
 `U'
      Move the entire speedbar display up one directory.
@@ -541,10 +544,10 @@ to expand it.
 
 File: speedbar.info,  Node: Buffer Mode,  Next: Minor Modes,  Prev: File Mode,  Up: Top
 
-Buffer Mode
-***********
+4 Buffer Mode
+*************
 
-   Buffer mode is very similar to File mode, except that instead of
+Buffer mode is very similar to File mode, except that instead of
 tracking the current directory and all files available there, the
 current list of Emacs buffers is shown.
 
@@ -573,13 +576,13 @@ to File mode.
 
 File: speedbar.info,  Node: Minor Modes,  Next: Customizing,  Prev: Buffer Mode,  Up: Top
 
-Minor Display Modes
-*******************
+5 Minor Display Modes
+*********************
 
-   For some buffers, a list of files and tags makes no sense.  This
-could be because files are not currently in reference (such as web
-pages), or that the files you might be interested have special
-properties (such as email folders.)
+For some buffers, a list of files and tags makes no sense.  This could
+be because files are not currently in reference (such as web pages), or
+that the files you might be interested have special properties (such as
+email folders.)
 
    In these cases, a minor display mode is needed.  A minor display mode
 will override any major display mode currently being displayed for the
@@ -596,10 +599,10 @@ bindings and visuals, but will have specialized behaviors.
 
 File: speedbar.info,  Node: RMAIL,  Next: Info,  Prev: Minor Modes,  Up: Minor Modes
 
-RMAIL
-=====
+5.1 RMAIL
+=========
 
-   When using RMAIL, speedbar will display two sections.  The first is a
+When using RMAIL, speedbar will display two sections.  The first is a
 layer one reply button.  Clicking here will initialize a reply buffer
 showing only this email address in the `To:' field.
 
@@ -619,13 +622,13 @@ using the mouse.
 
 File: speedbar.info,  Node: Info,  Next: GDB,  Prev: RMAIL,  Up: Minor Modes
 
-Info
-====
+5.2 Info
+========
 
-   When browsing Info files, all local relevant information is
-displayed in the info buffer and a topical high-level view is provided
-in speedbar.  All top-level info nodes are shown in the speedbar frame,
-and can be jumped to by clicking the name.
+When browsing Info files, all local relevant information is displayed in
+the info buffer and a topical high-level view is provided in speedbar.
+All top-level info nodes are shown in the speedbar frame, and can be
+jumped to by clicking the name.
 
    You can open these nodes with the `[+]' button to see what sub-topics
 are available.  Since these sub-topics are not examined until you click
@@ -635,13 +638,13 @@ the `[+]' button, sometimes a `[?]' will appear when you click on a
 
 File: speedbar.info,  Node: GDB,  Prev: Info,  Up: Minor Modes
 
-GDB
-===
+5.3 GDB
+=======
 
-   If you are debugging an application with GDB in Emacs, speedbar can
-show you the current stack when the current buffer is the `*gdb*'
-buffer.  Usually, it will just report that there is no stack, but when
-the application is stopped, the current stack will be shown.
+If you are debugging an application with GDB in Emacs, speedbar can show
+you the current stack when the current buffer is the `*gdb*' buffer.
+Usually, it will just report that there is no stack, but when the
+application is stopped, the current stack will be shown.
 
    You can click on any stack element and gdb will move to that stack
 level.  You can then check variables local to that level at the GDB
@@ -654,10 +657,10 @@ with a stack fetching command.
 
 File: speedbar.info,  Node: Customizing,  Next: Extending,  Prev: Minor Modes,  Up: Top
 
-Customizing
-***********
+6 Customizing
+*************
 
-   Speedbar is highly customizable, with a plethora of control elements.
+Speedbar is highly customizable, with a plethora of control elements.
 Since speedbar is so visual and reduces so much information, this is an
 important aspect of its behavior.
 
@@ -683,30 +686,30 @@ modify speedbar's behavior.
 
 File: speedbar.info,  Node: Frames and Faces,  Next: Tag Hierarchy Methods,  Prev: Customizing,  Up: Customizing
 
-Frames and Faces
-================
+6.1 Frames and Faces
+====================
 
-   There are several faces speedbar generates to provide a consistent
+There are several faces speedbar generates to provide a consistent
 color scheme across display types.  You can customize these faces using
 your favorite method.  They are:
 
 speedbar-button-face
-     Face used on expand/contract buttons.
+     Face used on expand/contract buttons.  
 
 speedbar-file-face
      Face used on Files.  Should also be used on non-directory like
-     nodes.
+     nodes.  
 
 speedbar-directory-face
      Face used for directories, or nodes which consist of groups of
-     other nodes.
+     other nodes.  
 
 speedbar-tag-face
-     Face used for tags in a file, or for leaf items.
+     Face used for tags in a file, or for leaf items.  
 
 speedbar-selected-face
      Face used to highlight the selected item.  This would be the
-     current file being edited.
+     current file being edited.  
 
 speedbar-highlight-face
      Face used when the mouse passes over a button.
@@ -726,10 +729,10 @@ XEmacs way of doing the same thing.
 
 File: speedbar.info,  Node: Tag Hierarchy Methods,  Next: Version Control,  Prev: Frames and Faces,  Up: Customizing
 
-Tag Hierarchy Methods
-=====================
+6.2 Tag Hierarchy Methods
+=========================
 
-   When listing tags within a file, it is possible to get an annoyingly
+When listing tags within a file, it is possible to get an annoyingly
 long list of entries.  Imenu (which generates the tag list in Emacs)
 will group some classes of items automatically.   Even here, however,
 some tag groups can be quite large.
@@ -740,15 +743,15 @@ through a hierarchy processor.  The specific variable to use is
 applied in any order.  They are:
 
 `speedbar-trim-words-tag-hierarchy'
-     Find a common prefix for all elements of a group, and trim it off.
+     Find a common prefix for all elements of a group, and trim it off.  
 
 `speedbar-prefix-group-tag-hierarchy'
      If a group is too large, place sets of tags into bins based on
-     common prefixes.
+     common prefixes.  
 
 `speedbar-simple-group-tag-hierarchy'
      Take all items in the top level list not in a group, and stick
-     them into a `Tags' group.
+     them into a `Tags' group.  
 
 `speedbar-sort-tag-hierarchy'
      Sort all items, leaving groups on top.
@@ -793,10 +796,10 @@ fit.
 
 File: speedbar.info,  Node: Version Control,  Next: Hooks,  Prev: Tag Hierarchy Methods,  Up: Customizing
 
-Version Control
-===============
+6.3 Version Control
+===================
 
-   When using the file mode in speedbar, information regarding a version
+When using the file mode in speedbar, information regarding a version
 control system adds small details to the display.  If a file is in a
 version control system, and is "checked out" or "locked" locally, an
 asterisk `*' appears at the end of the file name.  In addition, the
@@ -823,38 +826,38 @@ Return `t' if you want to have the asterisk placed near this file.
 
 File: speedbar.info,  Node: Hooks,  Prev: Version Control,  Up: Customizing
 
-Hooks
-=====
+6.4 Hooks
+=========
 
-   There are several hooks in speedbar allowing custom behaviors to be
+There are several hooks in speedbar allowing custom behaviors to be
 added.  Available hooks are:
 
 `speedbar-visiting-file-hook'
-     Hooks run when speedbar visits a file in the selected frame.
+     Hooks run when speedbar visits a file in the selected frame.  
 
 `speedbar-visiting-tag-hook'
-     Hooks run when speedbar visits a tag in the selected frame.
+     Hooks run when speedbar visits a tag in the selected frame.  
 
 `speedbar-load-hook'
-     Hooks run when speedbar is loaded.
+     Hooks run when speedbar is loaded.  
 
 `speedbar-reconfigure-keymaps-hook'
      Hooks run when the keymaps are regenerated.  Keymaps are
      reconfigured whenever modes change.  This will let you add custom
-     key bindings.
+     key bindings.  
 
 `speedbar-before-popup-hook'
      Hooks called before popping up the speedbar frame.  New frames are
-     often popped up when "power clicking" on an item to view it.
+     often popped up when "power clicking" on an item to view it.  
 
 `speedbar-before-delete-hook'
-     Hooks called before deleting or hiding the speedbar frame.
+     Hooks called before deleting or hiding the speedbar frame.  
 
 `speedbar-mode-hook'
-     Hooks called after creating a speedbar buffer.
+     Hooks called after creating a speedbar buffer.  
 
 `speedbar-timer-hook'
-     Hooks called after running the speedbar timer function.
+     Hooks called after running the speedbar timer function.  
 
 `speedbar-scanner-reset-hook'
      Hook called whenever generic scanners are reset.  Set this to
@@ -864,10 +867,10 @@ added.  Available hooks are:
 
 File: speedbar.info,  Node: Extending,  Next: Index,  Prev: Customizing,  Up: Top
 
-Extending
-*********
+7 Extending
+***********
 
-   Speedbar can run different types of Major display modes such as Files
+Speedbar can run different types of Major display modes such as Files
 (*note File Mode::), and Buffers (*note Buffer Mode::).  It can also
 manage different minor display modes for use with buffers handling
 specialized data.
@@ -890,10 +893,10 @@ specialized tagging functions.
 
 File: speedbar.info,  Node: Minor Display Modes,  Next: Major Display Modes,  Prev: Extending,  Up: Extending
 
-Minor Display Modes
-===================
+7.1 Minor Display Modes
+=======================
 
-   A "minor display mode" is a mode useful when using a specific type of
+A "minor display mode" is a mode useful when using a specific type of
 buffer.  This mode might not be useful for any other kind of data or
 mode, or may just be more useful that a files or buffers based mode when
 working with a specialized mode.
@@ -939,10 +942,10 @@ yourself, and start drawing buttons.  *Note Creating a display::.
 
 File: speedbar.info,  Node: Major Display Modes,  Next: Tagging Extensions,  Prev: Minor Display Modes,  Up: Extending
 
-Major Display Modes
-===================
+7.2 Major Display Modes
+=======================
 
-   Creating a "Major Display Mode" for speedbar requires authoring a
+Creating a "Major Display Mode" for speedbar requires authoring a
 keymap, an easy-menu segment, and writing several functions.  These
 items can be given any name, and are made the same way as in a minor
 display mode (*note Minor Display Modes::).  Once this is done, these
@@ -959,16 +962,16 @@ functions.  This will provide you with the initial bindings needed.
 Some common speedbar functions you might want to bind are:
 
 `speedbar-edit-line'
-     Edit the item on the current line.
+     Edit the item on the current line.  
 
 `speedbar-expand-line'
      Expand the item under the cursor.  With a numeric argument
-     (`C-u'), flush cached data before expanding.
+     (`C-u'), flush cached data before expanding.  
 
 `speedbar-contract-line'
      Contract the item under the cursor.
 
-   These function require that function `speedbar-line-path' be
+   These function require that function `speedbar-line-directory' be
 correctly overloaded to work.
 
    Next, register your extension like this;
@@ -997,15 +1000,15 @@ something like this:
      (speedbar-add-mode-functions-list
       '("MYEXTENSION"
         (speedbar-item-info . MyExtension-speedbar-item-info)
-        (speedbar-line-path . MyExtension-speedbar-line-path)))
+        (speedbar-line-directory . MyExtension-speedbar-line-directory)))
 
    The first element in the list is the name of you extension.  The
 second is an alist of functions to overload.  The function to overload
 is first, followed by what you want called instead.
 
-   For `speedbar-line-path' your function should take an optional DEPTH
-parameter.  This is the starting depth for heavily indented lines.  If
-it is not provided, you can derive it like this:
+   For `speedbar-line-directory' your function should take an optional
+DEPTH parameter.  This is the starting depth for heavily indented
+lines.  If it is not provided, you can derive it like this:
 
      (save-match-data
        (if (not depth)
@@ -1029,12 +1032,12 @@ summary to display in the minibuffer.
 
    There are several helper functions you can use if you are going to
 use built in tagging.  These functions can be `or'ed since each one
-returns non-nil if it displays a message.  They are:
+returns non-`nil' if it displays a message.  They are:
 
 `speedbar-item-info-file-helper'
      This takes an optional FILENAME parameter.  You can derive your own
      filename, or it will derive it using a (possibly overloaded)
-     function `speedbar-line-file'.  It shows details about a file.
+     function `speedbar-line-file'.  It shows details about a file.  
 
 `speedbar-item-info-tag-helper'
      If the current line is a tag, then display information about that
@@ -1050,17 +1053,38 @@ returns non-nil if it displays a message.  They are:
    Once you have done all this, speedbar will show an entry in the
 `Displays' menu declaring that your extension is available.
 
+   If your major mode is running slowly, you may need to add a set of
+stealthy update functions.
+
+ -- Variable: speedbar-stealthy-function-list
+     List of functions to periodically call stealthily.  Each function
+     must return `nil' if interrupted, or `t' if completed.  Stealthy
+     functions which have a single operation should always return `t'.
+     Functions which take a long time should maintain a state (where
+     they are in their speedbar related calculations) and permit
+     interruption.  See "speedbar-check-vc" as a good example.
+
+   Stealthy functions are currently used in files mode.  The first
+activity is to display the main list with minimal decorations though
+the buttons function.  Once that is done, additional work can be done
+decorating different lines after the fact.
+
+   For files mode, VC status and read-only markers can calculated after
+the first display is up.  Because the process of calculating that
+information can be slow, these functions are interruptable, and will
+continue processing at a later time out.
+
 
 File: speedbar.info,  Node: Tagging Extensions,  Next: Creating a display,  Prev: Major Display Modes,  Up: Extending
 
-Tagging Extensions
-==================
+7.3 Tagging Extensions
+======================
 
-   It is possible to create new methods for tagging files in speedbar.
-To do this, you need two basic functions, one function to fetch the
-tags from a buffer, the other to insert them below the filename.
+It is possible to create new methods for tagging files in speedbar.  To
+do this, you need two basic functions, one function to fetch the tags
+from a buffer, the other to insert them below the filename.
 
- - Function: my-fetch-dynamic-tags file
+ -- Function: my-fetch-dynamic-tags file
      Parse FILE for a list of tags.  Return the list, or `t' if there
      was an error.  FILE is not necessarily available as an buffer when
      your function is called.  Be sure to load it if it is needed with
@@ -1074,33 +1098,43 @@ tags from a buffer, the other to insert them below the filename.
    The non-error return value can be anything, as long as it can be
 inserted by its paired function:
 
- - Function: my-insert-tag-list level lst
+ -- Function: my-insert-tag-list level lst
      Insert a list of tags LST started at indentation level LEVEL.
      Creates buttons for each tag, and provides any other display
      information required.
 
    It is often useful to use `speedbar-create-tag-hierarchy' on your
-token list.  See that function's documentation for details on what it
-requires.
+tag list *Note Creating a display::.
 
    Once these two functions are written, modify the variable
 `speedbar-dynamic-tags-function-list' to include your parser at the
 beginning, like this:
 
      (add-to-list 'speedbar-dynamic-tags-function-list
-     	     '(my-fetch-dynamic-tags  . my-insert-tag-list))
+                  '(my-fetch-dynamic-tags  . my-insert-tag-list))
 
-   If your parser is only good for a few types of files, make sure that
-it is either a buffer local modification, or that the tag generator
-returns `t' for non valid buffers.
+ -- Variable: speedbar-dynamic-tags-function-list
+     A list of functions which will return and insert a list of tags.
+     Each element is of the form ( FETCH .  INSERT ) where FETCH is a
+     function which takes one parameter (the file to tag) and returns a
+     list of tags.  The tag list can be of any form as long as the
+     corresponding insert method can handle it.  If it returns `t',
+     then an error occurred, and the next fetch routine is tried.
+     INSERT is a function which takes an INDENTation level, and a LIST
+     of tags to insert.  It will then create the speedbar buttons.
+
+   If your parser is only good for a few types of files (ie, just
+texinfo files), make sure that it is either a buffer local modification
+(set only in texi files), or that the tag generator returns `t' for
+unsupported buffers.
 
 
 File: speedbar.info,  Node: Creating a display,  Prev: Tagging Extensions,  Up: Extending
 
-Creating a display
-==================
+7.4 Creating a display
+======================
 
-   Rendering a display in speedbar is completely flexible.  When your
+Rendering a display in speedbar is completely flexible.  When your
 button function is called, see *Note Minor Display Modes::, and *Note
 Major Display Modes::, you have control to `insert' anything you want.
 
@@ -1121,7 +1155,23 @@ a depth which indicates how far down the tree it is.  This information
 is stored in invisible text at the beginning of each line, and is used
 by the navigation commands.
 
- - Function: speedbar-insert-button text face mouse function &optional
+* Menu:
+
+* Creating Buttons::
+* Generic Tag Lists::
+* Expand Buttons::
+
+
+File: speedbar.info,  Node: Creating Buttons,  Next: Generic Tag Lists,  Up: Creating a display
+
+7.4.1 Creating Speedbar Buttons
+-------------------------------
+
+While it is certainly possible to insert your own text and add
+decorations to it, it is preferable to use the speedbar button creation
+API instead.
+
+ -- Function: speedbar-insert-button text face mouse function &optional
           token prevline
      This function inserts one button into the current location.  TEXT
      is the text to insert.  FACE is the face in which it will be
@@ -1130,11 +1180,21 @@ by the navigation commands.
      on the text.
 
      The optional argument TOKEN is extra data to associated with the
-     text.  Lastly PREVLINE should be non-nil if you want this line to
+     text.  Lastly PREVLINE should be non-`nil' if you want this line to
      appear directly after the last button which was created instead of
      on the next line.
 
- - Function: speedbar-make-tag-line exp-button-type exp-button-char
+   This routine creates a single button in the display, such as a [+]
+button, or the text that goes after it.  It is designed to be called
+iteratively with indicators on when to add carriage returns between
+buttons.
+
+   To insert a more traditional speedbar line that includes an expansion
+button followed by clickable text, it is preferable to create a
+tag-line.  Tag lines should be used to represent typical data a user
+will interact with.
+
+ -- Function: speedbar-make-tag-line exp-button-type exp-button-char
           exp-button-function exp-button-data tag-button
           tag-button-function tag-button-data tag-button-face depth
      Create a tag line with EXP-BUTTON-TYPE for the small expansion
@@ -1156,7 +1216,27 @@ by the navigation commands.
      the position to insert a new item, and that the new item will end
      with a CR.
 
- - Function: speedbar-insert-generic-list level list expand-fun find-fun
+   Major display modes that use this function will have a consistant
+look and feel and reliable image use.
+
+
+File: speedbar.info,  Node: Generic Tag Lists,  Next: Expand Buttons,  Prev: Creating Buttons,  Up: Creating a display
+
+7.4.2 Generic Tag Lists
+-----------------------
+
+For data stored in a hierarchical list, it is likely possible to have
+the entire data structure inserted with the speedbar generic list
+methods.
+
+   These insertion functions assume that the data represents 'tags', or
+data extracted from inside a file, and they are marked with tag markers.
+
+   Tags stored in this format can then be manipulated by the tag
+hierarchy methods described earlier in this manual.
+
+ -- Function: speedbar-insert-generic-list level list expand-fun
+          find-fun
      At LEVEL, (the current indentation level desired) insert a generic
      multi-level alist LIST.  Associations with lists get `{+}' tags
      (to expand into more nodes) and those with positions or other data
@@ -1180,17 +1260,126 @@ by the navigation commands.
      most obvious is `speedbar-tag-hierarchy-method'.  *Note Tag
      Hierarchy Methods::.
 
-      - Variable: speedbar-generic-list-group-expand-button-type
+      -- Variable: speedbar-generic-list-group-expand-button-type
           This is the button type used for groups of tags, whether
           expanded or added in via a hierarchy method.  Two good values
           are `'curly' and `'expandtag'.  Curly is the default button,
           and `'expandtag' is useful if the groups also has a position.
 
-      - Variable: speedbar-generic-list-tag-button-type
+      -- Variable: speedbar-generic-list-tag-button-type
           This is the button type used for a single tag.  Two good
           values are `nil' and `'statictag'.  `nil' is the default, and
           `'statictag' has the same width as `'expandtag'.
 
+
+
+File: speedbar.info,  Node: Expand Buttons,  Prev: Generic Tag Lists,  Up: Creating a display
+
+7.4.3 Expand Buttons
+--------------------
+
+Once you have made some buttons, you need to hitch them up to do
+something once clicked on.  This is set up with
+`speedbar-make-tag-line' which takes two functions.  One is for the
+expand button, and the other for the tag.
+
+   The function for the tag can be anything, but the expand button has
+certain expectations.  When that button is has a `+' in it, that
+indicates that there is "more" inside.  A `-' indicates that a section
+can be closed.
+
+   The expand function takes the same signature as all speedbar button
+functions, such as:
+
+     (defun MY-expand-function (text token indent)
+        "Display more information about MY thing.
+     ..."
+
+   This function should then use the TEXT parameter to determine what
+to do.  For example:
+
+       (cond ((string-match "+" text)        ;we have to expand this file
+              ;; Expand stuff here
+              )
+             ((string-match "-" text)        ;we have to contract this node
+              ;; Contract stuff here
+              ))
+
+   When expanding or contracting, you will need to change the `+' or
+`-' into the opposite symbol.  You can do that with
+
+ -- Function: speedbar-change-expand-button-char char
+     Change the expansion button character to CHAR for the current line.
+
+   Our sample would then look like this:
+
+       (cond ((string-match "+" text)        ;we have to expand this file
+              ;; Expand stuff here
+              (speedbar-change-expand-button-char ?-)
+              )
+             ((string-match "-" text)        ;we have to contract this node
+              ;; Contract stuff here
+              (speedbar-change-expand-button-char ?+)
+              ))
+
+   To expand text, the speedbar buffer needs to be writable.  The
+initial button insertion function runs while the buffer is writable,
+but an expand function will need to change that.  The best way is to use
+`speedbar-with-writable'.
+
+ -- Function: speedbar-with-writable &rest forms
+     Allow the speedbar buffer to be writable and evaluate FORMS.
+
+   Once the buffer is writable, then you can insert more information
+using any mechanism you like.  Remember that the cursor will be on the
+expand button just clicked though.  As such, the code might look like
+this:
+
+       (cond ((string-match "+" text)        ;we have to expand this file
+              ;; Expand stuff here
+              (speedbar-change-expand-button-char ?-)
+              (speedbar-with-writable
+                (save-excursion
+                  (end-of-line) (forward-char 1)
+                  ;; Insert goodies here.
+                ))
+              )
+
+   Contracting a node is a bit easier.  You can just use this built in
+function to do the work:
+
+ -- Function: speedbar-delete-subblock indent
+     Delete text from point to indentation level INDENT or greater.
+     Handles end-of-sublist smartly.
+
+     Remember that INDENT is also available as passed into
+     `MY-expand-function'.
+
+   The end result would then look like this:
+
+       (cond ((string-match "+" text)        ;we have to expand this file
+              ;; Expand stuff here
+              (speedbar-change-expand-button-char ?-)
+              (speedbar-with-writable
+                (save-excursion
+                  (end-of-line) (forward-char 1)
+                  ;; Insert goodies here.
+                ))
+              )
+             ((string-match "-" text)        ;we have to contract this node
+              ;; Contract stuff here
+              (speedbar-change-expand-button-char ?+)
+              (speedbar-delete-subblock indent))
+              ))
+
+   Expand buttons, unlike other speedbar operations can cause new data
+to appear in speedbar which would be useful to force onto the screen.
+You can then recenter using this function:
+
+ -- Function: speedbar-center-buffer-smartly
+     Recenter a speedbar buffer so the current indentation level is all
+     visible.  This assumes that the cursor is on a file, or tag of a
+     file which the user is interested in.
 
 
 File: speedbar.info,  Node: Index,  Prev: Extending,  Up: Top
@@ -1198,123 +1387,147 @@ File: speedbar.info,  Node: Index,  Prev: Extending,  Up: Top
 Concept Index
 *************
 
+ [index ]
 * Menu:
 
-* buffer mode:                           Buffer Mode.
-* common keys:                           Basic Key Bindings.
-* create major display mode:             Major Display Modes.
-* create minor display mode:             Minor Display Modes.
-* creating a display:                    Creating a display.
-* customizing:                           Customizing.
-* directory display:                     Directory Display.
-* displays submenu:                      Displays Submenu.
-* extending:                             Extending.
-* faces:                                 Frames and Faces.
-* file flags:                            Directory Display.
-* file key bindings:                     File Key Bindings.
-* file mode:                             File Mode.
-* frame parameters:                      Frames and Faces.
-* gdb:                                   GDB.
-* groups:                                Basic Visuals.
-* gud:                                   GDB.
-* hidden files:                          Hidden Files.
-* hooks:                                 Hooks.
-* Info:                                  Info.
-* introduction:                          Introduction.
-* key bindings:                          Basic Key Bindings.
-* minor display modes:                   Minor Modes.
-* mode switching hotkeys:                Basic Key Bindings.
-* mouse bindings:                        Mouse Bindings.
-* my-fetch-dynamic-tags:                 Tagging Extensions.
-* my-insert-tag-list:                    Tagging Extensions.
-* navigation:                            Basic Key Bindings.
-* power click:                           Mouse Bindings.
-* quitting speedbar:                     Basic Key Bindings.
-* refresh speedbar display:              Basic Key Bindings.
-* RMAIL:                                 RMAIL.
-* scrolling in speedbar:                 Basic Key Bindings.
-* slowbar mode:                          Basic Key Bindings.
-* speedbar-before-delete-hook:           Hooks.
-* speedbar-before-popup-hook:            Hooks.
-* speedbar-button-face:                  Frames and Faces.
-* speedbar-contract-line:                Major Display Modes.
-* speedbar-create-tag-hierarchy:         Tagging Extensions.
-* speedbar-directory-face:               Frames and Faces.
-* speedbar-directory-unshown-regexp:     Version Control.
-* speedbar-dynamic-tags-function-list:   Tagging Extensions.
-* speedbar-edit-line:                    Major Display Modes.
-* speedbar-expand-line:                  Major Display Modes.
-* speedbar-file-face:                    Frames and Faces.
-* speedbar-frame-parameters, Emacs:      Frames and Faces.
-* speedbar-frame-plist, XEmacs:          Frames and Faces.
-* speedbar-get-focus:                    Introduction.
-* speedbar-highlight-face:               Frames and Faces.
-* speedbar-insert-button:                Creating a display.
-* speedbar-insert-generic-list:          Creating a display.
-* speedbar-item-info:                    Major Display Modes.
-* speedbar-item-info-file-helper:        Major Display Modes.
-* speedbar-item-info-tag-helper:         Major Display Modes.
-* speedbar-line-path:                    Major Display Modes.
-* speedbar-load-hook:                    Hooks.
-* speedbar-make-specialized-keymap:      Major Display Modes.
-* speedbar-make-tag-line:                Creating a display.
-* speedbar-mode-hook:                    Hooks.
-* speedbar-obj-alist:                    Directory Display.
+* buffer mode:                           Buffer Mode.         (line   6)
+* common keys:                           Basic Key Bindings.  (line  59)
+* create major display mode:             Major Display Modes. (line   6)
+* create minor display mode:             Minor Display Modes. (line   6)
+* creating a display:                    Creating a display.  (line   6)
+* customizing:                           Customizing.         (line   6)
+* directory display:                     Directory Display.   (line   6)
+* displays submenu:                      Displays Submenu.    (line   6)
+* extending:                             Extending.           (line   6)
+* faces:                                 Frames and Faces.    (line   6)
+* file flags:                            Directory Display.   (line  51)
+* file key bindings:                     File Key Bindings.   (line   6)
+* file mode:                             File Mode.           (line   6)
+* frame parameters:                      Frames and Faces.    (line   6)
+* gdb:                                   GDB.                 (line   6)
+* groups:                                Basic Visuals.       (line  27)
+* gud:                                   GDB.                 (line   6)
+* hidden files:                          Hidden Files.        (line   6)
+* hooks:                                 Hooks.               (line   6)
+* Info:                                  Info.                (line   6)
+* introduction:                          Introduction.        (line   6)
+* key bindings:                          Basic Key Bindings.  (line   6)
+* minor display modes:                   Minor Modes.         (line   6)
+* mode switching hotkeys:                Basic Key Bindings.  (line  46)
+* mouse bindings:                        Mouse Bindings.      (line   6)
+* my-fetch-dynamic-tags:                 Tagging Extensions.  (line  11)
+* my-insert-tag-list:                    Tagging Extensions.  (line  25)
+* navigation:                            Basic Key Bindings.  (line  24)
+* power click:                           Mouse Bindings.      (line  25)
+* quitting speedbar:                     Basic Key Bindings.  (line   9)
+* refresh speedbar display:              Basic Key Bindings.  (line  16)
+* RMAIL:                                 RMAIL.               (line   6)
+* slowbar mode:                          Basic Key Bindings.  (line  19)
+* speedbar-before-delete-hook:           Hooks.               (line  25)
+* speedbar-before-popup-hook:            Hooks.               (line  21)
+* speedbar-button-face:                  Frames and Faces.    (line  10)
+* speedbar-center-buffer-smartly:        Expand Buttons.      (line 105)
+* speedbar-change-expand-button-char:    Expand Buttons.      (line  37)
+* speedbar-contract-line:                Major Display Modes. (line  27)
+* speedbar-create-tag-hierarchy:         Tagging Extensions.  (line  29)
+* speedbar-delete-subblock:              Expand Buttons.      (line  77)
+* speedbar-directory-face:               Frames and Faces.    (line  15)
+* speedbar-directory-unshown-regexp:     Version Control.     (line  13)
+* speedbar-dynamic-tags-function-list:   Tagging Extensions.  (line  32)
+* speedbar-edit-line:                    Major Display Modes. (line  22)
+* speedbar-expand-line:                  Major Display Modes. (line  23)
+* speedbar-file-face:                    Frames and Faces.    (line  11)
+* speedbar-frame-parameters, Emacs:      Frames and Faces.    (line  35)
+* speedbar-frame-plist, XEmacs:          Frames and Faces.    (line  40)
+* speedbar-get-focus:                    Introduction.        (line  28)
+* speedbar-highlight-face:               Frames and Faces.    (line  26)
+* speedbar-insert-button:                Creating Buttons.    (line  12)
+* speedbar-insert-generic-list:          Generic Tag Lists.   (line  18)
+* speedbar-item-info:                    Major Display Modes. (line  87)
+* speedbar-item-info-file-helper:        Major Display Modes. (line  95)
+* speedbar-item-info-tag-helper:         Major Display Modes. (line  98)
+* speedbar-line-directory:               Major Display Modes. (line  32)
+* speedbar-load-hook:                    Hooks.               (line  13)
+* speedbar-make-specialized-keymap:      Major Display Modes. (line  17)
+* speedbar-make-tag-line:                Creating Buttons.    (line  36)
+* speedbar-mode-hook:                    Hooks.               (line  28)
+* speedbar-obj-alist:                    Directory Display.   (line  53)
 * speedbar-prefix-group-tag-hierarchy:   Tag Hierarchy Methods.
-* speedbar-reconfigure-keymaps-hook:     Hooks.
-* speedbar-scanner-reset-hook:           Hooks.
-* speedbar-selected-face:                Frames and Faces.
+                                                              (line  17)
+* speedbar-reconfigure-keymaps-hook:     Hooks.               (line  16)
+* speedbar-scanner-reset-hook:           Hooks.               (line  34)
+* speedbar-selected-face:                Frames and Faces.    (line  22)
 * speedbar-simple-group-tag-hierarchy:   Tag Hierarchy Methods.
+                                                              (line  21)
 * speedbar-sort-tag-hierarchy:           Tag Hierarchy Methods.
-* speedbar-tag-face:                     Frames and Faces.
+                                                              (line  25)
+* speedbar-tag-face:                     Frames and Faces.    (line  19)
 * speedbar-tag-group-name-minimum-length: Tag Hierarchy Methods.
+                                                              (line  35)
 * speedbar-tag-hierarchy-method:         Tag Hierarchy Methods.
+                                                              (line  11)
 * speedbar-tag-regroup-maximum-length:   Tag Hierarchy Methods.
+                                                              (line  59)
 * speedbar-tag-split-minimum-length:     Tag Hierarchy Methods.
-* speedbar-timer-hook:                   Hooks.
+                                                              (line  52)
+* speedbar-timer-hook:                   Hooks.               (line  31)
 * speedbar-trim-words-tag-hierarchy:     Tag Hierarchy Methods.
-* speedbar-vc-directory-enable-hook:     Version Control.
-* speedbar-vc-in-control-hook:           Version Control.
-* speedbar-vc-indicator:                 Version Control.
-* speedbar-visiting-file-hook:           Hooks.
-* speedbar-visiting-tag-hook:            Hooks.
+                                                              (line  16)
+* speedbar-vc-directory-enable-hook:     Version Control.     (line  17)
+* speedbar-vc-in-control-hook:           Version Control.     (line  23)
+* speedbar-vc-indicator:                 Version Control.     (line  27)
+* speedbar-visiting-file-hook:           Hooks.               (line   9)
+* speedbar-visiting-tag-hook:            Hooks.               (line  10)
+* speedbar-with-writable:                Expand Buttons.      (line  56)
 * tag groups:                            Tag Hierarchy Methods.
+                                                              (line   6)
 * tag hierarchy:                         Tag Hierarchy Methods.
+                                                              (line   6)
 * tag sorting:                           Tag Hierarchy Methods.
-* tags:                                  Basic Visuals.
-* vc extensions:                         Version Control.
-* version control:                       Version Control.
-* visuals:                               Basic Visuals.
+                                                              (line   6)
+* tags:                                  Basic Visuals.       (line  61)
+* vc extensions:                         Version Control.     (line   6)
+* version control:                       Version Control.     (line   6)
+* visuals:                               Basic Visuals.       (line   6)
 
 
 
 Tag Table:
-Node: Top1266
-Node: Introduction3048
-Node: Basic Navigation4611
-Node: Basic Key Bindings5055
-Node: Basic Visuals7240
-Node: Mouse Bindings11124
-Node: Displays Submenu12744
-Node: File Mode13418
-Node: Directory Display14024
-Node: Hidden Files17057
-Node: File Key Bindings18501
-Node: Buffer Mode19930
-Node: Minor Modes21044
-Node: RMAIL21899
-Node: Info22792
-Node: GDB23395
-Node: Customizing24058
-Node: Frames and Faces24868
-Node: Tag Hierarchy Methods26191
-Node: Version Control28406
-Node: Hooks29748
-Node: Extending30983
-Node: Minor Display Modes32028
-Node: Major Display Modes34014
-Node: Tagging Extensions38776
-Node: Creating a display40422
-Node: Index44951
+Node: Top1466
+Node: Introduction3242
+Node: Basic Navigation4806
+Node: Basic Key Bindings5251
+Node: Basic Visuals7392
+Node: Mouse Bindings11347
+Node: Displays Submenu12972
+Node: File Mode13652
+Node: Directory Display14259
+Node: Hidden Files17299
+Node: File Key Bindings18746
+Node: Buffer Mode20180
+Node: Minor Modes21295
+Node: RMAIL22151
+Node: Info23049
+Node: GDB23656
+Node: Customizing24323
+Node: Frames and Faces25134
+Node: Tag Hierarchy Methods26472
+Node: Version Control28698
+Node: Hooks30045
+Node: Extending31301
+Node: Minor Display Modes32347
+Node: Major Display Modes34338
+Ref: speedbar-stealthy-function-list39277
+Node: Tagging Extensions40186
+Ref: speedbar-dynamic-tags-function-list41678
+Node: Creating a display42458
+Node: Creating Buttons43623
+Node: Generic Tag Lists46264
+Node: Expand Buttons48527
+Ref: speedbar-change-expand-button-char49842
+Ref: speedbar-with-writable50606
+Ref: speedbar-delete-subblock51393
+Ref: speedbar-center-buffer-smartly52455
+Node: Index52641
 
 End Tag Table

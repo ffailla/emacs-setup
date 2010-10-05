@@ -1,9 +1,9 @@
 ;;; wisent-python-wy.el --- Generated parser support file
 
-;; Copyright (C) 2002, 2003, 2004 Richard Kim
+;; Copyright (C) 2002, 2003, 2004, 2007 Richard Kim
 
 ;; Author: Eric M. Ludlam <zappo@projectile.siege-engine.com>
-;; Created: 2004-07-20 14:35:43-0400
+;; Created: 2010-08-22 20:55:22-0400
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -21,16 +21,13 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
 ;; generated from the grammar file wisent-python.wy.
-
-;;; History:
-;;
 
 ;;; Code:
 
@@ -42,6 +39,7 @@
 (defconst wisent-python-wy--keyword-table
   (semantic-lex-make-keyword-table
    '(("and" . AND)
+     ("as" . AS)
      ("assert" . ASSERT)
      ("break" . BREAK)
      ("class" . CLASS)
@@ -79,6 +77,7 @@
      ("pass" summary "Statement that does nothing")
      ("or" summary "Binary logical 'or' operator")
      ("not" summary "Unary boolean negation operator")
+     ("lambda" summary "Create anonymous function")
      ("is" summary "Binary operator that tests for object equality")
      ("in" summary "Part of 'for' statement ")
      ("import" summary "Load specified modules")
@@ -86,33 +85,29 @@
      ("global" summary "Declare one or more symbols as global symbols")
      ("from" summary "Modify behavior of 'import' statement")
      ("for" summary "Start a 'for' loop")
-     ("finally" summary "Specify code to be executed after 'try' statements whether or not an exception occured")
-     ("exec" summary "Dynamically execute python code")
+     ("finally" summary "Specify code to be executed after 'try' statements whether or not an exception occurred")
+     ("exec" summary "Dynamically execute Python code")
      ("except" summary "Specify exception handlers along with 'try' keyword")
      ("else" summary "Start the 'else' clause following an 'if' statement")
      ("elif" summary "Shorthand for 'else if' following an 'if' statement")
      ("del" summary "Delete specified objects, i.e., undo what assignment did")
      ("def" summary "Define a new function")
-     ("continue" summary "Skip to the next interation of enclosing for or whilte loop")
+     ("continue" summary "Skip to the next iteration of enclosing 'for' or 'while' loop")
      ("class" summary "Define a new class")
-     ("break" summary "Terminate 'for' or 'while loop")
+     ("break" summary "Terminate 'for' or 'while' loop")
      ("assert" summary "Raise AssertionError exception if <expr> is false")
+     ("as" summary "EXPR as NAME makes value of EXPR available as variable NAME")
      ("and" summary "Logical AND binary operator ... ")))
   "Table of language keywords.")
 
 (defconst wisent-python-wy--token-table
   (semantic-lex-make-type-table
-   '(("<no-type>"
-      (DEDENT)
-      (INDENT))
-     ("symbol"
+   '(("symbol"
       (NAME))
      ("number"
       (NUMBER_LITERAL))
      ("string"
       (STRING_LITERAL))
-     ("charquote"
-      (BACKSLASH . "\\"))
      ("punctuation"
       (BACKQUOTE . "`")
       (ASSIGN . "=")
@@ -152,11 +147,6 @@
       (EXPEQ . "**=")
       (GTGTEQ . ">>=")
       (LTLTEQ . "<<="))
-     ("semantic-list"
-      (INDENT_BLOCK . "^\\s-+")
-      (BRACK_BLOCK . "^\\[")
-      (BRACE_BLOCK . "^{")
-      (PAREN_BLOCK . "^("))
      ("close-paren"
       (RBRACK . "]")
       (RBRACE . "}")
@@ -165,9 +155,23 @@
       (LBRACK . "[")
       (LBRACE . "{")
       (LPAREN . "("))
+     ("block"
+      (BRACK_BLOCK . "(LBRACK RBRACK)")
+      (BRACE_BLOCK . "(LBRACE RBRACE)")
+      (PAREN_BLOCK . "(LPAREN RPAREN)"))
+     ("indentation"
+      (INDENT_BLOCK . "(INDENT DEDENT)")
+      (DEDENT . "[^:INDENT:]")
+      (INDENT . "^\\s-+"))
      ("newline"
-      (NEWLINE)))
-   '(("charquote" string t)))
+      (NEWLINE . "\n"))
+     ("charquote"
+      (BACKSLASH . "\\")))
+   '(("keyword" :declared t)
+     ("symbol" :declared t)
+     ("number" :declared t)
+     ("punctuation" :declared t)
+     ("block" :declared t)))
   "Table of lexical tokens.")
 
 (defconst wisent-python-wy--parse-table
@@ -175,7 +179,7 @@
     (eval-when-compile
       (require 'wisent-comp))
     (wisent-compile-grammar
-     '((NEWLINE LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK PAREN_BLOCK BRACE_BLOCK BRACK_BLOCK INDENT_BLOCK LTLTEQ GTGTEQ EXPEQ DIVDIVEQ DIVDIV LTLT GTGT EXPONENT EQ GE LE PLUSEQ MINUSEQ MULTEQ DIVEQ MODEQ AMPEQ OREQ HATEQ LTGT NE HAT LT GT AMP MULT DIV MOD PLUS MINUS PERIOD TILDE BAR COLON SEMICOLON COMMA ASSIGN BACKQUOTE BACKSLASH STRING_LITERAL NUMBER_LITERAL NAME INDENT DEDENT AND ASSERT BREAK CLASS CONTINUE DEF DEL ELIF ELSE EXCEPT EXEC FINALLY FOR FROM GLOBAL IF IMPORT IN IS LAMBDA NOT OR PASS PRINT RAISE RETURN TRY WHILE YIELD)
+     '((BACKSLASH NEWLINE INDENT DEDENT INDENT_BLOCK PAREN_BLOCK BRACE_BLOCK BRACK_BLOCK LPAREN RPAREN LBRACE RBRACE LBRACK RBRACK LTLTEQ GTGTEQ EXPEQ DIVDIVEQ DIVDIV LTLT GTGT EXPONENT EQ GE LE PLUSEQ MINUSEQ MULTEQ DIVEQ MODEQ AMPEQ OREQ HATEQ LTGT NE HAT LT GT AMP MULT DIV MOD PLUS MINUS PERIOD TILDE BAR COLON SEMICOLON COMMA ASSIGN BACKQUOTE STRING_LITERAL NUMBER_LITERAL NAME AND AS ASSERT BREAK CLASS CONTINUE DEF DEL ELIF ELSE EXCEPT EXEC FINALLY FOR FROM GLOBAL IF IMPORT IN IS LAMBDA NOT OR PASS PRINT RAISE RETURN TRY WHILE YIELD)
        nil
        (goal
 	((NEWLINE))
@@ -283,6 +287,9 @@
 	((testlist)
 	 nil))
        (yield_stmt
+	((YIELD)
+	 (wisent-raw-tag
+	  (semantic-tag-new-code $1 nil)))
 	((YIELD testlist)
 	 (wisent-raw-tag
 	  (semantic-tag-new-code $1 nil))))
@@ -323,14 +330,14 @@
 	((import_as_name_list COMMA import_as_name)
 	 nil))
        (import_as_name
-	((NAME name_name_opt)
+	((NAME as_name_opt)
 	 nil))
        (dotted_as_name
-	((dotted_name name_name_opt)))
-       (name_name_opt
+	((dotted_name as_name_opt)))
+       (as_name_opt
 	(nil)
-	((NAME NAME)
-	 nil))
+	((AS NAME)
+	 (identity $2)))
        (dotted_name
 	((NAME))
 	((dotted_name PERIOD NAME)
@@ -428,10 +435,12 @@
 	  (semantic-tag-new-function $2 nil $3))))
        (function_parameter_list
 	((PAREN_BLOCK)
-	 (semantic-parse-region
-	  (car $region1)
-	  (cdr $region1)
-	  'function_parameters 1)))
+	 (let
+	     ((wisent-python-EXPANDING-block t))
+	   (semantic-parse-region
+	    (car $region1)
+	    (cdr $region1)
+	    'function_parameters 1))))
        (function_parameters
 	((LPAREN)
 	 nil)
@@ -450,16 +459,20 @@
        (class_declaration
 	((CLASS NAME paren_class_list_opt COLON suite)
 	 (wisent-raw-tag
-	  (semantic-tag-new-type $2 $1 $5 $3))))
+	  (semantic-tag-new-type $2 $1 $5
+				 (cons $3 nil)))))
        (paren_class_list_opt
 	(nil)
 	((paren_class_list)))
        (paren_class_list
 	((PAREN_BLOCK)
-	 (semantic-parse-region
-	  (car $region1)
-	  (cdr $region1)
-	  'paren_classes 1)))
+	 (let
+	     ((wisent-python-EXPANDING-block t))
+	   (mapcar 'semantic-tag-name
+		   (semantic-parse-region
+		    (car $region1)
+		    (cdr $region1)
+		    'paren_classes 1)))))
        (paren_classes
 	((LPAREN)
 	 nil)
@@ -472,7 +485,7 @@
 	 (wisent-raw-tag
 	  (semantic-tag-new-variable $1 nil nil))))
        (paren_class
-	((NAME)))
+	((dotted_name)))
        (test
 	((test_test))
 	((lambdef)))
@@ -668,6 +681,76 @@
 ;;; Analyzers
 ;;
 (require 'semantic-lex)
+
+(define-lex-keyword-type-analyzer wisent-python-wy--<keyword>-keyword-analyzer
+  "keyword analyzer for <keyword> tokens."
+  "\\(\\sw\\|\\s_\\)+")
+
+(define-lex-block-type-analyzer wisent-python-wy--<block>-block-analyzer
+  "block analyzer for <block> tokens."
+  "\\s(\\|\\s)"
+  '((("(" LPAREN PAREN_BLOCK)
+     ("{" LBRACE BRACE_BLOCK)
+     ("[" LBRACK BRACK_BLOCK))
+    (")" RPAREN)
+    ("}" RBRACE)
+    ("]" RBRACK))
+  )
+
+(define-lex-regex-type-analyzer wisent-python-wy--<symbol>-regexp-analyzer
+  "regexp analyzer for <symbol> tokens."
+  "\\(\\sw\\|\\s_\\)+"
+  nil
+  'NAME)
+
+(define-lex-regex-type-analyzer wisent-python-wy--<number>-regexp-analyzer
+  "regexp analyzer for <number> tokens."
+  semantic-lex-number-expression
+  nil
+  'NUMBER_LITERAL)
+
+(define-lex-string-type-analyzer wisent-python-wy--<punctuation>-string-analyzer
+  "string analyzer for <punctuation> tokens."
+  "\\(\\s.\\|\\s$\\|\\s'\\)+"
+  '((BACKQUOTE . "`")
+    (ASSIGN . "=")
+    (COMMA . ",")
+    (SEMICOLON . ";")
+    (COLON . ":")
+    (BAR . "|")
+    (TILDE . "~")
+    (PERIOD . ".")
+    (MINUS . "-")
+    (PLUS . "+")
+    (MOD . "%")
+    (DIV . "/")
+    (MULT . "*")
+    (AMP . "&")
+    (GT . ">")
+    (LT . "<")
+    (HAT . "^")
+    (NE . "!=")
+    (LTGT . "<>")
+    (HATEQ . "^=")
+    (OREQ . "|=")
+    (AMPEQ . "&=")
+    (MODEQ . "%=")
+    (DIVEQ . "/=")
+    (MULTEQ . "*=")
+    (MINUSEQ . "-=")
+    (PLUSEQ . "+=")
+    (LE . "<=")
+    (GE . ">=")
+    (EQ . "==")
+    (EXPONENT . "**")
+    (GTGT . ">>")
+    (LTLT . "<<")
+    (DIVDIV . "//")
+    (DIVDIVEQ . "//=")
+    (EXPEQ . "**=")
+    (GTGTEQ . ">>=")
+    (LTLTEQ . "<<="))
+  'punctuation)
 
 
 ;;; Epilogue
