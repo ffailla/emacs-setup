@@ -64,9 +64,9 @@
 ;; ac-slime
 ;;  * http://github.com/purcell/ac-slime
 ;;
-;(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
-;(require 'ac-slime)
-;(add-hook 'slime-mode-hook 'set-up-slime-ac)
+(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
+(require 'ac-slime)
+(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
 ;;
 ;; highlight-parentheses
@@ -146,7 +146,6 @@ by using nxml's indentation rules."
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/magit/")
 (require 'magit)
-;;(autoload 'magit "magit" nil t)
 
 ;;
 ;; log4j mode
@@ -202,23 +201,6 @@ by using nxml's indentation rules."
 ;;
 (add-to-list 'auto-mode-alist '("\\COMMIT_EDITMSG\\'" . diff-mode))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(diff-added ((t (:foreground "#559944"))))
- '(diff-context ((t nil)))
- '(diff-file-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
- '(diff-function ((t (:foreground "#00bbdd"))))
- '(diff-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
- '(diff-hunk-header ((t (:foreground "#fbde2d"))))
- '(diff-nonexistent ((t (:inherit diff-file-header :strike-through nil))))
- '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
- '(diff-removed ((t (:foreground "#de1923")))))(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
  '(diff-added ((t (:foreground "#559944"))))
  '(diff-context ((t nil)))
  '(diff-file-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
@@ -279,7 +261,6 @@ by using nxml's indentation rules."
 ;;  * http://ess.r-project.org/
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
-(require 'ess-site)
 (autoload 'ess-site "ess-site" nil t)
 (add-to-list 'auto-mode-alist '("\\.R\\'" . ess-site))
 ;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
