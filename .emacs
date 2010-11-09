@@ -3,6 +3,7 @@
 (require 'cl)
 
 ;; init env 
+(set-face-attribute 'default (selected-frame) :height 100)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
@@ -10,6 +11,11 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (setenv "PATH" (concat (getenv "PATH") ":/opt/local/bin:/usr/local/bin"))
 (setq exec-path (append exec-path '("/opt/local/bin" "/usr/local/bin")))
+
+;; enable column number mode
+(add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml|csv|clj|java|cs|dat|h|cpp|c\\)\\'" . column-number-mode))
+
+(setq ediff-split-window-function 'split-window-horizontally)
 
 ;;; This was installed by package-install.el.
 ;;; This provides support for the package system and
@@ -77,11 +83,14 @@
   (highlight-parentheses-mode t)
   (paredit-mode t)
   (progn
+    (define-key clojure-mode-map "\C-cc" 'comment-region)
+    (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
     (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
     (setq cdt-source-path 
 	  (reduce (lambda (acc f)
 		    (concat (expand-file-name acc) ":" (expand-file-name f)))
-		  '("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		  '("src/main/clojure"
+		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
 		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
 		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
     (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
@@ -104,9 +113,9 @@
 ;; ac-slime
 ;;  * http://github.com/purcell/ac-slime
 ;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
-(require 'ac-slime)
-(add-hook 'slime-mode-hook 'set-up-slime-ac)
+;;(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
+;;(require 'ac-slime)
+;;(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
 ;;
 ;; highlight-parentheses
@@ -216,9 +225,12 @@ by using nxml's indentation rules."
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/jdee/lisp"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/cedet/common"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
-(autoload 'cedet "cedet" nil t)
-(autoload 'jde "jde" nil t)
-(add-to-list 'auto-mode-alist '("\\.java\\'" . jde))
+;;(autoload 'cedet "cedet" nil t)
+;;(autoload 'jde "jde" nil t)
+;;(add-to-list 'auto-mode-alist '("\\.java\\'" . jde))
+(defun start-jde ()
+  (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
+  (require 'jde))
 
 ;;
 ;; diff-mode customization
@@ -328,9 +340,21 @@ by using nxml's indentation rules."
 	 auto-mode-alist))
 
 ;;
+;; csv-mode
+;;  * http://www.emacswiki.org/emacs/csv-mode.el
+(add-to-list 'load-path "~/.emacs.d/site-lisp/csv-mode")
+;;(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
+;;(autoload 'csv-mode "csv-mode" "Major mode for editing comma-separated value files." t)
+;;(require 'csv-mode)
+
+;;
 ;; start emacs server
 ;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
 (server-start)
+
+(defalias 'ppx 'pprint-xml)
+(defalias 'ttl 'toggle-truncate-lines)
+(defalias 'rnb 'rename-buffer)
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
 				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))

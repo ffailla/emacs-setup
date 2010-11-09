@@ -140,7 +140,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(top_builddir)/./install-sh -c -d
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /Users/ffailla/emacs.d/site-lisp
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -150,14 +150,15 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 top_builddir = .
 top_srcdir = .
-lispdir = $(datadir)/emacs/site-lisp
-#lispdir = /Users/ffailla/.emacs.d/site-lisp
+
+#lispdir = $(datadir)/emacs/site-lisp
+lispdir = /Users/ffailla/.emacs.d/site-lisp
 sitestartdir = $(sysconfdir)/emacs/site-start.d
-lisp_DATA = magit.el magit.elc magit-svn.el magit-svn.elc magit-topgit.el magit-topgit.elc
+lisp_DATA = magit.el magit.elc
 sitestart_DATA = 50magit.el
 info_TEXINFOS = magit.texi
-CLEANFILES = magit-*.elc
-EXTRA_DIST = magit.el 50magit.el magit.spec magit-svn.el magit-topgit.el
+CLEANFILES = magit.elc
+EXTRA_DIST = magit.el 50magit.el magit.spec
 all: all-am
 
 .SUFFIXES:
@@ -696,8 +697,8 @@ uninstall-am: uninstall-dvi-am uninstall-html-am uninstall-info-am \
 
 %.elc: %.el
 	@if [ $(builddir) != $(srcdir) ]; then ln $(srcdir)/$*.el .; fi
-	emacs --batch --eval "(add-to-list 'load-path \"$(srcdir)\")" \
-	              --eval '(byte-compile-file "$*.el")'
+#	emacs --batch --eval '(byte-compile-file "$*.el")'
+	/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval '(byte-compile-file "$*.el")'
 	@if [ $(builddir) != $(srcdir) ]; then rm -f $*.el; fi
 
 elpa: magit-pkg.el info

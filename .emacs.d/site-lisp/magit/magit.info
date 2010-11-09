@@ -307,10 +307,6 @@ current commit in HEAD.
    Typing `C-c C-s' will toggle the `--signoff' option.  The default is
 determined by the `magit-commit-signoff' customization variable.
 
-   Typing `C-c C-e' will toggle the `--allow-empty' option.  This
-allows you to make commits that serve as notes, without including any
-changes.
-
    If you change your mind and don't want to go ahead with your commit
 while you are in the `*magit-log-edit*' buffer, you can just switch to
 another buffer, continue editing there, staging and unstaging things
@@ -694,9 +690,8 @@ that it pulls from the new remote branch.
 
    Typing `f' will run `git remote update'.  With a prefix arg, it will
 prompt for the name of the remote to update.  Typing `F' will run `git
-pull' (with a prefix arg will pull with `--rebase').  When you don't
-have a default branch configured to be pulled into the current one, you
-will be asked for it.
+pull'.  When you don't have a default branch configured to be pulled
+into the current one, you will be asked for it.
 
    If there is a default remote repository for the current branch, Magit
 will show that repository in the status buffer header.
@@ -718,12 +713,12 @@ File: magit.info,  Node: Interfacing with Subversion,  Next: Using Git Directly,
 20 Interfacing with Subversion
 ******************************
 
-Typing `N r' runs `git svn rebase', typing `N c' runs `git svn dcommit'
-and typing `N f' runs `git svn fetch'.
+Typing `N r' runs `git svn rebase' and typing `N c' runs `git svn
+dcommit'.
 
-   `N s' will prompt you for a (numeric, Subversion) revision and then
+   `N f' will prompt you for a (numeric, Subversion) revision and then
 search for a corresponding Git sha1 for the commit. This is limited to
-the path of the remote Subversion repository. With a prefix (`C-u N s'
+the path of the remote Subversion repository. With a prefix (`C-u N f'
 the user will also be prompted for a branch to search in.
 
 
@@ -747,20 +742,20 @@ Node: Sections3198
 Node: Status5748
 Node: Untracked files8477
 Node: Staging and Committing9424
-Node: History12764
-Node: Reflogs15499
-Node: Diffing15887
-Node: Tagging16485
-Node: Resetting16929
-Node: Stashing18453
-Node: Branching19034
-Node: The branch list20025
-Node: Wazzup21007
-Node: Merging21795
-Node: Rebasing23266
-Node: Rewriting24081
-Node: Pushing and Pulling26935
-Node: Interfacing with Subversion28624
-Node: Using Git Directly29192
+Node: History12618
+Node: Reflogs15353
+Node: Diffing15741
+Node: Tagging16339
+Node: Resetting16783
+Node: Stashing18307
+Node: Branching18888
+Node: The branch list19879
+Node: Wazzup20861
+Node: Merging21649
+Node: Rebasing23120
+Node: Rewriting23935
+Node: Pushing and Pulling26789
+Node: Interfacing with Subversion28432
+Node: Using Git Directly28965
 
 End Tag Table

@@ -154,7 +154,7 @@ public class DefaultFormatter implements JisqlFormatter {
                                             //FF metaData.getColumnDisplaySize(i)
 					    getColumnDisplaySize(metaData, i)));
                 if (i == numColumns)
-                    out.print("-|");
+                    out.print("-| ");
                 else
                     out.print("-+-");
             }
@@ -215,25 +215,25 @@ public class DefaultFormatter implements JisqlFormatter {
      */
 	private String formatLabel(String s, int width) {
 		if (s == null)
-			s = "NULL";
+		    s = "NULL";
 
 		if (columnWidth != 0) {
-			if (width > columnWidth)
-				width = columnWidth;
+		    if (width > columnWidth)
+			width = columnWidth;
 		}
 
 		if (width < s.length())
-			width = s.length();
+		    width = s.length();
 
 		int len = s.length();
 
 		if (len >= width)
-			return s.substring(0, width);
+		    return s.substring(0, width);
 
 		int fillWidth = width - len;
 		StringBuffer fill = new StringBuffer(fillWidth);
 		for (int i = 0; i < fillWidth; ++i)
-			fill.append(spacer);
+		    fill.append(spacer);
 		if (leftJustify)
 			return s + fill;
 		else if (s.startsWith("-"))
@@ -254,27 +254,27 @@ public class DefaultFormatter implements JisqlFormatter {
 	private String formatSeparator(String s, int width) {
 	    s = "NULL";
 
-		if (columnWidth != 0) {
-			if (width > columnWidth)
-				width = columnWidth;
-		}
-
-		if (width < s.length())
-			width = s.length();
-
-		int len = s.length();
-
-		if (len >= width)
-			width = len;
-
-		StringBuffer fill = new StringBuffer(width);
-		for (int i = 0; i < width; ++i)
-			fill.append('-');
-
-        if( trimColumns )
-		    return fill.toString().trim();
-        else
-		    return fill.toString();
+	    if (columnWidth != 0) {
+		if (width > columnWidth)
+		    width = columnWidth;
+	    }
+	    
+	    if (width < s.length())
+		width = s.length();
+	    
+	    int len = s.length();
+	    
+	    if (len >= width)
+		width = len;
+	    
+	    StringBuffer fill = new StringBuffer(width);
+	    for (int i = 0; i < width; ++i)
+		fill.append('-');
+	    
+	    if( trimColumns )
+		return fill.toString().trim();
+	    else
+		return fill.toString();
 	}
 
 	/**
