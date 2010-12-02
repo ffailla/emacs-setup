@@ -5,7 +5,7 @@
 ;; Author: Eric S Fraga
 ;; Keywords: literate programming, reproducible research, accounting
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 
 ;; This file is part of GNU Emacs.
 
@@ -38,7 +38,6 @@
 
 ;;; Code:
 (require 'ob)
-(require 'org)
 
 (defvar org-babel-default-header-args:ledger
   '((:results . "output") (:cmdline . "bal"))
@@ -50,13 +49,17 @@ called by `org-babel-execute-src-block'."
   (message "executing Ledger source code block")
   (let ((result-params (split-string (or (cdr (assoc :results params)) "")))
 	(cmdline (cdr (assoc :cmdline params)))
-        (in-file (make-temp-file "org-babel-ledger"))
-	(out-file (make-temp-file "org-babel-ledger-output"))
-	)
+        (in-file (org-babel-temp-file "ledger-"))
+	(out-file (org-babel-temp-file "ledger-output-")))
     (with-temp-file in-file (insert body))
-    (message (concat "ledger -f " in-file " " cmdline))
+    (message (concat "ledger"
+		     " -f " (org-babel-process-file-name in-file)
+		     " " cmdline))
     (with-output-to-string
-      (shell-command (concat "ledger -f " in-file " " cmdline " > " out-file)))
+      (shell-command (concat "ledger"
+			     " -f " (org-babel-process-file-name in-file)
+			     " " cmdline
+			     " > " (org-babel-process-file-name out-file))))
     (with-temp-buffer (insert-file-contents out-file) (buffer-string))))
 
 (defun org-babel-prep-session:ledger (session params)

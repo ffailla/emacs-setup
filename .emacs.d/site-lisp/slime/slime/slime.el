@@ -198,6 +198,9 @@ The default is nil, as this feature can be a security risk."
   :type 'integer
   :group 'slime-lisp)
 
+(defvar slime-connect-host-history (list slime-lisp-host))
+(defvar slime-connect-port-history (list (prin1-to-string slime-port)))
+
 (defvar slime-net-valid-coding-systems
   '((iso-latin-1-unix nil "iso-latin-1-unix")
     (iso-8859-1-unix  nil "iso-latin-1-unix")
@@ -1126,8 +1129,14 @@ The rules for selecting the arguments are rather complicated:
                (list :program program :program-args args))))))
 
 (defun slime-lookup-lisp-implementation (table name)
-  (destructuring-bind (name (prog &rest args) &rest keys) (assoc name table)
-    (list* :name name :program prog :program-args args keys)))
+  (let ((arguments (rest (assoc name table))))
+    (unless arguments
+      (error "Could not find lisp implementation with the name '%S'" name))
+    (when (and (= (length arguments) 1)
+               (functionp (first arguments)))
+      (setf arguments (funcall (first arguments))))
+    (destructuring-bind ((prog &rest args) &rest keys) arguments
+      (list* :name name :program prog :program-args args keys))))
 
 (defun* slime-start (&key (program inferior-lisp-program) program-args 
                           directory
@@ -1170,9 +1179,12 @@ DIRECTORY change to this directory before starting the process.
 
 (defun slime-connect (host port &optional coding-system)
   "Connect to a running Swank server. Return the connection."
-  (interactive (list (read-from-minibuffer "Host: " slime-lisp-host)
-                     (read-from-minibuffer "Port: " (format "%d" slime-port)
-                                           nil t)))
+  (interactive (list (read-from-minibuffer
+                      "Host: " (first slime-connect-host-history)
+                      nil nil '(slime-connect-host-history . 1))
+                     (string-to-int (read-from-minibuffer
+                      "Port: " (first slime-connect-port-history)
+                      nil nil '(slime-connect-port-history . 1)))))
   (when (and (interactive-p) slime-net-processes
              (y-or-n-p "Close old connections first? "))
     (slime-disconnect-all))
@@ -2639,14 +2651,18 @@ to it depending on its sign."
     (run-with-timer (or timeout 0.2) nil 'delete-overlay overlay)))
 
 (defun slime-compile-string (string start-offset)
-  (slime-eval-async 
-   `(swank:compile-string-for-emacs
-     ,string
-     ,(buffer-name)
-     ,start-offset
-     ,(if (buffer-file-name) (slime-to-lisp-filename (buffer-file-name)))
-     ',slime-compilation-policy)
-   #'slime-compilation-finished))
+  (let* ((line (save-excursion
+                 (goto-char start-offset)
+                 (list (line-number-at-pos) (1+ (current-column)))))
+         (position `((:position ,start-offset) (:line ,@line))))
+    (slime-eval-async 
+      `(swank:compile-string-for-emacs
+        ,string
+        ,(buffer-name)
+        ',position
+        ,(if (buffer-file-name) (slime-to-lisp-filename (buffer-file-name)))
+        ',slime-compilation-policy)
+      #'slime-compilation-finished)))
 
 (defun slime-compilation-finished (result)
   (with-struct (slime-compilation-result. notes duration successp
@@ -3259,12 +3275,12 @@ you should check twice before modifying.")
     ((:function-name name)
      (let ((case-fold-search t)
            (name (regexp-quote name)))
-       (when (or 
-              (re-search-forward 
-               (format "\\s *(def\\(\\s_\\|\\sw\\)*\\s +%s\\S_" name) nil t)
-              (re-search-forward 
-               (format "\\s *(def\\(\\s_\\|\\sw\\)*\\s +(*%s\\S_" name) nil t)
-              (re-search-forward 
+       (goto-char (point-min))
+       (when (or
+              (re-search-forward
+               (format "\\s *(def\\(\\s_\\|\\sw\\)*\\s +(*%s\\S_"
+                       (regexp-quote name)) nil t)
+              (re-search-forward
                (format "[( \t]%s\\>\\(\\s \\|$\\)" name) nil t))
          (goto-char (match-beginning 0)))))
     ((:method name specializers &rest qualifiers)
@@ -3322,11 +3338,20 @@ Don't move if there are multiple or no calls in the current defun."
   (save-restriction 
     (narrow-to-defun)
     (let ((start (point))
-          (regexp (concat "(" fname "[\n \t]")))
+          (regexp (concat "(" fname "[)\n \t]"))
+          (case-fold-search t))
       (cond ((and (re-search-forward regexp nil t)
                   (not (re-search-forward regexp nil t)))
              (goto-char (match-beginning 0)))
             (t (goto-char start))))))
+
+(defun slime-search-edit-path (edit-path)
+  "Move to EDIT-PATH starting at the current toplevel form."
+  (when edit-path
+    (unless (and (= (current-column) 0)
+                 (looking-at "("))
+      (beginning-of-defun))
+    (slime-forward-source-path edit-path)))
 
 (defun slime-goto-source-location (location &optional noerror)
   "Move to the source location LOCATION.  Several kinds of locations
@@ -3367,6 +3392,8 @@ are supported:
     (let ((hints (slime-location.hints location)))
       (when-let (snippet (getf hints :snippet))
         (slime-isearch snippet))
+      (when-let (snippet (getf hints :edit-path))
+        (slime-search-edit-path snippet))
       (when-let (fname (getf hints :call-site))
         (slime-search-call-site fname))
       (when (getf hints :align)
@@ -6447,6 +6474,8 @@ If PREV resp. NEXT are true insert more-buttons as needed."
                  'mouse-face 'highlight
                  'face 'slime-inspector-value-face)
          (insert string)))
+      ((:label string)
+       (insert (slime-inspector-fontify label string)))
       ((:action string id)
        (slime-insert-propertized (list 'slime-action-number id
                                        'mouse-face 'highlight
@@ -7727,7 +7756,7 @@ confronted with nasty #.-fu."
        `(swank:compile-string-for-emacs
          ,buffer-content
          ,(buffer-name)
-         ,0
+         '((:position 0) (:line 1 1))
          ,nil
          ,nil))
       (let ((bufname (buffer-name)))

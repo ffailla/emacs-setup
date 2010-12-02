@@ -1,3 +1,169 @@
+2010-11-13  Helmut Eller  <heller@common-lisp.net>
+
+	Improve source locations for compiler messages in Lispworks.
+
+	* swank-lispworks.lisp (map-error-database)
+	(signal-error-data-base, make-dspec-progenitor-location): Pass the
+	edit-path along.
+	(signal-undefined-functions): No edit-path available so just use
+	nil.
+
+2010-11-12  Helmut Eller  <heller@common-lisp.net>
+
+	Improve frame-source-location for Lispworks.
+
+	* swank-lispworks.lisp (frame-source-location): Exctract the
+	edit-path from the frame and pass it to Emacs.
+	(edit-path-to-cmucl-source-path): New function.
+	(frame-location): Use it.
+
+	* slime.el (slime-location-offset): Add a :edit-path property.
+	(slime-search-edit-path): New function.
+	(slime-search-call-site): Fix regexp to match
+	zero arg functions.
+
+2010-11-07  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-backend.lisp (label-value-line): Remove display-nil-value.
+	And the other stuff too.
+	(label-value-line*): Idem.
+
+2010-11-07  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-loader.lisp: ASDF free again.  And proud of it!
+	(default-fasl-dir, load-swank): Remove asdf stuff.
+
+2010-11-03  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-loader.lisp (*architecture-features*): Add :arm for CCL
+	ARM port.
+
+2010-11-02  Martin Simmons  <martin@lispworks.com>
+
+	* swank-lispworks.lisp (list-callers-internal): Revert to previous
+	low level implementation, fixed for LW6.
+	(list-callees-internal): Reimplement using low level instead of
+	the compiler's xref.
+
+2010-10-23  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (slime-goto-location-position): In case of
+	(:function-name name) go to (point-min) before searching for
+	function. Remove redundant regexp and regexp-quote function name
+	before inserting it into a regexp.
+
+2010-10-21  Helmut Eller  <heller@common-lisp.net>
+
+	In ABCL, try harder to find the source of stack frames.
+
+	* swank-abcl.lisp (source-location): Now a GF.
+	(source-location [java-stack-frame]): New.
+	(source-location [lisp-stack-frame]): New.
+	(source-location [function]): New.
+	(frame-source-location, find-definitions): Use them.
+	(*source-path*, find-definitions): New.
+	(system-property, pathname-parent, pathname-absolute-p)
+	(split-string, path-separator, search-path-property)
+	(jdk-source-path, class-path, zipfile-contains-p)
+	(find-file-in-path): Noise for filename frobbing.
+
+2010-10-21  Helmut Eller  <heller@common-lisp.net>
+
+	Require ABCL 0.22 and remove obsolete conditionalisation.
+
+	* swank-abcl.lisp (call-with-debugger-hook)
+	(install-debugger-globally)
+	(call-with-debugging-environment, backtrace, print-frame, spawn):
+	Remove #+/#- stuff.
+	(preferred-communication-style): Return :spawn unconditionally.
+	(sys::break): Removed.
+
+2010-10-20  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (slime-connect): Convert the port number read from
+	minibuffer to an integer, passing it as a string to
+	`make-network-process' isn't portable.
+	Patch by Marko Kocic.
+
+2010-10-19  Stas Boukarev  <stassats@gmail.com>
+
+	* swank.lisp (invoke-nth-restart): Make sure there is such restart
+	before invoking it.
+
+2010-10-19  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-sbcl.lisp (deinit-log-output): Use the right symbol for
+	*LOG-OUTPUT*, swank package isn't available at the time
+	swank-backend is compiled.
+
+2010-10-16  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-loader.lisp (default-fasl-dir): Guard against using :asdf
+	package if it doesn't exist.
+	Patch by Anton Vodonosov.
+
+2010-10-16  Attila Lendvai  <attila.lendvai@gmail.com>
+
+	* swank-fuzzy.lisp: speed up by 2-4 times (on sbcl).
+
+	* fuzzy.el: Clean up fuzzy completion's keymap code, drop
+	mimic-key-bindings.
+
+	* slime.el: Added separate host and port history for
+	slime-connect.
+	(slime-lookup-lisp-implementation): better error reporting and
+	allow using a functionp to generate the arguments.
+
+	* swank.lisp: Smarten up the label-value-line macros:
+	  - support a :label emacs font property
+	  - added key args: padding-length, display-nil-value,
+	    hide-when-nil, splice-as-ispec, value-text
+	  - label-value-line* will evaluate and splice the result
+	    of the form after a @ character
+
+	* swank-loader.lisp: Optional integration with ASDF. When ASDF is
+	available, store slime fasl's where ASDF would store them. Also
+	make sure swank.asd is visible to ASDF.
+
+2010-10-09  Raymond Toy  <toy.raymond@gmail.com>
+
+	* swank-cmucl.lisp (codepoint-length): Implement codepoint-length
+	to return the number of codepoints in cmucl's utf-16 strings.
+
+	* swank-backend.lisp (:swank-backend): Export codepoint-length. 
+	(codepoint-length): definterface codepoint-length.  Default is to
+	use LENGTH.
+
+	* swank-rpc.lisp (write-message): Call
+	swank-backend:codepoint-length to get the correct length for
+	emacs. 
+
+2010-10-08  Christophe Rhodes  <csr21@cantab.net>
+
+	Pass more detailed source location information to
+	swank:compile-string-for-emacs.  Motivated by R's source location
+	needs (where srcrefs are line/column based).
+
+	* slime.el (slime-compile-string): Generate :line location format
+	from start-offset, passing it through to
+	swank:compile-file-for-emacs.
+	(find-definition.2): Use new-style position.
+
+	* swank.lisp (compile-string-for-emacs): Use only the offset from
+	the position argument.
+
+	* swank-backend.lisp (swank-compile-string): Fix docstring typo.
+
+2010-10-07  Nikodemus Siivola  <nikodemus@random-state.net>
+
+	Hanging on to a *log-output* from a previous image is bad on SBCL
+	at least: it is initialized to an FD-STREAM, which cannot be
+	reused from one image to another.
+
+	Deal with this by using sb-ext:*save-hooks* to clear the stream.
+
+	* swank-sbcl.lisp (deinit-log-output): New function.
+
 2010-10-02  Helmut Eller  <heller@common-lisp.net>
 
 	Rename slime-macro/compiler-macro-expand-1 => slime-expand-1

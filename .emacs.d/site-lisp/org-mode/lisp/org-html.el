@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -126,6 +126,9 @@ not be modified."
   .target { }
   .timestamp { color: #bebebe; }
   .timestamp-kwd { color: #5f9ea0; }
+  .right  {margin-left:auto; margin-right:0px;  text-align:right;}
+  .left   {margin-left:0px;  margin-right:auto; text-align:left;}
+  .center {margin-left:auto; margin-right:auto; text-align:center;}
   p.verse { margin-left: 3% }
   pre {
 	border: 1pt solid #AEBDCC;
@@ -136,7 +139,13 @@ not be modified."
         overflow:auto;
   }
   table { border-collapse: collapse; }
-  td, th { vertical-align: top; }
+  td, th { vertical-align: top;  }
+  th.right  { text-align:center;  }
+  th.left   { text-align:center;   }
+  th.center { text-align:center; }
+  td.right  { text-align:right;  }
+  td.left   { text-align:left;   }
+  td.center { text-align:center; }
   dt { font-weight: bold; }
   div.figure { padding: 0.5em; }
   div.figure p { text-align: center; }
@@ -387,7 +396,7 @@ be linked only."
 		 (const :tag "When there is no description" maybe)))
 
 (defcustom org-export-html-inline-image-extensions
-  '("png" "jpeg" "jpg" "gif")
+  '("png" "jpeg" "jpg" "gif" "svg")
   "Extensions of image files that can be inlined into HTML."
   :group 'org-export-html
   :type '(repeat (string :tag "Extension")))
@@ -400,17 +409,22 @@ borders and spacing."
   :group 'org-export-html
   :type 'string)
 
-(defcustom org-export-table-header-tags '("<th scope=\"%s\">" . "</th>")
+(defcustom org-export-table-header-tags '("<th scope=\"%s\"%s>" . "</th>")
   "The opening tag for table header fields.
 This is customizable so that alignment options can be specified.
-%s will be filled with the scope of the field, either row or col.
-See also the variable `org-export-html-table-use-header-tags-for-first-column'."
+The first %s will be filled with the scope of the field, either row or col.
+The second %s will be replaced by a style entry to align the field.
+See also the variable `org-export-html-table-use-header-tags-for-first-column'.
+See also the variable `org-export-html-table-align-individual-fields'."
   :group 'org-export-tables
   :type '(cons (string :tag "Opening tag") (string :tag "Closing tag")))
 
-(defcustom org-export-table-data-tags '("<td>" . "</td>")
+(defcustom org-export-table-data-tags '("<td%s>" . "</td>")
   "The opening tag for table data fields.
-This is customizable so that alignment options can be specified."
+This is customizable so that alignment options can be specified.
+The first %s will be filled with the scope of the field, either row or col.
+The second %s will be replaced by a style entry to align the field.
+See also the variable `org-export-html-table-align-individual-fields'."
   :group 'org-export-tables
   :type '(cons (string :tag "Opening tag") (string :tag "Closing tag")))
 
@@ -441,7 +455,13 @@ will give even lines the class \"tr-even\" and odd lines the class \"tr-odd\"."
 		  (string :tag "Specify")
 		  (sexp))))
 
-
+(defcustom org-export-html-table-align-individual-fields t
+  "Non-nil means attach style attributes for alignment to each table field.
+When nil, alignment will only be specified in the column tags, but this
+is ignored by some browsers (like Firefox, Safari).  Opera does it right
+though."
+  :group 'org-export-tables
+  :type 'boolean)
 
 (defcustom org-export-html-table-use-header-tags-for-first-column nil
   "Non-nil means format column one in tables with header tags.
@@ -519,7 +539,7 @@ with a link to this URL."
   "Preamble, to be inserted just after <body>.  Set by publishing functions.
 This may also be a function, building and inserting the preamble.")
 (defvar org-export-html-postamble nil
-  "Preamble, to be inserted just before </body>.  Set by publishing functions.
+  "Postamble, to be inserted just before </body>.  Set by publishing functions.
 This may also be a function, building and inserting the postamble.")
 (defvar org-export-html-auto-preamble t
   "Should default preamble be inserted?  Set by publishing functions.")
@@ -674,7 +694,7 @@ See variable `org-export-html-link-org-files-as-html'"
 	 (string-match "\\.org$" path)
 	 (progn
 	    (list
-	       "http"
+	       "file"
 	       (concat
 		  (substring path 0 (match-beginning 0))
 		  "."
@@ -720,7 +740,7 @@ MAY-INLINE-P allows inlining it as an image."
 			   ;;Substitute just if original path was absolute.
 			   ;;(Otherwise path must remain relative)
 			   (if (file-name-absolute-p path)
-			      (expand-file-name path)
+			      (concat "file://" (expand-file-name path))
 			      path)))
 		     ((string= type "")
 			(list nil path))
@@ -746,7 +766,8 @@ MAY-INLINE-P allows inlining it as an image."
 	    ((or
 		(not type)
 		(string= type "http")
-		(string= type "https"))
+		(string= type "https")
+		(string= type "file"))
 	       (if fragment
 		  (setq thefile (concat thefile "#" fragment))))
 
@@ -756,8 +777,7 @@ MAY-INLINE-P allows inlining it as an image."
 	 (setq thefile
 	    (let
 	       ((str (org-export-html-format-href thefile)))
-	      (if (and type (not (string= "file" type))
-		       (org-string-match-p "^//" str))
+	      (if (and type (not (string= "file" type)))
 		  (concat type ":" str)
 		  str)))
 
@@ -890,8 +910,8 @@ PUB-DIR is set, use this as the publishing directory."
 		       (string-match "\\S-" (plist-get opt-plist :link-up))
 		       (plist-get opt-plist :link-up)))
 	 (link-home (and (plist-get opt-plist :link-home)
-			(string-match "\\S-" (plist-get opt-plist :link-home))
-			(plist-get opt-plist :link-home)))
+			 (string-match "\\S-" (plist-get opt-plist :link-home))
+			 (plist-get opt-plist :link-home)))
 	 (dummy (setq opt-plist (plist-put opt-plist :title title)))
 	 (html-table-tag (plist-get opt-plist :html-table-tag))
 	 (quote-re0   (concat "^[ \t]*" org-quote-string "\\>"))
@@ -960,9 +980,9 @@ PUB-DIR is set, use this as the publishing directory."
 	    ""))
 	 table-open type
 	 table-buffer table-orig-buffer
-	 ind item-type starter didclose
+	 ind item-type starter
 	 rpl path attr desc descp desc1 desc2 link
-	 snumber fnc item-tag initial-number
+	 snumber fnc item-tag item-number
 	 footnotes footref-seen
 	 id-file href
 	 )
@@ -1072,73 +1092,73 @@ lang=\"%s\" xml:lang=\"%s\">
 	    (push "<ul>\n<li>" thetoc)
 	    (setq lines
 		  (mapcar '(lambda (line)
-		    (if (and (string-match org-todo-line-regexp line)
-			     (not (get-text-property 0 'org-protected line)))
-			;; This is a headline
-			(progn
-			  (setq have-headings t)
-			  (setq level (- (match-end 1) (match-beginning 1)
-					 level-offset)
-				level (org-tr-level level)
-				txt (save-match-data
-				      (org-html-expand
-				       (org-export-cleanup-toc-line
-					(match-string 3 line))))
-				todo
-				(or (and org-export-mark-todo-in-toc
-					 (match-beginning 2)
-					 (not (member (match-string 2 line)
-						      org-done-keywords)))
+			     (if (and (string-match org-todo-line-regexp line)
+				      (not (get-text-property 0 'org-protected line)))
+				 ;; This is a headline
+				 (progn
+				   (setq have-headings t)
+				   (setq level (- (match-end 1) (match-beginning 1)
+						  level-offset)
+					 level (org-tr-level level)
+					 txt (save-match-data
+					       (org-html-expand
+						(org-export-cleanup-toc-line
+						 (match-string 3 line))))
+					 todo
+					 (or (and org-export-mark-todo-in-toc
+						  (match-beginning 2)
+						  (not (member (match-string 2 line)
+							       org-done-keywords)))
 					; TODO, not DONE
-				    (and org-export-mark-todo-in-toc
-					 (= level umax-toc)
-					 (org-search-todo-below
-					  line lines level))))
-			  (if (string-match
-			       (org-re "[ \t]+:\\([[:alnum:]_@:]+\\):[ \t]*$") txt)
-			      (setq txt (replace-match  "&nbsp;&nbsp;&nbsp;<span class=\"tag\"> \\1</span>" t nil txt)))
-			  (if (string-match quote-re0 txt)
-			      (setq txt (replace-match "" t t txt)))
-			  (setq snumber (org-section-number level))
-			  (if org-export-with-section-numbers
-			      (setq txt (concat snumber " " txt)))
-			  (if (<= level (max umax umax-toc))
-			      (setq head-count (+ head-count 1)))
-			  (if (<= level umax-toc)
-			      (progn
-				(if (> level org-last-level)
-				    (progn
-				      (setq cnt (- level org-last-level))
-				      (while (>= (setq cnt (1- cnt)) 0)
-					(push "\n<ul>\n<li>" thetoc))
-				      (push "\n" thetoc)))
-				(if (< level org-last-level)
-				    (progn
-				      (setq cnt (- org-last-level level))
-				      (while (>= (setq cnt (1- cnt)) 0)
-					(push "</li>\n</ul>" thetoc))
-				      (push "\n" thetoc)))
-				;; Check for targets
-				(while (string-match org-any-target-regexp line)
-				  (setq line (replace-match
-					      (concat "@<span class=\"target\">" (match-string 1 line) "@</span> ")
-					      t t line)))
-				(while (string-match "&lt;\\(&lt;\\)+\\|&gt;\\(&gt;\\)+" txt)
-				  (setq txt (replace-match "" t t txt)))
-				(setq href
-				      (replace-regexp-in-string
-				       "\\." "_" (format "sec-%s" snumber)))
-				(setq href (or (cdr (assoc href org-export-preferred-target-alist)) href))
-				(push
-				 (format
-				  (if todo
-				      "</li>\n<li><a href=\"#%s\"><span class=\"todo\">%s</span></a>"
-				    "</li>\n<li><a href=\"#%s\">%s</a>")
-				  href txt) thetoc)
+					     (and org-export-mark-todo-in-toc
+						  (= level umax-toc)
+						  (org-search-todo-below
+						   line lines level))))
+				   (if (string-match
+					(org-re "[ \t]+:\\([[:alnum:]_@:]+\\):[ \t]*$") txt)
+				       (setq txt (replace-match  "&nbsp;&nbsp;&nbsp;<span class=\"tag\"> \\1</span>" t nil txt)))
+				   (if (string-match quote-re0 txt)
+				       (setq txt (replace-match "" t t txt)))
+				   (setq snumber (org-section-number level))
+				   (if org-export-with-section-numbers
+				       (setq txt (concat snumber " " txt)))
+				   (if (<= level (max umax umax-toc))
+				       (setq head-count (+ head-count 1)))
+				   (if (<= level umax-toc)
+				       (progn
+					 (if (> level org-last-level)
+					     (progn
+					       (setq cnt (- level org-last-level))
+					       (while (>= (setq cnt (1- cnt)) 0)
+						 (push "\n<ul>\n<li>" thetoc))
+					       (push "\n" thetoc)))
+					 (if (< level org-last-level)
+					     (progn
+					       (setq cnt (- org-last-level level))
+					       (while (>= (setq cnt (1- cnt)) 0)
+						 (push "</li>\n</ul>" thetoc))
+					       (push "\n" thetoc)))
+					 ;; Check for targets
+					 (while (string-match org-any-target-regexp line)
+					   (setq line (replace-match
+						       (concat "@<span class=\"target\">" (match-string 1 line) "@</span> ")
+						       t t line)))
+					 (while (string-match "&lt;\\(&lt;\\)+\\|&gt;\\(&gt;\\)+" txt)
+					   (setq txt (replace-match "" t t txt)))
+					 (setq href
+					       (replace-regexp-in-string
+						"\\." "_" (format "sec-%s" snumber)))
+					 (setq href (or (cdr (assoc href org-export-preferred-target-alist)) href))
+					 (push
+					  (format
+					   (if todo
+					       "</li>\n<li><a href=\"#%s\"><span class=\"todo\">%s</span></a>"
+					     "</li>\n<li><a href=\"#%s\">%s</a>")
+					   href txt) thetoc)
 
-				(setq org-last-level level))
-			    )))
-		    line)
+					 (setq org-last-level level))
+				     )))
+			     line)
 			  lines))
 	    (while (> org-last-level (1- org-min-level))
 	      (setq org-last-level (1- org-last-level))
@@ -1181,7 +1201,16 @@ lang=\"%s\" xml:lang=\"%s\">
 	      (org-open-par))
 	    (throw 'nextline nil))
 
-	  (org-export-html-close-lists-maybe line)
+	  ;; Explicit list closure
+	  (when (equal "ORG-LIST-END" line)
+	    (while local-list-indent
+	      (org-close-li (car local-list-type))
+	      (insert (format "</%sl>\n" (car local-list-type)))
+	      (pop local-list-type)
+	      (pop local-list-indent))
+	    (setq in-local-list nil)
+	    (org-open-par)
+	    (throw 'nextline nil))
 
 	  ;; Protected HTML
 	  (when (get-text-property 0 'org-protected line)
@@ -1300,79 +1329,79 @@ lang=\"%s\" xml:lang=\"%s\">
 		  desc2 (if (match-end 2) (concat type ":" path) path)
 		  descp (and desc1 (not (equal desc1 desc2)))
 		  desc (or desc1 desc2))
-	     ;; Make an image out of the description if that is so wanted
+	    ;; Make an image out of the description if that is so wanted
 	    (when (and descp (org-file-image-p
-				desc org-export-html-inline-image-extensions))
-	       (save-match-data
-		  (if (string-match "^file:" desc)
-		     (setq desc (substring desc (match-end 0)))))
-	       (setq desc (org-add-props
+			      desc org-export-html-inline-image-extensions))
+	      (save-match-data
+		(if (string-match "^file:" desc)
+		    (setq desc (substring desc (match-end 0)))))
+	      (setq desc (org-add-props
 			     (concat "<img src=\"" desc "\"/>")
 			     '(org-protected t))))
 	    (cond
 	     ((equal type "internal")
-		(let
-		   ((frag-0
-		       (if (= (string-to-char path) ?#)
-			  (substring path 1)
-			  path)))
-		   (setq rpl
+	      (let
+		  ((frag-0
+		    (if (= (string-to-char path) ?#)
+			(substring path 1)
+		      path)))
+		(setq rpl
 		      (org-html-make-link
-			 opt-plist
-			 ""
-			 ""
-			 (org-solidify-link-text
-			    (save-match-data (org-link-unescape frag-0))
-			    nil)
-			 desc attr nil))))
+		       opt-plist
+		       ""
+		       ""
+		       (org-solidify-link-text
+			(save-match-data (org-link-unescape frag-0))
+			nil)
+		       desc attr nil))))
 	     ((and (equal type "id")
 		   (setq id-file (org-id-find-id-file path)))
 	      ;; This is an id: link to another file (if it was the same file,
 	      ;; it would have become an internal link...)
 	      (save-match-data
 		(setq id-file (file-relative-name
-				 id-file
-				 (file-name-directory org-current-export-file)))
+			       id-file
+			       (file-name-directory org-current-export-file)))
 		(setq rpl
-		   (org-html-make-link opt-plist
-		      "file" id-file
-		      (concat (if (org-uuidgen-p path) "ID-") path)
-		       desc
-		      attr
-		      nil))))
+		      (org-html-make-link opt-plist
+					  "file" id-file
+					  (concat (if (org-uuidgen-p path) "ID-") path)
+					  desc
+					  attr
+					  nil))))
 	     ((member type '("http" "https"))
-		;; standard URL, can inline as image
-		(setq rpl
-		   (org-html-make-link opt-plist
-		      type path nil
-		      desc
-		      attr
-		      (org-html-should-inline-p path descp))))
+	      ;; standard URL, can inline as image
+	      (setq rpl
+		    (org-html-make-link opt-plist
+					type path nil
+					desc
+					attr
+					(org-html-should-inline-p path descp))))
 	     ((member type '("ftp" "mailto" "news"))
-		;; standard URL, can't inline as image
-		(setq rpl
-		   (org-html-make-link opt-plist
-		      type path nil
-		      desc
-		      attr
-		      nil)))
+	      ;; standard URL, can't inline as image
+	      (setq rpl
+		    (org-html-make-link opt-plist
+					type path nil
+					desc
+					attr
+					nil)))
 
 	     ((string= type "coderef")
-		(let*
-		   ((coderef-str (format "coderef-%s" path))
-		      (attr-1
-			 (format "class=\"coderef\" onmouseover=\"CodeHighlightOn(this, '%s');\" onmouseout=\"CodeHighlightOff(this, '%s');\""
+	      (let*
+		  ((coderef-str (format "coderef-%s" path))
+		   (attr-1
+		    (format "class=\"coderef\" onmouseover=\"CodeHighlightOn(this, '%s');\" onmouseout=\"CodeHighlightOff(this, '%s');\""
 			    coderef-str coderef-str)))
-		   (setq rpl
+		(setq rpl
 		      (org-html-make-link opt-plist
-			 type "" coderef-str
-			 (format
-			    (org-export-get-coderef-format
-			       path
-			       (and descp desc))
-			    (cdr (assoc path org-export-code-refs)))
-			 attr-1
-			 nil))))
+					  type "" coderef-str
+					  (format
+					   (org-export-get-coderef-format
+					    path
+					    (and descp desc))
+					   (cdr (assoc path org-export-code-refs)))
+					  attr-1
+					  nil))))
 
 	     ((functionp (setq fnc (nth 2 (assoc type org-link-protocols))))
 	      ;; The link protocol has a function for format the link
@@ -1381,55 +1410,55 @@ lang=\"%s\" xml:lang=\"%s\">
 		      (funcall fnc (org-link-unescape path) desc1 'html))))
 
 	     ((string= type "file")
-		;; FILE link
-		(save-match-data
-		   (let*
-		      ((components
-			  (if
-			     (string-match "::\\(.*\\)" path)
-			     (list
-				(replace-match "" t nil path)
-				(match-string 1 path))
-			     (list path nil)))
+	      ;; FILE link
+	      (save-match-data
+		(let*
+		    ((components
+		      (if
+			  (string-match "::\\(.*\\)" path)
+			  (list
+			   (replace-match "" t nil path)
+			   (match-string 1 path))
+			(list path nil)))
 
-			 ;;The proper path, without a fragment
-			 (path-1
-			    (first components))
+		     ;;The proper path, without a fragment
+		     (path-1
+		      (first components))
 
-			 ;;The raw fragment
-			 (fragment-0
-			    (second components))
+		     ;;The raw fragment
+		     (fragment-0
+		      (second components))
 
-			 ;;Check the fragment.  If it can't be used as
-			 ;;target fragment we'll pass nil instead.
-			 (fragment-1
-			    (if
-			       (and fragment-0
-				  (not (string-match "^[0-9]*$" fragment-0))
-				  (not (string-match "^\\*" fragment-0))
-				  (not (string-match "^/.*/$" fragment-0)))
-			       (org-solidify-link-text
-				  (org-link-unescape fragment-0))
-			       nil))
-			 (desc-2
-			    ;;Description minus "file:" and ".org"
-			    (if (string-match "^file:" desc)
-			       (let
-				  ((desc-1 (replace-match "" t t desc)))
-				  (if (string-match "\\.org$" desc-1)
-				     (replace-match "" t t desc-1)
-				     desc-1))
-			       desc)))
+		     ;;Check the fragment.  If it can't be used as
+		     ;;target fragment we'll pass nil instead.
+		     (fragment-1
+		      (if
+			  (and fragment-0
+			       (not (string-match "^[0-9]*$" fragment-0))
+			       (not (string-match "^\\*" fragment-0))
+			       (not (string-match "^/.*/$" fragment-0)))
+			  (org-solidify-link-text
+			   (org-link-unescape fragment-0))
+			nil))
+		     (desc-2
+		      ;;Description minus "file:" and ".org"
+		      (if (string-match "^file:" desc)
+			  (let
+			      ((desc-1 (replace-match "" t t desc)))
+			    (if (string-match "\\.org$" desc-1)
+				(replace-match "" t t desc-1)
+			      desc-1))
+			desc)))
 
-		      (setq rpl
-			 (if
+		  (setq rpl
+			(if
 			    (and
-			       (functionp link-validate)
-			       (not (funcall link-validate path-1 current-dir)))
+			     (functionp link-validate)
+			     (not (funcall link-validate path-1 current-dir)))
 			    desc
-			    (org-html-make-link opt-plist
-			       "file" path-1 fragment-1 desc-2 attr
-			       (org-html-should-inline-p path-1 descp)))))))
+			  (org-html-make-link opt-plist
+					      "file" path-1 fragment-1 desc-2 attr
+					      (org-html-should-inline-p path-1 descp)))))))
 
 	     (t
 	      ;; just publish the path, as default
@@ -1486,14 +1515,6 @@ lang=\"%s\" xml:lang=\"%s\">
 		(setq txt (replace-match "" t t txt)))
 	    (if (<= level (max umax umax-toc))
 		(setq head-count (+ head-count 1)))
-	    (when in-local-list
-	      ;; Close any local lists before inserting a new header line
-	      (while local-list-type
-		(org-close-li (car local-list-type))
-		(insert (format "</%sl>\n" (car local-list-type)))
-		(pop local-list-type))
-	      (setq local-list-indent nil
-		    in-local-list nil))
 	    (setq first-heading-pos (or first-heading-pos (point)))
 	    (org-html-level-start level txt umax
 				  (and org-export-with-toc (<= level umax))
@@ -1504,19 +1525,6 @@ lang=\"%s\" xml:lang=\"%s\">
 	      (org-close-par-maybe)
 	      (insert "<pre>")
 	      (setq inquote t)))
-
-	   ((string-match "^[ \t]*- __+[ \t]*$" line)
-	    ;; Explicit list closure
-	    (when local-list-type
-	      (let ((ind (org-get-indentation line)))
-		(while (and local-list-indent
-			    (<= ind (car local-list-indent)))
-		  (org-close-li (car local-list-type))
-		  (insert (format "</%sl>\n" (car local-list-type)))
-		  (pop local-list-type)
-		  (pop local-list-indent))
-		(or local-list-indent (setq in-local-list nil))))
-	    (throw 'nextline nil))
 
 	   ((and org-export-with-tables
 		 (string-match "^\\([ \t]*\\)\\(|\\|\\+-+\\+\\)" line))
@@ -1550,66 +1558,57 @@ lang=\"%s\" xml:lang=\"%s\">
 		    starter (if (match-beginning 2)
 				(substring (match-string 2 line) 0 -1))
 		    line (substring line (match-beginning 5))
-		    initial-number nil
+		    item-number nil
 		    item-tag nil)
-	      (if (string-match "\\`\\[@start:\\([0-9]+\\)\\][ \t]?" line)
-		  (setq initial-number (match-string 1 line)
+	      (if (string-match "\\[@\\(?:start:\\)?\\([0-9]+\\)\\][ \t]?" line)
+		  (setq item-number (match-string 1 line)
 			line (replace-match "" t t line)))
 	      (if (and starter (string-match "\\(.*?\\) ::[ \t]*" line))
 		  (setq item-type "d"
 			item-tag (match-string 1 line)
 			line (substring line (match-end 0))))
-	      (when (and (not (equal item-type "d"))
-			 (not (string-match "[^ \t]" line)))
-		;; empty line.  Pretend indentation is large.
-		(setq ind (if org-empty-line-terminates-plain-lists
-			      0
-			    (1+ (or (car local-list-indent) 1)))))
-	      (setq didclose nil)
-	      (while (and in-local-list
-			  (or (and (= ind (car local-list-indent))
-				   (not starter))
-			      (< ind (car local-list-indent))))
-		(setq didclose t)
-		(org-close-li (car local-list-type))
-		(insert (format "</%sl>\n" (car local-list-type)))
-		(pop local-list-type) (pop local-list-indent)
-		(setq in-local-list local-list-indent))
 	      (cond
 	       ((and starter
 		     (or (not in-local-list)
 			 (> ind (car local-list-indent))))
-		;; check for a specified start number
 		;; Start new (level of) list
 		(org-close-par-maybe)
 		(insert (cond
 			 ((equal item-type "u") "<ul>\n<li>\n")
-			 ((equal item-type "o")
-			  (if initial-number
-			      (format "<ol start=%s>\n<li>\n" initial-number)
-			    "<ol>\n<li>\n"))
+			 ((and (equal item-type "o") item-number)
+			  (format "<ol>\n<li value=\"%s\">\n" item-number))
+			 ((equal item-type "o") "<ol>\n<li>\n")
 			 ((equal item-type "d")
 			  (format "<dl>\n<dt>%s</dt><dd>\n" item-tag))))
 		(push item-type local-list-type)
 		(push ind local-list-indent)
 		(setq in-local-list t))
+	       ;; Continue list
 	       (starter
-		;; continue current list
+		;; terminate any previous sublist but first ensure
+		;; list is not ill-formed.
+		(let ((min-ind (apply 'min local-list-indent)))
+		  (when (< ind min-ind) (setq ind min-ind)))
+		(while (< ind (car local-list-indent))
+		  (org-close-li (car local-list-type))
+		  (insert (format "</%sl>\n" (car local-list-type)))
+		  (pop local-list-type) (pop local-list-indent)
+		  (setq in-local-list local-list-indent))
+		;; insert new item
 		(org-close-li (car local-list-type))
 		(insert (cond
 			 ((equal (car local-list-type) "d")
 			  (format "<dt>%s</dt><dd>\n" (or item-tag "???")))
-			 (t "<li>\n"))))
-	       (didclose
-		;; we did close a list, normal text follows: need <p>
-		(org-open-par)))
+			 ((and (equal item-type "o") item-number)
+			  (format "<li value=\"%s\">\n" item-number))
+			 (t "<li>\n")))))
 	      (if (string-match "^[ \t]*\\[\\([X ]\\)\\]" line)
 		  (setq line
 			(replace-match
 			 (if (equal (match-string 1 line) "X")
 			     "<b>[X]</b>"
 			   "<b>[<span style=\"visibility:hidden;\">X</span>]</b>")
-			   t t line))))
+			 t t line))))
 
 	    ;; Horizontal line
 	    (when (string-match "^[ \t]*-\\{5,\\}[ \t]*$" line)
@@ -1664,14 +1663,7 @@ lang=\"%s\" xml:lang=\"%s\">
       (when inquote
 	(insert "</pre>\n")
 	(org-open-par))
-      (when in-local-list
-	;; Close any local lists before inserting a new header line
-	(while local-list-type
-	  (org-close-li (car local-list-type))
-	  (insert (format "</%sl>\n" (car local-list-type)))
-	  (pop local-list-type))
-	(setq local-list-indent nil
-	      in-local-list nil))
+
       (org-html-level-start 1 nil umax
 			    (and org-export-with-toc (<= level umax))
 			    head-count)
@@ -1752,8 +1744,6 @@ lang=\"%s\" xml:lang=\"%s\">
       (while (re-search-forward "<li>[ \r\n\t]*</li>\n?" nil t)
 	(replace-match ""))
       (goto-char (point-min))
-      (while (re-search-forward "</ul>\\s-*<ul>\n?" nil t)
-	(replace-match ""))
       ;; Convert whitespace place holders
       (goto-char (point-min))
       (let (beg end n)
@@ -1848,13 +1838,14 @@ lang=\"%s\" xml:lang=\"%s\">
 	nil))))
 
 (defvar org-table-number-regexp) ; defined in org-table.el
-(defun org-format-table-html (lines olines)
-  "Find out which HTML converter to use and return the HTML code."
+(defun org-format-table-html (lines olines &optional no-css)
+  "Find out which HTML converter to use and return the HTML code.
+NO-CSS is passed to the exporter."
   (if (stringp lines)
       (setq lines (org-split-string lines "\n")))
   (if (string-match "^[ \t]*|" (car lines))
       ;; A normal org table
-      (org-format-org-table-html lines)
+      (org-format-org-table-html lines nil no-css)
     ;; Table made by table.el - test for spanning
     (let* ((hlines (delq nil (mapcar
 			      (lambda (x)
@@ -1875,8 +1866,12 @@ lang=\"%s\" xml:lang=\"%s\">
 	(org-format-table-table-html-using-table-generate-source olines)))))
 
 (defvar org-table-number-fraction) ; defined in org-table.el
-(defun org-format-org-table-html (lines &optional splice)
-  "Format a table into HTML."
+(defun org-format-org-table-html (lines &optional splice no-css)
+  "Format a table into HTML.
+LINES is a list of lines.  Optional argument SPLICE means, do not
+insert header and surrounding <table> tags, just format the lines.
+Optional argument NO-CSS means use XHTML attributes instead of CSS
+for formatting.  This is required for the DocBook exporter."
   (require 'org-table)
   ;; Get rid of hlines at beginning and end
   (if (string-match "^[ \t]*|-" (car lines)) (setq lines (cdr lines)))
@@ -1890,6 +1885,8 @@ lang=\"%s\" xml:lang=\"%s\">
 
   (let* ((caption (org-find-text-property-in-string 'org-caption (car lines)))
 	 (label (org-find-text-property-in-string 'org-label (car lines)))
+	 (forced-aligns (org-find-text-property-in-string 'org-forced-aligns
+							  (car lines)))
 	 (attributes (org-find-text-property-in-string 'org-attributes
 						       (car lines)))
 	 (html-table-tag (org-export-splice-attributes
@@ -1898,10 +1895,13 @@ lang=\"%s\" xml:lang=\"%s\">
 		    (delq nil (mapcar
 			       (lambda (x) (string-match "^[ \t]*|-" x))
 			       (cdr lines)))))
-
-	 (nline 0) fnum nfields i
-	 tbopen line fields html gr colgropen rowstart rowend)
+	 (nline 0) fnum nfields i (cnt 0)
+	 tbopen line fields html gr colgropen rowstart rowend
+	 ali align aligns n)
     (setq caption (and caption (org-html-do-expand caption)))
+    (when (and forced-aligns org-table-clean-did-remove-column)
+    (setq forced-aligns
+	  (mapcar (lambda (x) (cons (1- (car x)) (cdr x))) forced-aligns)))
     (if splice (setq head nil))
     (unless splice (push (if head "<thead>" "<tbody>") html))
     (setq tbopen t)
@@ -1925,23 +1925,26 @@ lang=\"%s\" xml:lang=\"%s\">
 	(push (concat rowstart
 		      (mapconcat
 		       (lambda (x)
-			 (setq i (1+ i))
+			 (setq i (1+ i) ali (format "@@class%03d@@" i))
 			 (if (and (< i nfields) ; make sure no rogue line causes an error here
 				  (string-match org-table-number-regexp x))
 			     (incf (aref fnum i)))
 			 (cond
 			  (head
 			   (concat
-			    (format (car org-export-table-header-tags) "col")
+			    (format (car org-export-table-header-tags)
+				    "col" ali)
 			    x
 			    (cdr org-export-table-header-tags)))
 			  ((and (= i 0) org-export-html-table-use-header-tags-for-first-column)
 			   (concat
-			    (format (car org-export-table-header-tags) "row")
+			    (format (car org-export-table-header-tags)
+				    "row" ali)
 			    x
 			    (cdr org-export-table-header-tags)))
 			  (t
-			   (concat (car org-export-table-data-tags) x
+			   (concat (format (car org-export-table-data-tags) ali)
+				   x
 				   (cdr org-export-table-data-tags)))))
 		       fields "")
 		      rowend)
@@ -1954,23 +1957,38 @@ lang=\"%s\" xml:lang=\"%s\">
       (unless (car org-table-colgroup-info)
 	(setq org-table-colgroup-info
 	      (cons :start (cdr org-table-colgroup-info))))
+      (setq i 0)
       (push (mapconcat
 	     (lambda (x)
-	       (setq gr (pop org-table-colgroup-info))
-	       (format "%s<col align=\"%s\" />%s"
+	       (setq gr (pop org-table-colgroup-info)
+		     i (1+ i)
+		     align (if (assoc i forced-aligns)
+			       (cdr (assoc (cdr (assoc i forced-aligns))
+					   '(("l" . "left") ("r" . "right")
+					     ("c" . "center"))))
+			     (if (> (/ (float x) nline)
+				    org-table-number-fraction)
+				 "right" "left")))
+	       (push align aligns)
+	       (format (if no-css
+			   "%s<col align=\"%s\" />%s"
+			 "%s<col class=\"%s\" />%s")
 		       (if (memq gr '(:start :startend))
 			   (prog1
-			       (if colgropen "</colgroup>\n<colgroup>" "<colgroup>")
+			       (if colgropen
+				   "</colgroup>\n<colgroup>"
+				 "<colgroup>")
 			     (setq colgropen t))
 			 "")
-		       (if (> (/ (float x) nline) org-table-number-fraction)
-			   "right" "left")
+		       align
 		       (if (memq gr '(:end :startend))
 			   (progn (setq colgropen nil) "</colgroup>")
 			 "")))
 	     fnum "")
 	    html)
-      (if colgropen (setq html (cons (car html) (cons "</colgroup>" (cdr html)))))
+      (setq aligns (nreverse aligns))
+      (if colgropen (setq html (cons (car html)
+				     (cons "</colgroup>" (cdr html)))))
       ;; Since the output of HTML table formatter can also be used in
       ;; DocBook document, we want to always include the caption to make
       ;; DocBook XML file valid.
@@ -1978,6 +1996,18 @@ lang=\"%s\" xml:lang=\"%s\">
       (when label (push (format "<a name=\"%s\" id=\"%s\"></a>" label label)
 			html))
       (push html-table-tag html))
+    (setq html (mapcar
+		(lambda (x)
+		  (replace-regexp-in-string
+		   "@@class\\([0-9]+\\)@@"
+		   (lambda (txt)
+		     (if (not org-export-html-table-align-individual-fields)
+			 ""
+		       (setq n (string-to-number (match-string 1 txt)))
+		       (format (if no-css " align=\"%s\"" " class=\"%s\"")
+			       (or (nth n aligns) "left"))))
+		   x))
+		html))
     (concat (mapconcat 'identity html "\n") "\n")))
 
 (defun org-export-splice-attributes (tag attributes)
@@ -2022,10 +2052,10 @@ But it has the disadvantage, that no cell- or row-spanning is allowed."
 			 (if (equal x "") (setq x empty))
 			 (if head
 			     (concat
-			      (format (car org-export-table-header-tags) "col")
+			      (format (car org-export-table-header-tags) "col" "")
 			      x
 			      (cdr org-export-table-header-tags))
-			   (concat (car org-export-table-data-tags) x
+			   (concat (format (car org-export-table-data-tags) "") x
 				   (cdr org-export-table-data-tags))))
 		       field-buffer "\n")
 		      "</tr>\n"))
@@ -2164,7 +2194,7 @@ that uses these same face definitions."
   "Prepare STRING for HTML export.  Apply all active conversions.
 If there are links in the string, don't modify these."
   (let* ((re (concat org-bracket-link-regexp "\\|"
-		     (org-re "[ \t]+\\(:[[:alnum:]_@:]+:\\)[ \t]*$")))
+		     (org-re "[ \t]+\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$")))
 	 m s l res)
     (if (string-match "^[ \t]*\\+-[-+]*\\+[ \t]*$" string)
 	string
@@ -2274,28 +2304,6 @@ If there are links in the string, don't modify these."
 (defvar in-local-list)
 (defvar local-list-indent)
 (defvar local-list-type)
-(defun org-export-html-close-lists-maybe (line)
-  "Close local lists based on the original indentation of the line."
-  (let* ((rawhtml (and in-local-list
-		       (get-text-property 0 'org-protected line)
-		       (not (get-text-property 0 'org-example line))))
-	 ;; rawhtml means: This was between #+begin_html..#+end_html
-	 ;; originally, thus it excludes stuff that was a source code example
-	 ;; Actually, this code seems wrong, I don't know why it works, but
-	 ;; it seems to work.... So keep it like this for now.
-         (ind (if rawhtml
-		  (org-get-indentation line)
-		(get-text-property 0 'original-indentation line)))
-	 didclose)
-    (when ind
-      (while (and in-local-list
-		  (<= ind (car local-list-indent)))
-	(setq didclose t)
-	(org-close-li (car local-list-type))
-	(insert (format "</%sl>\n" (car local-list-type)))
-	(pop local-list-type) (pop local-list-indent)
-	(setq in-local-list local-list-indent))
-      (and didclose (org-open-par)))))
 
 (defvar body-only) ; dynamically scoped into this.
 (defun org-html-level-start (level title umax with-toc head-count)
@@ -2328,7 +2336,7 @@ When TITLE is nil, just close all open levels."
     (when title
       ;; If title is nil, this means this function is called to close
       ;; all levels, so the rest is done only if title is given
-	(when (string-match (org-re "\\(:[[:alnum:]_@:]+:\\)[ \t]*$") title)
+	(when (string-match (org-re "\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$") title)
 	  (setq title (replace-match
 		       (if org-export-with-tags
 			   (save-match-data

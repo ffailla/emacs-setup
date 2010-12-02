@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -103,7 +103,7 @@
 
 (defgroup org-feed  nil
   "Options concerning RSS feeds as inputs for Org files."
-  :tag "Org ID"
+  :tag "Org Feed"
   :group 'org)
 
 (defcustom org-feed-alist nil

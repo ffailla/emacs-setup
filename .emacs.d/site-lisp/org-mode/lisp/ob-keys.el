@@ -5,7 +5,7 @@
 ;; Author: Eric Schulte
 ;; Keywords: literate programming, reproducible research
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 
 ;; This file is part of GNU Emacs.
 
@@ -58,6 +58,8 @@ functions which are assigned key bindings, and see
     ("\C-o" . org-babel-open-src-block-result)
     ("\C-v" . org-babel-expand-src-block)
     ("v" . org-babel-expand-src-block)
+    ("u" . org-babel-goto-src-block-head)
+    ("\C-u" . org-babel-goto-src-block-head)
     ("g" . org-babel-goto-named-src-block)
     ("r" . org-babel-goto-named-result)
     ("\C-r" . org-babel-goto-named-result)
@@ -65,6 +67,8 @@ functions which are assigned key bindings, and see
     ("b" . org-babel-execute-buffer)
     ("\C-s" . org-babel-execute-subtree)
     ("s" . org-babel-execute-subtree)
+    ("\C-d" . org-babel-demarcate-block)
+    ("d" . org-babel-demarcate-block)
     ("\C-t" . org-babel-tangle)
     ("t" . org-babel-tangle)
     ("\C-f" . org-babel-tangle-file)
@@ -79,7 +83,8 @@ functions which are assigned key bindings, and see
     ("a" . org-babel-sha1-hash)
     ("h" . org-babel-describe-bindings)
     ("\C-x" . org-babel-do-key-sequence-in-edit-buffer)
-    ("x" . org-babel-do-key-sequence-in-edit-buffer))
+    ("x" . org-babel-do-key-sequence-in-edit-buffer)
+    ("\C-\M-h" . org-babel-mark-block))
   "Alist of key bindings and interactive Babel functions.
 This list associates interactive Babel functions
 with keys.  Each element of this list will add an entry to the

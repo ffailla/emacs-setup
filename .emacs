@@ -4,16 +4,21 @@
 
 ;; init env 
 (set-face-attribute 'default (selected-frame) :height 100)
+
+(prefer-coding-system       'utf-8)
+(set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
-(prefer-coding-system 'utf-8)
+(setq default-buffer-file-coding-system 'utf-8)
+(setq default-save-buffer-coding-system 'utf-8)
+
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (setenv "PATH" (concat (getenv "PATH") ":/opt/local/bin:/usr/local/bin"))
 (setq exec-path (append exec-path '("/opt/local/bin" "/usr/local/bin")))
 
 ;; enable column number mode
-(add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml|csv|clj|java|cs|dat|h|cpp|c\\)\\'" . column-number-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(xml\\|xsl\\|rng\\|xhtml|csv|clj|java|cs|dat|h|cpp|c|org|log|js|sh|html|htm|asp|aspx\\)\\'" . column-number-mode))
 
 (setq ediff-split-window-function 'split-window-horizontally)
 
@@ -32,7 +37,7 @@
 (defvar autosave-dir
   (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
 (make-directory autosave-dir t)
-(setq auto-save-file-name-transforms `(("\\(?:[^/]*/\\)*\\(.*\\)" ,(concat autosave-dir "\\1") t)))
+(setq auto-save-file-name-transforms `(("\\(?:[^/]*/\\)*\\(.*\\)", (concat autosave-dir "\\1") t)))
 
 ;; Put backup files (ie foo~) in one place too. (The backup-directory-alist
 ;; list contains regexp=>directory mappings; filenames matching a regexp are
@@ -46,7 +51,7 @@
 ;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
-(setq inferior-lisp-program "/opt/local/bin/lisp")
+;;(setq inferior-lisp-program "/opt/local/bin/lisp")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
 (autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
 (eval-after-load 'slime 
@@ -69,6 +74,13 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/clojure-mode/")
 (autoload 'clojure-mode "clojure-mode" nil t)
 (autoload 'clojure-test-mode "clojure-test-mode" nil t)
+;;(require 'clojure-mode)
+
+;;(defun swank-clojure-autoloads nil  
+;;  (interactive)  
+;;  (let ((generated-autoload-file "~/Tools/swank-clojure-enablers/swank-clojure-autoload.el"))  
+;;    (update-directory-autoloads "~/Tools/swank-clojure-enablers"))) 
+;;(setq swank-clojure-classpath (directory-files "~/.clojure-jars" t ".jar$"))
 
 ;;
 ;; setup clojure-mode hook
@@ -77,29 +89,30 @@
 ;;  * http://georgejahad.com/clojure/emacs-cdt.html
 ;;  * git://github.com/GeorgeJahad/cdt.git
 ;;
+
 (defun clojure-mode-setup ()
   (slime-mode t)
   (show-paren-mode t)
   (highlight-parentheses-mode t)
   (paredit-mode t)
   (progn
-    (define-key clojure-mode-map "\C-cc" 'comment-region)
-    (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
-    (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
-    (setq cdt-source-path 
-	  (reduce (lambda (acc f)
-		    (concat (expand-file-name acc) ":" (expand-file-name f)))
-		  '("src/main/clojure"
-		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
-    (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
+      (define-key clojure-mode-map "\C-cc" 'comment-region)
+      (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
+      (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
+      (setq cdt-source-path 
+  	  (reduce (lambda (acc f)
+  		    (concat (expand-file-name acc) ":" (expand-file-name f)))
+  		  '("src/main/clojure"
+  		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+  		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+  		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
+      (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
-;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
-;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
+;;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
+;;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
 ;;  
 ;; auto-complete
@@ -124,7 +137,7 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp/highlight-parentheses/")
 (autoload 'highlight-parentheses-mode "highlight-parentheses" "highlight parentheses mode" t)
 (setq hl-paren-colors
-      '(;;"orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
+      '("orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
 	"grey55" "#7F9F7F" "#8CD0D3" "#DCA3A3" "#385F38" "#F0DFAF" "#BCA3A3" "#C0BED1" "#FFCFAF" "#F0EFD0" "#F0DFAF" "#DFCFAF"	
 	"brown" "Darkblue" "darkgray" "darkgreen" "darkcyan" "darkred" "darkmagenta" "brown" "gray" "black" "darkmagenta" "Darkblue" "darkgreen" "darkcyan" "darkred" "red"
 	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154" 
@@ -210,6 +223,27 @@ by using nxml's indentation rules."
 (add-hook 'org-mode-hook 'turn-on-font-lock)  ; Org buffers only
 ;(global-font-lock-mode 1)                     ; for all buffers
 
+(setq org-directory "~/org")
+(setq org-mobile-inbox-for-pull "~/org/flagged.org")
+(setq org-mobile-directory "~/Dropbox/MobileOrg")
+(setq org-default-notes-file "~/org/notes.org")
+(setq org-agenda-files '("~/org/todo.org" "~/org/notes.org"))
+(define-key global-map "\C-cc" 'org-capture)
+
+(defun set-mobile-org-files ()
+  (setq org-mobile-files 
+	(append (directory-files "~/org" t ".org$") '(org-agenda-files org-agenda-text-search-extra-files))))
+
+;;(prefer-coding-system       'utf-8)
+;;(set-default-coding-systems 'utf-8)
+;;(set-terminal-coding-system 'utf-8)
+;;(set-keyboard-coding-system 'utf-8)
+;;(setq default-buffer-file-coding-system 'utf-8)
+
+(modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
+(modify-coding-system-alist 'file "\\.dat\\'" 'utf-8)
+(add-hook 'org-mode-hook 'set-mobile-org-files)
+
 ;;
 ;; save-visited-files
 ;;  * http://github.com/nflath/save-visited-files
@@ -237,6 +271,10 @@ by using nxml's indentation rules."
 ;;
 (add-to-list 'auto-mode-alist '("\\COMMIT_EDITMSG\\'" . diff-mode))
 (custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
  '(diff-added ((t (:foreground "#559944"))))
  '(diff-context ((t nil)))
  '(diff-file-header ((((class color) (min-colors 88) (background dark)) (:foreground "RoyalBlue1"))))
@@ -348,6 +386,20 @@ by using nxml's indentation rules."
 ;;(require 'csv-mode)
 
 ;;
+;; ecb
+;;  * http://http://ecb.sourceforge.net/
+;;  * cvs -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb login
+;;  * cvs -z3 -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb co -P modulename
+(add-to-list 'load-path "~/.emacs.d/site-lisp/ecb/")
+;;(require 'ecb)
+;;(require 'ecb-autoloads)
+
+(defun start-ecb ()
+  (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
+  (semantic-load-enable-minimum-features)
+  (require 'ecb))
+
+;;
 ;; start emacs server
 ;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
 (server-start)
@@ -355,6 +407,15 @@ by using nxml's indentation rules."
 (defalias 'ppx 'pprint-xml)
 (defalias 'ttl 'toggle-truncate-lines)
 (defalias 'rnb 'rename-buffer)
+(defalias 'slc 'slime-connect)
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
 				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
+
+(custom-set-variables
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(ecb-options-version "2.40"))
+

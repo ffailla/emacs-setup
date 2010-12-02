@@ -2,7 +2,7 @@
 ;;
 ;; Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
-;; Version: 7.01trans
+;; Version: 7.3
 ;; Author: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Maintainer: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Keywords: org, wp, tex
@@ -373,7 +373,7 @@ The need to be after the begin statement of the environment."
     (let (dovl)
       (goto-char (point-min))
       (while (re-search-forward
-	      "^[ \t]*\\\\begin{\\(itemize\\|enumerate\\|desctiption\\)}[ \t\n]*\\\\item\\>\\( ?\\(<[^<>\n]*>\\|\\[[^][\n*]\\]\\)\\)?[ \t]*\\S-" nil t)
+	      "^[ \t]*\\\\begin{\\(itemize\\|enumerate\\|description\\)}[ \t\n]*\\\\item\\>\\( ?\\(<[^<>\n]*>\\|\\[[^][\n*]\\]\\)\\)?[ \t]*\\S-" nil t)
 	(if (setq dovl (cdr (assoc "BEAMER_dovl"
 				   (get-text-property (match-end 0)
 						      'org-props))))
@@ -382,7 +382,7 @@ The need to be after the begin statement of the environment."
 	      (insert dovl)))))))
 
 (defun org-beamer-amend-header ()
-  "Add `org-beamer-header-extra' to the LaTeX herder.
+  "Add `org-beamer-header-extra' to the LaTeX header.
 If the file contains the string BEAMER-HEADER-EXTRA-HERE on a line
 by itself, it will be replaced with `org-beamer-header-extra'.  If not,
 the value will be inserted right after the documentclass statement."
@@ -438,10 +438,8 @@ The effect is that these values will be accessible during export."
 		(save-restriction
 		  (widen)
 		  (goto-char (point-min))
-		  (and (let ((case-fold-search t))
-			 (re-search-forward
-			  "^#\\+BEAMER_FRAME_LEVEL:[ \t]*\\(.*?\\)[ \t]*$"
-			  nil t))
+		  (and (re-search-forward
+			"^#\\+BEAMER_FRAME_LEVEL:[ \t]*\\(.*?\\)[ \t]*$" nil t)
 		       (match-string 1))))
 	      (plist-get org-export-latex-options-plist :beamer-frame-level)
 	      org-beamer-frame-level))
@@ -463,7 +461,7 @@ The effect is that these values will be accessible during export."
 	      (save-excursion
 		(save-restriction
 		  (widen)
-		  (let ((txt "") (case-fold-search t))
+		  (let ((txt ""))
 		    (goto-char (point-min))
 		    (while (re-search-forward
 			    "^#\\+BEAMER_HEADER_EXTRA:[ \t]*\\(.*?\\)[ \t]*$"

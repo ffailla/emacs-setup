@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -39,6 +39,15 @@
 
 (declare-function org-add-props "org-compat" (string plist &rest props))
 (declare-function org-string-match-p "org-compat" (&rest args))
+
+(defmacro org-called-interactively-p (&optional kind)
+  `(if (featurep 'xemacs)
+       (interactive-p)
+     (if (or (> emacs-major-version 23)
+	     (and (>= emacs-major-version 23)
+		  (>= emacs-minor-version 2)))
+	 (called-interactively-p ,kind)
+       (interactive-p))))
 
 (defmacro org-bound-and-true-p (var)
   "Return the value of symbol VAR if it is bound, else nil."
@@ -289,6 +298,25 @@ This is in contrast to merely setting it to 0."
   (setq newtext (org-add-props newtext (text-properties-at
 					(match-beginning 0) string)))
   (replace-match newtext fixedcase literal string))
+
+(defmacro org-save-outline-visibility (use-markers &rest body)
+  "Save and restore outline visibility around BODY.
+If USE-MARKERS is non-nil, use markers for the positions.
+This means that the buffer may change while running BODY,
+but it also means that the buffer should stay alive
+during the operation, because otherwise all these markers will
+point nowhere."
+  (declare (indent 1))
+  `(let ((data (org-outline-overlay-data ,use-markers)))
+     (unwind-protect
+	 (progn
+	   ,@body
+	   (org-set-outline-overlay-data data))
+       (when ,use-markers
+	 (mapc (lambda (c)
+		 (and (markerp (car c)) (move-marker (car c) nil))
+		 (and (markerp (cdr c)) (move-marker (cdr c) nil)))
+	       data)))))
 
 (defmacro org-with-limited-levels (&rest body)
   "Execute BODY with limited number of outline levels."

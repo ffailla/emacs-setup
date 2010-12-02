@@ -8,7 +8,7 @@
 ;;         Dan Davison <davison at stats dot ox dot ac dot uk>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -109,6 +109,10 @@ editing it with \\[org-edit-src-code].  Has no effect if
   :group 'org-edit-structure
   :type 'integer)
 
+(defvar org-src-strip-leading-and-trailing-blank-lines nil
+  "If non-nil, blank lines are removed when exiting the code edit
+buffer.")
+
 (defcustom org-edit-src-persistent-message t
   "Non-nil means show persistent exit help message while editing src examples.
 The message is shown in the header-line, which will be created in the
@@ -149,7 +153,8 @@ but which mess up the display of a snippet in Org exported files.")
 
 (defcustom org-src-lang-modes
   '(("ocaml" . tuareg) ("elisp" . emacs-lisp) ("ditaa" . artist)
-    ("asymptote" . asy) ("dot" . fundamental) ("sqlite" . sql))
+    ("asymptote" . asy) ("dot" . fundamental) ("sqlite" . sql)
+    ("calc" . fundamental))
   "Alist mapping languages to their major mode.
 The key is the language name, the value is the string that should
 be inserted as the name of the major mode.  For many languages this is
@@ -196,25 +201,28 @@ There is a mode hook, and keybindings for `org-edit-src-exit' and
 
 (defun org-edit-src-code (&optional context code edit-buffer-name quietp)
   "Edit the source code example at point.
-The example is copied to a separate buffer, and that buffer is switched
-to the correct language mode.  When done, exit with \\[org-edit-src-exit].
-This will remove the original code in the Org buffer, and replace it with
-the edited version. Optional argument CONTEXT is used by
-\\[org-edit-src-save] when calling this function."
+The example is copied to a separate buffer, and that buffer is
+switched to the correct language mode.  When done, exit with
+\\[org-edit-src-exit].  This will remove the original code in the
+Org buffer, and replace it with the edited version. Optional
+argument CONTEXT is used by \\[org-edit-src-save] when calling
+this function. See \\[org-src-window-setup] to configure the
+display of windows containing the Org buffer and the code
+buffer."
   (interactive)
   (unless (eq context 'save)
     (setq org-edit-src-saved-temp-window-config (current-window-configuration)))
-  (let ((line (org-current-line))
-	(col (current-column))
+  (let ((mark (and (org-region-active-p) (mark)))
 	(case-fold-search t)
 	(info (org-edit-src-find-region-and-lang))
-	(babel-info (org-babel-get-src-block-info))
+	(babel-info (org-babel-get-src-block-info 'light))
 	(org-mode-p (eq major-mode 'org-mode))
 	(beg (make-marker))
 	(end (make-marker))
 	(preserve-indentation org-src-preserve-indentation)
 	(allow-write-back-p (null code))
-	block-nindent total-nindent ovl lang lang-f single lfmt begline buffer msg)
+	block-nindent total-nindent ovl lang lang-f single lfmt buffer msg
+	begline markline markcol line col)
     (if (not info)
 	nil
       (setq beg (move-marker beg (nth 0 info))
@@ -232,6 +240,10 @@ the edited version. Optional argument CONTEXT is used by
 	    block-nindent (nth 5 info)
 	    lang-f (intern (concat lang "-mode"))
 	    begline (save-excursion (goto-char beg) (org-current-line)))
+      (if (and mark (>= mark beg) (<= mark end))
+	  (save-excursion (goto-char mark)
+			  (setq markline (org-current-line)
+				markcol (current-column))))
       (if (equal lang-f 'table.el-mode)
 	  (setq lang-f (lambda ()
 			 (text-mode)
@@ -241,7 +253,10 @@ the edited version. Optional argument CONTEXT is used by
 			 (org-set-local 'org-edit-src-content-indentation 0))))
       (unless (functionp lang-f)
 	(error "No such language mode: %s" lang-f))
-      (org-goto-line line)
+      (save-excursion
+	(if (> (point) end) (goto-char end))
+	(setq line (org-current-line)
+	      col (current-column)))
       (if (and (setq buffer (org-edit-src-find-buffer beg end))
 	       (if org-src-ask-before-returning-to-edit-buffer
 		   (y-or-n-p "Return to existing edit buffer? [n] will revert changes: ") t))
@@ -273,7 +288,10 @@ the edited version. Optional argument CONTEXT is used by
 	(unless preserve-indentation
 	  (setq total-nindent (or (org-do-remove-indentation) 0)))
 	(let ((org-inhibit-startup t))
-	  (funcall lang-f))
+	  (condition-case e
+	      (funcall lang-f)
+	    (error
+	     (error "Language mode `%s' fails with: %S" lang-f (nth 1 e)))))
 	(set (make-local-variable 'org-edit-src-force-single-line) single)
 	(set (make-local-variable 'org-edit-src-from-org-mode) org-mode-p)
 	(set (make-local-variable 'org-edit-src-allow-write-back-p) allow-write-back-p)
@@ -287,6 +305,12 @@ the edited version. Optional argument CONTEXT is used by
 	  (while (re-search-forward "^," nil t)
 	    (if (eq (org-current-line) line) (setq total-nindent (1+ total-nindent)))
 	    (replace-match "")))
+	(when markline
+	  (org-goto-line (1+ (- markline begline)))
+	  (org-move-to-column
+	   (if preserve-indentation markcol (max 0 (- markcol total-nindent))))
+	  (push-mark (point) 'no-message t)
+	  (setq deactivate-mark nil))
 	(org-goto-line (1+ (- line begline)))
 	(org-move-to-column
 	 (if preserve-indentation col (max 0 (- col total-nindent))))
@@ -562,11 +586,12 @@ the language, a switch telling if the content should be in a single line."
 	 (delta 0) code line col indent)
     (when allow-write-back-p
       (unless preserve-indentation (untabify (point-min) (point-max)))
-      (save-excursion
-	(goto-char (point-min))
-	(if (looking-at "[ \t\n]*\n") (replace-match ""))
-	(unless macro
-	  (if (re-search-forward "\n[ \t\n]*\\'" nil t) (replace-match "")))))
+      (if org-src-strip-leading-and-trailing-blank-lines
+	  (save-excursion
+	    (goto-char (point-min))
+	    (if (looking-at "[ \t\n]*\n") (replace-match ""))
+	    (unless macro
+	      (if (re-search-forward "\n[ \t\n]*\\'" nil t) (replace-match ""))))))
     (setq line (if (org-bound-and-true-p org-edit-src-force-single-line)
 		   1
 		 (org-current-line))
@@ -712,6 +737,73 @@ Org-babel commands."
      (call-interactively
       (lookup-key org-babel-map key)))))
 
+(defcustom org-src-tab-acts-natively nil
+  "If non-nil, the effect of TAB in a code block is as if it were
+issued in the language major mode buffer."
+  :type 'boolean
+  :group 'org-babel)
+
+(defun org-src-native-tab-command-maybe ()
+  "Perform language-specific TAB action.
+Alter code block according to effect of TAB in the language major
+mode."
+  (and org-src-tab-acts-natively
+       (let ((org-src-strip-leading-and-trailing-blank-lines nil))
+	 (org-babel-do-key-sequence-in-edit-buffer (kbd "TAB")))))
+
+(add-hook 'org-tab-first-hook 'org-src-native-tab-command-maybe)
+
+(defun org-src-font-lock-fontify-block (lang start end)
+  "Fontify code block.
+This function is called by emacs automatic fontification, as long
+as `org-src-fontify-natively' is non-nil. For manual
+fontification of code blocks see `org-src-fontify-block' and
+`org-src-fontify-buffer'"
+  (let* ((lang-mode (org-src-get-lang-mode lang))
+	 (string (buffer-substring-no-properties start end))
+	 (modified (buffer-modified-p))
+	 (org-buffer (current-buffer)) pos next)
+    (remove-text-properties start end '(face nil))
+    (with-current-buffer
+	(get-buffer-create
+	 (concat " org-src-fontification:" (symbol-name lang-mode)))
+      (delete-region (point-min) (point-max))
+      (insert string)
+      (unless (eq major-mode lang-mode) (funcall lang-mode))
+      (font-lock-fontify-buffer)
+      (setq pos (point-min))
+      (while (setq next (next-single-property-change pos 'face))
+	(put-text-property
+	 (+ start (1- pos)) (+ start next) 'face
+	 (get-text-property pos 'face) org-buffer)
+	(setq pos next)))
+    (add-text-properties
+     start end
+     '(font-lock-fontified t fontified t font-lock-multiline t))
+    (set-buffer-modified-p modified))
+  t) ;; Tell `org-fontify-meta-lines-and-blocks' that we fontified
+
+(defun org-src-fontify-block ()
+  "Fontify code block at point."
+  (interactive)
+  (save-excursion
+    (let ((org-src-fontify-natively t)
+	  (info (org-edit-src-find-region-and-lang)))
+      (font-lock-fontify-region (nth 0 info) (nth 1 info)))))
+
+(defun org-src-fontify-buffer ()
+  "Fontify all code blocks in the current buffer"
+  (interactive)
+  (org-babel-map-src-blocks nil
+    (org-src-fontify-block)))
+
+(defun org-src-get-lang-mode (lang)
+  "Return major mode that should be used for LANG.
+LANG is a string, and the returned major mode is a symbol."
+  (intern
+   (concat
+    ((lambda (l) (if (symbolp l) (symbol-name l) l))
+     (or (cdr (assoc lang org-src-lang-modes)) lang)) "-mode")))
 
 (provide 'org-src)
 

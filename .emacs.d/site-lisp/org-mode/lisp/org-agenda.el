@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -1488,6 +1488,18 @@ the lower-case version of all tags."
   (require 'cl))
 (require 'org)
 
+(defmacro org-agenda-with-point-at-orig-entry (string &rest body)
+  "Execute BODY with point at location given by `org-hd-marker' property.
+If STRING is non-nil, the text property will be fetched from position 0
+in that string.  If STRING is nil, it will be fetched from the beginning
+of the current line."
+  `(let ((marker (get-text-property (if string 0 (point-at-bol))
+				    'org-hd-marker string)))
+     (with-current-buffer (marker-buffer marker)
+       (save-excursion
+	 (goto-char marker)
+	 ,@body))))
+
 (defun org-add-agenda-custom-command (entry)
   "Replace or add a command in `org-agenda-custom-commands'.
 This is mostly for hacking and trying a new command - once the command
@@ -2615,7 +2627,9 @@ Drawers will be excluded, also the line with scheduling/deadline info."
 	  (setq txt (org-agenda-get-some-entry-text
 		     m org-agenda-add-entry-text-maxlines "    > "))
 	  (end-of-line 1)
-	  (if (string-match "\\S-" txt) (insert "\n" txt)))))))
+	  (if (string-match "\\S-" txt)
+	      (insert "\n" txt)
+	    (or (eobp) (forward-char 1))))))))
 
 (defun org-agenda-get-some-entry-text (marker n-lines &optional indent
 					      &rest keep)
@@ -2815,7 +2829,11 @@ the global options and expect it to be applied to the entire view.")
 	(switch-to-buffer-other-frame abuf))
        ((equal org-agenda-window-setup 'reorganize-frame)
 	(delete-other-windows)
-	(org-switch-to-buffer-other-window abuf))))
+	(org-switch-to-buffer-other-window abuf)))
+      ;; additional test in case agenda is invoked from within agenda
+      ;; buffer via elisp link
+      (unless (equal (current-buffer) abuf)
+	(switch-to-buffer abuf)))
     (setq buffer-read-only nil)
     (let ((inhibit-read-only t)) (erase-buffer))
     (org-agenda-mode)
@@ -3538,6 +3556,20 @@ in `org-agenda-text-search-extra-files'."
 	    (member (string-to-char words) '(?- ?+ ?\{)))
 	(setq boolean t))
     (setq words (org-split-string words))
+    (let (www w)
+      (while (setq w (pop words))
+	(while (and (string-match "\\\\\\'" w) words)
+	  (setq w (concat (substring w 0 -1) " " (pop words))))
+	(push w www))
+      (setq words (nreverse www) www nil)
+      (while (setq w (pop words))
+	(when (and (string-match "\\`[-+]?{" w)
+		   (not (string-match "}\\'" w)))
+	  (while (and words (not (string-match "}\\'" (car words))))
+	    (setq w (concat w " " (pop words))))
+	  (setq w (concat w " " (pop words))))
+	(push w www))
+      (setq words (nreverse www)))
     (setq org-agenda-last-search-view-search-was-boolean boolean)
     (when boolean
       (let (wds w)
@@ -3988,8 +4020,7 @@ The remainder is either a list of TODO keywords, or a state symbol
   "Create agenda view for projects that are stuck.
 Stuck projects are project that have no next actions.  For the definitions
 of what a project is and how to check if it stuck, customize the variable
-`org-stuck-projects'.
-MATCH is being ignored."
+`org-stuck-projects'."
   (interactive)
   (let* ((org-agenda-skip-function
 	  'org-agenda-skip-entry-when-regexp-matches-in-subtree)
@@ -4011,11 +4042,11 @@ MATCH is being ignored."
 			  "\\)\\>"))
 	 (tags (nth 2 org-stuck-projects))
 	 (tags-re (if (member "*" tags)
-		      (org-re "^\\*+ .*:[[:alnum:]_@]+:[ \t]*$")
+		      (org-re "^\\*+ .*:[[:alnum:]_@#%]+:[ \t]*$")
 		    (if tags
 			(concat "^\\*+ .*:\\("
 				(mapconcat 'identity tags "\\|")
-				(org-re "\\):[[:alnum:]_@:]*[ \t]*$")))))
+				(org-re "\\):[[:alnum:]_@#%:]*[ \t]*$")))))
 	 (gen-re (nth 3 org-stuck-projects))
 	 (re-list
 	  (delq nil
@@ -4468,17 +4499,20 @@ the documentation of `org-diary'."
 		category (org-get-category beg)
 		todo-state (org-get-todo-state))
 
-	  (if (string-match "\\S-" result)
-	      (setq txt result)
-	    (setq txt "SEXP entry returned empty string"))
+	  (dolist (r (if (stringp result)
+			 (list result)
+		       result)) ;; we expect a list here
+	    (if (string-match "\\S-" r)
+		(setq txt r)
+	      (setq txt "SEXP entry returned empty string"))
 
-	  (setq txt (org-format-agenda-item
-                     "" txt category tags 'time))
-	  (org-add-props txt props 'org-marker marker)
-	  (org-add-props txt nil
-	    'org-category category 'date date 'todo-state todo-state
-	    'type "sexp")
-	  (push txt ee))))
+	    (setq txt (org-format-agenda-item
+		       "" txt category tags 'time))
+	    (org-add-props txt props 'org-marker marker)
+	    (org-add-props txt nil
+	      'org-category category 'date date 'todo-state todo-state
+	      'type "sexp")
+	    (push txt ee)))))
     (nreverse ee)))
 
 (defun org-diary-class (m1 d1 y1 m2 d2 y2 dayname &rest skip-weeks)
@@ -4974,7 +5008,7 @@ Any match of REMOVE-RE will be removed from TXT."
 	  (setq h (/ m 60) m (- m (* h 60)))
 	  (setq s2 (format "%02d:%02d" h m))))
 
-      (when (string-match (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@:]+:\\)[ \t]*$")
+      (when (string-match (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$")
 			  txt)
 	;; Tags are in the string
 	(if (or (eq org-agenda-remove-tags t)
@@ -5048,7 +5082,7 @@ Any match of REMOVE-RE will be removed from TXT."
 The modified list may contain inherited tags, and tags matched by
 `org-agenda-hide-tags-regexp' will be removed."
   (when (or add-inherited hide-re)
-    (if (string-match (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@:]+:\\)[ \t]*$") txt)
+    (if (string-match (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$") txt)
 	(setq txt (substring txt 0 (match-beginning 0))))
     (setq tags
 	  (delq nil
@@ -5104,13 +5138,13 @@ The modified list may contain inherited tags, and tags matched by
 	  (throw 'exit list))
       (while (setq time (pop gridtimes))
 	(unless (and remove (member time have))
-	  (setq time (int-to-string time))
+	  (setq time (replace-regexp-in-string " " "0" (format "%04s" time)))
 	  (push (org-format-agenda-item
 		 nil string "" nil
 		 (concat (substring time 0 -2) ":" (substring time -2)))
 		new)
 	  (put-text-property
-	   1 (length (car new)) 'face 'org-time-grid (car new))))
+	   2 (length (car new)) 'face 'org-time-grid (car new))))
       (if (member 'time-up org-agenda-sorting-strategy-selected)
 	  (append new list)
 	(append list new)))))
@@ -5713,7 +5747,9 @@ If the line does not have an effort defined, return nil."
 	      (if (not (eval org-agenda-filter-form))
 		  (org-agenda-filter-by-tag-hide-line))
 	      (beginning-of-line 2))
-	  (beginning-of-line 2))))))
+	  (beginning-of-line 2))))
+    (if (get-char-property (point) 'invisible)
+	(org-agenda-previous-line))))
 
 (defun org-agenda-filter-by-tag-hide-line ()
   (let (ov)
@@ -5790,7 +5826,9 @@ Negative selection means regexp must not match for selection of an entry."
 
 (defun org-agenda-goto-date (date)
   "Jump to DATE in agenda."
-  (interactive (list (org-read-date)))
+  (interactive (list (let ((org-read-date-prefer-future
+			    (eval org-agenda-jump-prefer-future)))
+		       (org-read-date))))
   (org-agenda-list nil date))
 
 (defun org-agenda-goto-today ()
@@ -6714,7 +6752,7 @@ If FORCE-TAGS is non nil, the car of it returns the new tags."
   (let ((inhibit-read-only t) l c)
     (save-excursion
       (goto-char (if line (point-at-bol) (point-min)))
-      (while (re-search-forward (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@:]+:\\)[ \t]*$")
+      (while (re-search-forward (org-re "\\([ \t]+\\)\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$")
 				(if line (point-at-eol) nil) t)
 	(add-text-properties
 	 (match-beginning 2) (match-end 2)
@@ -7266,7 +7304,8 @@ the resulting entry will not be shown.  When TEXT is empty, switch to
       (let ((calendar-date-display-form
 	     (if (if (boundp 'calendar-date-style)
 		     (eq calendar-date-style 'european)
-		   (org-bound-and-true-p european-calendar-style)) ; Emacs 22
+		   (with-no-warnings ;; european-calendar-style is obsolete as of version 23.1
+		     (org-bound-and-true-p european-calendar-style))) ; Emacs 22
 		 '(day " " month " " year)
 	       '(month " " day " " year))))
 

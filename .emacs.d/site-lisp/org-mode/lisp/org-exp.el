@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.01trans
+;; Version: 7.3
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -181,7 +181,7 @@ This option can also be set with the +OPTIONS line, e.g. \"-:nil\"."
     ("no" "Forfatter"  "Dato"  "Innhold" "Fotnoter")
     ("nb" "Forfatter"  "Dato"  "Innhold" "Fotnoter")  ;; nb = Norsk (bokm.l)
     ("nn" "Forfattar"  "Dato"  "Innhald" "Fotnotar")  ;; nn = Norsk (nynorsk)
-    ("pl" "Autor"      "Data" "Spis tre&sacute;ci"  "Przypis")
+    ("pl" "Autor"      "Data" "Spis tre&#x015b;ci"  "Przypis")
     ("sv" "F&ouml;rfattare" "Datum" "Inneh&aring;ll" "Fotnoter"))
   "Terms used in export text, translated to different languages.
 Use the variable `org-export-default-language' to set the language,
@@ -695,6 +695,7 @@ modified) list.")
 		    "EXPORT_SELECT_TAGS" "EXPORT_EXCLUDE_TAGS"
 		    "KEYWORDS" "DESCRIPTION" "MACRO" "BIND" "XSLT")
 		  (mapcar 'car org-export-inbuffer-options-extra))))
+	    (case-fold-search t)
 	    p key val text options mathjax a pr style
 	    latex-header latex-class macros letbind
 	    ext-setup-or-nil setup-contents (start 0))
@@ -770,6 +771,7 @@ modified) list.")
 	;; Add macro definitions
 	(setq p (plist-put p :macro-date "(eval (format-time-string \"$1\"))"))
 	(setq p (plist-put p :macro-time "(eval (format-time-string \"$1\"))"))
+	(setq p (plist-put p :macro-property "(eval (org-entry-get nil \"$1\" 'selective))"))
 	(setq p (plist-put
 		 p :macro-modification-time
 		 (and (buffer-file-name)
@@ -1075,6 +1077,9 @@ on this string to produce the exported version."
 				     (plist-get parameters :exclude-tags))
       (run-hooks 'org-export-preprocess-after-tree-selection-hook)
 
+      ;; Mark end of lists
+      (org-export-mark-list-ending backend)
+
       ;; Handle source code snippets
       (org-export-replace-src-segments-and-examples backend)
 
@@ -1162,7 +1167,8 @@ on this string to produce the exported version."
       (when (plist-get parameters :emph-multiline)
 	(org-export-concatenate-multiline-emphasis))
 
-      ;; Remove special table lines
+      ;; Remove special table lines, and store alignment information
+      (org-store-forced-table-alignment)
       (when org-export-table-remove-special-lines
 	(org-export-remove-special-table-lines))
 
@@ -1476,7 +1482,7 @@ from the buffer."
       (goto-char (point-min))
       (while (re-search-forward re-archive nil t)
 	(if (not (org-on-heading-p t))
-	    (org-end-of-subtree t)
+	    (goto-char (point-at-eol))
 	  (beginning-of-line 1)
 	  (setq a (if export-archived-trees
 		      (1+ (point-at-eol)) (point))
@@ -1625,6 +1631,31 @@ These special cookies will later be interpreted by the backend."
 	(delete-region beg end)
 	(insert (org-add-props content nil 'original-indentation ind))))))
 
+(defun org-export-mark-list-ending (backend)
+  "Mark list endings with special cookies.
+These special cookies will later be interpreted by the backend.
+`org-list-end-re' is replaced by a blank line in the process."
+  (let ((process-buffer
+	 (lambda (end-list-marker)
+	   (goto-char (point-min))
+	   (while (org-search-forward-unenclosed org-item-beginning-re nil t)
+	     (goto-char (org-list-bottom-point))
+	     (when (and (not (eq org-list-ending-method 'indent))
+			(looking-at (org-list-end-re)))
+	       (replace-match "\n"))
+	     (insert end-list-marker)))))
+  ;; We need to divide backends into 3 categories.
+  (cond
+   ;; 1. Backends using `org-list-parse-list' do not need markers.
+   ((memq backend '(latex))
+    nil)
+   ;; 2. Line-processing backends need to be told where lists end.
+   ((memq backend '(html docbook))
+    (funcall process-buffer "ORG-LIST-END\n"))
+   ;; 3. Others backends do not need to know this: clean list enders.
+   (t
+    (funcall process-buffer "")))))
+
 (defun org-export-attach-captions-and-attributes (backend target-alist)
   "Move #+CAPTION, #+ATTR_BACKEND, and #+LABEL text into text properties.
 If the next thing following is a table, add the text properties to the first
@@ -1742,8 +1773,30 @@ When it is nil, all comments will be removed."
 	  (org-if-unprotected
 	   (replace-match "\\1[[\\2]]")))))))
 
+(defun org-store-forced-table-alignment ()
+  "Find table lines which force alignment, store the results in properties."
+  (let (line cnt aligns)
+    (goto-char (point-min))
+    (while (re-search-forward "|[ \t]*<[lrc][0-9]*>[ \t]*|" nil t)
+      ;; OK, this looks like a table line with an alignment cookie
+      (org-if-unprotected
+       (setq line (buffer-substring (point-at-bol) (point-at-eol)))
+       (when (and (org-at-table-p)
+		  (org-table-cookie-line-p line))
+	 (setq cnt 0 aligns nil)
+	 (mapc
+	  (lambda (x)
+	    (setq cnt (1+ cnt))
+	    (if (string-match "\\`<\\([lrc]\\)" x)
+		(push (cons cnt (downcase (match-string 1 x))) aligns)))
+	  (org-split-string line "[ \t]*|[ \t]*"))
+	 (add-text-properties (org-table-begin) (org-table-end)
+			      (list 'org-forced-aligns aligns))))
+      (goto-char (point-at-eol)))))
+
 (defun org-export-remove-special-table-lines ()
-  "Remove tables lines that are used for internal purposes."
+  "Remove tables lines that are used for internal purposes.
+Also, store forcedalignment information found in such lines."
   (goto-char (point-min))
   (while (re-search-forward "^[ \t]*|" nil t)
     (org-if-unprotected-at (1- (point))
@@ -1756,7 +1809,7 @@ When it is nil, all comments will be removed."
 		 (lambda (f)
 		   (or (= (length f) 0)
 		       (string-match
-			"\\`<\\([0-9]\\|[rl]\\|[rl][0-9]+\\)>\\'" f)))
+			"\\`<\\([0-9]\\|[lrc]\\|[lrc][0-9]+\\)>\\'" f)))
 		 (org-split-string ;; FIXME, can't we do without splitting???
 		  (buffer-substring (point-at-bol) (point-at-eol))
 		  "[ \t]*|[ \t]*")))))
@@ -1777,16 +1830,19 @@ When it is nil, all comments will be removed."
 	nodesc)
     (goto-char (point-min))
     (while (re-search-forward re-plain-link nil t)
-      (goto-char (1- (match-end 0)))
-      (org-if-unprotected-at (1+ (match-beginning 0))
-       (let* ((s (concat (match-string 1)
-			 "[[" (match-string 2) ":" (match-string 3)
-			 "][" (match-string 2) ":" (org-export-protect-sub-super
-						    (match-string 3))
-			 "]]")))
-	 ;; added 'org-link face to links
-	 (put-text-property 0 (length s) 'face 'org-link s)
-	 (replace-match s t t))))
+      (unless (org-string-match-p
+	       "\\[\\[\\S+:\\S-*?\\<"
+	       (buffer-substring (point-at-bol) (match-beginning 0)))
+	(goto-char (1- (match-end 0)))
+	(org-if-unprotected-at (1+ (match-beginning 0))
+	  (let* ((s (concat (match-string 1)
+			    "[[" (match-string 2) ":" (match-string 3)
+			    "][" (match-string 2) ":" (org-export-protect-sub-super
+						       (match-string 3))
+			    "]]")))
+	    ;; added 'org-link face to links
+	    (put-text-property 0 (length s) 'face 'org-link s)
+	    (replace-match s t t)))))
     (goto-char (point-min))
     (while (re-search-forward re-angle-link nil t)
       (goto-char (1- (match-end 0)))
@@ -1837,7 +1893,9 @@ can work correctly."
     (if (and (not (= (char-after (match-beginning 3))
 		     (char-after (match-beginning 4))))
 	     (save-excursion (goto-char (match-beginning 0))
-			     (save-match-data (not (org-at-table-p)))))
+			     (save-match-data
+			       (and (not (org-at-table-p))
+				    (not (org-at-heading-p))))))
 	(org-if-unprotected
 	 (subst-char-in-region (match-beginning 0) (match-end 0)
 			       ?\n ?\  t)
@@ -2176,6 +2234,8 @@ in the list) and remove property and value from the list in LISTVAR."
 (defvar org-export-latex-listings) ;; defined in org-latex.el
 (defvar org-export-latex-listings-langs) ;; defined in org-latex.el
 (defvar org-export-latex-listings-w-names) ;; defined in org-latex.el
+(defvar org-export-latex-minted-langs) ;; defined in org-latex.el
+(defvar org-export-latex-minted-with-line-numbers) ;; defined in org-latex.el
 
 (defun org-export-format-source-code-or-example
   (backend lang code &optional opts indent caption)
@@ -2305,35 +2365,56 @@ INDENT was the original indentation of the block."
 	      (setq rtn (org-export-number-lines rtn 'latex 0 0 num cont rpllbl fmt))
 	      (concat "#+BEGIN_LaTeX\n"
 		      (org-add-props
-                          (if org-export-latex-listings
-                              (concat
-                               (if lang
-                                   (let*
-				       ((lang-sym (intern lang))
-					(lstlang
-					 (or (cadr
-					      (assq
-					       lang-sym
-					       org-export-latex-listings-langs))
-					     lang)))
-                                     (format "\\lstset{language=%s}\n" lstlang))
-                                 "\n")
-                               (when (and caption
-					  org-export-latex-listings-w-names)
-                                 (format "\n%s $\\equiv$ \n"
-					 (replace-regexp-in-string
-					  "_" "\\\\_" caption)))
-                               "\\begin{lstlisting}\n"
-                               rtn "\\end{lstlisting}\n")
-                            (concat (car org-export-latex-verbatim-wrap)
-                                    rtn (cdr org-export-latex-verbatim-wrap)))
-			  '(org-protected t org-example t))
-		      "#+END_LaTeX\n"))
-	     ((eq backend 'ascii)
-	      ;; This is not HTML or LaTeX, so just make it an example.
-	      (setq rtn (org-export-number-lines rtn 'ascii 0 0 num cont rpllbl fmt))
-	      (concat caption "\n"
-                      "#+BEGIN_ASCII\n"
+                          (cond
+			   ((and org-export-latex-listings
+				 (not (eq org-export-latex-listings 'minted)))
+			    (concat
+			     (if lang
+				 (let*
+				     ((lang-sym (intern lang))
+				      (lstlang
+				       (or (cadr
+					    (assq
+					     lang-sym
+					     org-export-latex-listings-langs))
+					   lang)))
+				   (format "\\lstset{language=%s}\n" lstlang))
+			       "\n")
+			     (when (and caption
+					org-export-latex-listings-w-names)
+			       (format "\n%s $\\equiv$ \n"
+				       (replace-regexp-in-string
+					"_" "\\\\_" caption)))
+			     "\\begin{lstlisting}\n"
+			     rtn "\\end{lstlisting}\n"))
+			   ((eq org-export-latex-listings 'minted)
+			    (if lang
+				(let*
+				    ((lang-sym (intern lang))
+				     (minted-lang
+				      (or (cadr
+					   (assq
+					    lang-sym
+					    org-export-latex-minted-langs))
+					  (downcase lang))))
+				  (concat
+				   (when (and caption
+					      org-export-latex-listings-w-names)
+				     (format "\n%s $\\equiv$ \n"
+					     (replace-regexp-in-string
+					      "_" "\\\\_" caption)))
+				   (format
+				    "\\begin{minted}[mathescape,%s\nnumbersep=5pt,\nframe=lines,\nframesep=2mm]{%s}\n" (if org-export-latex-minted-with-line-numbers "\nlinenos," "") minted-lang)
+				   rtn "\\end{minted}\n"))))
+			    (t (concat (car org-export-latex-verbatim-wrap)
+				       rtn (cdr org-export-latex-verbatim-wrap))))
+			   '(org-protected t org-example t))
+			  "#+END_LaTeX\n"))
+	      ((eq backend 'ascii)
+	       ;; This is not HTML or LaTeX, so just make it an example.
+	       (setq rtn (org-export-number-lines rtn 'ascii 0 0 num cont rpllbl fmt))
+	       (concat caption "\n"
+		      "#+BEGIN_ASCII\n"
 		      (org-add-props
 			  (concat
 			   (mapconcat
@@ -2530,6 +2611,28 @@ command."
     s))
 
 (defvar org-export-htmlized-org-css-url) ;; defined in org-html.el
+
+(defun org-export-string (string fmt &optional dir)
+  "Export STRING to FMT using existing export facilities.
+During export STRING is saved to a temporary file whose location
+could vary.  Optional argument DIR can be used to force the
+directory in which the temporary file is created during export
+which can be useful for resolving relative paths.  Dir defaults
+to the value of `temporary-file-directory'."
+  (let ((temporary-file-directory (or dir temporary-file-directory))
+	(tmp-file (make-temp-file "org-")))
+    (unwind-protect
+	(with-temp-buffer
+	  (insert string)
+	  (write-file tmp-file)
+	  (org-load-modules-maybe)
+	  (unless org-local-vars
+	    (setq org-local-vars (org-get-local-variables)))
+	  (eval ;; convert to fmt -- mimicing `org-run-like-in-org-mode'
+	   (list 'let org-local-vars
+		 (list (intern (concat "org-export-as-" fmt))
+		       nil nil nil ''string t))))
+      (delete-file tmp-file))))
 
 ;;;###autoload
 (defun org-export-as-org (arg &optional hidden ext-plist
@@ -2793,7 +2896,7 @@ If yes remove the column and the special lines."
 (defun org-export-cleanup-toc-line (s)
   "Remove tags and timestamps from lines going into the toc."
   (when (memq org-export-with-tags '(not-in-toc nil))
-    (if (string-match (org-re " +:[[:alnum:]_@:]+: *$") s)
+    (if (string-match (org-re " +:[[:alnum:]_@#%:]+: *$") s)
 	(setq s (replace-match "" t t s))))
   (when org-export-remove-timestamps-from-toc
     (while (string-match org-maybe-keyword-time-regexp s)
