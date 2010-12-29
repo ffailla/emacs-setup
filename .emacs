@@ -4,6 +4,8 @@
 
 ;; init env 
 (set-face-attribute 'default (selected-frame) :height 100)
+(set-frame-position (selected-frame) 0 0)
+(set-frame-size (selected-frame) 234 65)
 
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -227,22 +229,22 @@ by using nxml's indentation rules."
 (setq org-mobile-inbox-for-pull "~/org/flagged.org")
 (setq org-mobile-directory "~/Dropbox/MobileOrg")
 (setq org-default-notes-file "~/org/notes.org")
-(setq org-agenda-files '("~/org/todo.org" "~/org/notes.org"))
+;;(setq org-agenda-files '("/Users/ffailla/org/notes.org" "/Users/ffailla/org/sliver.org" "/Users/ffailla/org/flagged.org" "/Users/ffailla/org/eas.org" "/Users/ffailla/org/todo.org" "/Users/ffailla/org/zurveyz.org"))
+(setq org-agenda-files (directory-files "~/org" t ".org$"))
 (define-key global-map "\C-cc" 'org-capture)
+
+(defun set-org-agenda-files ()
+  (setq org-agenda-files 
+	(directory-files "~/org" t ".org$")))
 
 (defun set-mobile-org-files ()
   (setq org-mobile-files 
 	(append (directory-files "~/org" t ".org$") '(org-agenda-files org-agenda-text-search-extra-files))))
 
-;;(prefer-coding-system       'utf-8)
-;;(set-default-coding-systems 'utf-8)
-;;(set-terminal-coding-system 'utf-8)
-;;(set-keyboard-coding-system 'utf-8)
-;;(setq default-buffer-file-coding-system 'utf-8)
-
 (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
 (modify-coding-system-alist 'file "\\.dat\\'" 'utf-8)
-(add-hook 'org-mode-hook 'set-mobile-org-files)
+;;(add-hook 'org-mode-hook 'set-mobile-org-files)
+;;(add-hook 'org-mode-hook 'set-org-agenda-files)
 
 ;;
 ;; save-visited-files
@@ -417,5 +419,6 @@ by using nxml's indentation rules."
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(ecb-layout-window-sizes nil)
  '(ecb-options-version "2.40"))
 
