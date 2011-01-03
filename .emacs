@@ -24,6 +24,12 @@
 
 (setq ediff-split-window-function 'split-window-horizontally)
 
+
+;; linum mode
+;;  * http://stud4.tuwien.ac.at/~e0225855/linum/linum.el
+;;
+(require 'linum)
+
 ;;; This was installed by package-install.el.
 ;;; This provides support for the package system and
 ;;; interfacing with ELPA, the package archive.
@@ -414,11 +420,4 @@ by using nxml's indentation rules."
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
 				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
 
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(ecb-layout-window-sizes nil)
- '(ecb-options-version "2.40"))
 
