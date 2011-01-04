@@ -24,7 +24,6 @@
 
 (setq ediff-split-window-function 'split-window-horizontally)
 
-
 ;; linum mode
 ;;  * http://stud4.tuwien.ac.at/~e0225855/linum/linum.el
 ;;
@@ -97,6 +96,15 @@
 ;;  * http://georgejahad.com/clojure/emacs-cdt.html
 ;;  * git://github.com/GeorgeJahad/cdt.git
 ;;
+(defun cdt-set-source-path ()
+  (interactive)
+  (setq cdt-source-path 
+	(reduce (lambda (acc f)
+		  (concat (expand-file-name acc) ":" (expand-file-name f)))
+		'("./src/main/clojure"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 
 (defun clojure-mode-setup ()
   (slime-mode t)
@@ -107,12 +115,6 @@
       (define-key clojure-mode-map "\C-cc" 'comment-region)
       (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
       (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
-      (setq cdt-source-path 
-  	  (reduce (lambda (acc f)
-  		    (concat (expand-file-name acc) ":" (expand-file-name f)))
-  		  '("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
       (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
@@ -121,15 +123,6 @@
 ;;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
 ;;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
-(defun cdt-set-source-path ()
-  (interactive)
-  (setq cdt-source-path 
-	(reduce (lambda (acc f)
-		  (concat (expand-file-name acc) ":" (expand-file-name f)))
-		'("./src/main/clojure"
-		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 ;;  
 ;; auto-complete
 ;;
