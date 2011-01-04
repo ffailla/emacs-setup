@@ -110,10 +110,9 @@
       (setq cdt-source-path 
   	  (reduce (lambda (acc f)
   		    (concat (expand-file-name acc) ":" (expand-file-name f)))
-  		  '("src/main/clojure"
-  		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-  		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-  		     "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
+  		  '("~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+		    "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure")))
       (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
@@ -122,6 +121,15 @@
 ;;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
 ;;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
+(defun cdt-set-source-path ()
+  (interactive)
+  (setq cdt-source-path 
+	(reduce (lambda (acc f)
+		  (concat (expand-file-name acc) ":" (expand-file-name f)))
+		'("./src/main/clojure"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+		  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 ;;  
 ;; auto-complete
 ;;
