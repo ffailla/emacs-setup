@@ -1,0 +1,14 @@
+#!/bin/sh
+echo "running clojure from /opt/local/bin/lisp"
+
+CLASSPATH=$CLASSPATH:src:test:config:data
+
+for f in lib/*.jar; do
+    CLASSPATH=$CLASSPATH:$f
+done
+
+export CLASSPATH=~/.m2/repository/jline/jline/0.9.94/jline-0.9.94.jar:~/dev/swank-clojure/swank-clojure.jar:~/dev/clojure/clojure.jar:~/dev/clojure-contrib/clojure-contrib.jar
+
+java -server -Xmx1G -agentlib:jdwp=transport=dt_socket,address=8029,server=y,suspend=n -cp $CLASSPATH jline.ConsoleRunner clojure.main -r
+
+#java -server -cp $CLASSPATH clojure.main -e "(do (require 'swank.swank) (swank.swank/start-repl))" -r

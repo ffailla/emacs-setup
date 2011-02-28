@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo ediff $1 $2
+
+/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-files \"$1\" \"$2\")" 

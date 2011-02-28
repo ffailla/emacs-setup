@@ -291,8 +291,8 @@ by using nxml's indentation rules."
 ;;  * git clone git://git.bunkus.org/mo-git-blame.git
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/mo-git-blame")
-(autoload 'mo-git-blame-file "mo-git-blame" nil t)
-(autoload 'mo-git-blame-current "mo-git-blame" nil t)
+;;(autoload 'mo-git-blame-file "mo-git-blame" nil t)
+;;(autoload 'mo-git-blame-current "mo-git-blame" nil t)
 
 ;;
 ;; log4j mode
@@ -540,6 +540,11 @@ by using nxml's indentation rules."
 ;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
 ;;
 (server-start)
+;;(add-hook 'after-init-hook 'server-start)
+;;(add-hook 'server-done-hook
+;;	  (lambda ()
+;;	    (shell-command
+;;	     "screen -r -X select `cat ~/.emacsclient-caller`")))
 
 ;;
 ;; custom aliases
