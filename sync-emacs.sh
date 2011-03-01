@@ -13,6 +13,6 @@ then
 fi
 
 rsync -av --copy-dirlinks --delete ~/.emacs ./
-rsync -av --copy-dirlinks --delete ~/.emacs.d/ ./
-rsync -av --copy-dirlinks --delete ~/bin/ ./
+rsync -av --copy-dirlinks --delete ~/.emacs.d/ ./.emacs.d
+rsync -av --copy-dirlinks --delete ~/bin/ ./bin
 rsync -av --copy-dirlinks --delete ~/.screenrc ./
