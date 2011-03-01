@@ -1,2 +1,3 @@
 #!/bin/sh -e
-/Applications/Aquamacs\ Emacs.app/Contents/MacOS/Aquamacs\ Emacs -nw --debug-init "$@"
+#/Applications/Aquamacs\ Emacs.app/Contents/MacOS/Aquamacs\ Emacs -nw --debug-init "$@"
+/Applications/Emacs.app/Contents/MacOS/Emacs -nw --debug-init "$@
