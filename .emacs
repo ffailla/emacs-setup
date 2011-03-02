@@ -556,6 +556,17 @@ by using nxml's indentation rules."
 (defalias 'omps 'org-mobile-push)
 (defalias 'ompl 'org-mobile-pull)
 
+(define-key global-map "\C-cs"
+  (lambda ()
+    (interactive)
+    (message "saving current frame and window layout")
+    (setq my-favorite-frame-setup (current-frame-configuration))))
+(define-key global-map "\C-cf"
+  (lambda ()
+    (interactive)
+    (message "restoring frame and window layout")
+    (set-frame-configuration my-favorite-frame-setup)))
+
 ;;(global-set-key (kbd "C-x <up>") 'windmove-up)
 ;;(global-set-key (kbd "C-x <down>") 'windmove-down)
 ;;(global-set-key (kbd "C-x <right>") 'windmove-right)
