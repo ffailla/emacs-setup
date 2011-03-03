@@ -399,6 +399,7 @@ by using nxml's indentation rules."
 ;; csharpmode
 ;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
 ;;  * find . -name "*.cs" -print | etags -
+;;  * DIR /S /A /ONE /B | etags -
 (add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
@@ -535,11 +536,6 @@ by using nxml's indentation rules."
   (interactive)
   (require 'jira))
 
-;;
-;; start emacs server
-;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
-;;
-(server-start)
 ;;(add-hook 'after-init-hook 'server-start)
 ;;(add-hook 'server-done-hook
 ;;	  (lambda ()
@@ -571,6 +567,14 @@ by using nxml's indentation rules."
 ;;(global-set-key (kbd "C-x <down>") 'windmove-down)
 ;;(global-set-key (kbd "C-x <right>") 'windmove-right)
 ;;(global-set-key (kbd "C-x <left>") 'windmove-left)
+
+;;
+;; start emacs server
+;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
+;;
+(if (not (and (boundp 'server-process)
+	      (memq (process-status server-process) '(connect listen open run))))
+    (server-start))
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
 				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
