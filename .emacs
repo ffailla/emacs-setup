@@ -12,14 +12,16 @@
      (expand-file-name "~/.emacs.d/elpa/package.el"))
   (package-initialize))
 
-;; init env 
+;;;; init env 
 (tool-bar-mode -1)
 (setq inhibit-splash-screen t)
+
 (desktop-save-mode 1)
 (add-hook 'auto-save-hook (lambda () (desktop-save-in-desktop-dir)))
 (savehist-mode 1)
 (require 'saveplace)
 (setq-default save-place t)
+
 (set-face-attribute 'default (selected-frame) :height 100)
 (set-frame-position (selected-frame) 0 0)
 (set-frame-size (selected-frame) 234 65)
@@ -44,26 +46,29 @@
 (setenv "PATH" (concat (getenv "PATH") "~/bin:/opt/local/bin:/usr/local/bin:/sbin"))
 (setq exec-path (append exec-path '("~/bin" "/opt/local/bin" "/usr/local/bin" "/sbin")))
 
-;;
-;; enable column number mode
-;;(add-to-list 'auto-mode-alist '("\\.*\\'" . column-number-mode))
+(add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m)
 
-;;
-;; linum mode
-;;  * http://stud4.tuwien.ac.at/~e0225855/linum/linum.el
-;;
+;;;
+;;; enable column number mode
+;;;
+(setq column-number-mode t)
+
+;;;
+;;; linum mode
+;;;  * http://stud4.tuwien.ac.at/~e0225855/linum/linum.el
+;;;
 (require 'linum)
 (global-linum-mode 1)
 ;;(setq linum-format "%d ")
-;;(add-to-list 'auto-mode-alist '("\\.*\\'" . linum-mode))
 
-;;
-;; ediff
+;;;
+;;; ediff
+;;;
 (setq ediff-split-window-function 'split-window-horizontally)
 
-;;
-;; Setup TRAMP mode
-;;
+;;;
+;;; Setup TRAMP mode
+;;;
 (setq tramp-default-method "ssh")
 (setq tramp-default-user "root")
 (setq tramp-default-host "localhost")
@@ -80,7 +85,7 @@
 (add-hook 'find-file-hooks 'tramp-header-line-function)
 (add-hook 'dired-mode-hook 'tramp-header-line-function)
 
-;; TRAMP beep when done downloading files
+;;; TRAMP beep when done downloading files
 (defadvice tramp-handle-write-region
   (after tramp-write-beep-advice activate)
   " make tramp beep after writing a file."
@@ -97,9 +102,9 @@
   (interactive)
   (beep))
 
-;;
-;; printing
-;;
+;;;
+;;; printing support
+;;;
 (require 'printing)
 (pr-update-menus)
 (setq ps-printer-name "PDF_file_generator")
@@ -116,8 +121,11 @@
   (shell-command "rm /tmp/tmp.ps")
   (message (concat "Saved to:  " (buffer-name) ".pdf")))
 
-;; Put autosave files (ie #foo#) in one place, *not* 
-;; scattered all over the file system!
+;;;
+;;; autosave/backup tmp file locations
+;;;
+
+;; Put autosave files (ie #foo#) in one place, *not* scattered all over the file system!
 (defvar autosave-dir
   (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
 (make-directory autosave-dir t)
@@ -129,11 +137,11 @@
 (defvar backup-dir (concat "/tmp/emacs_backups/" (user-login-name) "/"))
 (setq backup-directory-alist (list (cons "." backup-dir)))
 
-;;
-;; slime - cvs distro
-;;  * http://common-lisp.net/project/slime/
-;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
-;;
+;;;
+;;; slime - cvs distro
+;;;  * http://common-lisp.net/project/slime/
+;;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
 (setq inferior-lisp-program "~/bin/lisp")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
@@ -143,10 +151,10 @@
      (setq slime-protocol-version 'ignore)
      (slime-setup '(slime-repl slime-fuzzy))))
 
-;;
-;; paredit
-;;  * http://mumble.net/~campbell/emacs/paredit.el
-;;
+;;;
+;;; paredit
+;;;  * http://mumble.net/~campbell/emacs/paredit.el
+;;;
 ;(add-to-list 'load-path "/path/to/elisp")
 (add-to-list 'load-path "~/.emacs.d/site-lisp/paredit/")
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
@@ -166,11 +174,11 @@
 ;;    (update-directory-autoloads "~/Tools/swank-clojure-enablers"))) 
 ;;(setq swank-clojure-classpath (directory-files "~/.clojure-jars" t ".jar$"))
 
-;;
-;; cdt
-;;  * http://georgejahad.com/clojure/emacs-cdt.html
-;;  * git://github.com/GeorgeJahad/cdt.git
-;;
+;;;
+;;; cdt
+;;;  * http://georgejahad.com/clojure/emacs-cdt.html
+;;;  * git://github.com/GeorgeJahad/cdt.git
+;;;
 (defun cdt-set-source-path ()
   (interactive)
   (setq cdt-source-path 
@@ -187,6 +195,7 @@
   (highlight-parentheses-mode t)
   (paredit-mode t)
   (outline-minor-mode t)
+  (column-number-mode)
   (progn
       (define-key clojure-mode-map "\C-cc" 'comment-region)
       (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
@@ -208,26 +217,26 @@
   (sit-for 5)  ;; hack for now... yuck... need to learn more elisp to do this correctly
   (slime-connect "localhost" 4005))
 
-;;  
-;; auto-complete
-;;
+;;;  
+;;; auto-complete
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/auto-complete/")
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
 (ac-config-default)
 
-;;
-;; ac-slime
-;;  * http://github.com/purcell/ac-slime
-;;
+;;;
+;;; ac-slime
+;;;  * http://github.com/purcell/ac-slime
+;;;
 ;;(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
 ;;(require 'ac-slime)
 ;;(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
-;;
-;; highlight-parentheses
-;;  * http://nschum.de/src/emacs/highlight-parentheses/
-;;
+;;;
+;;; highlight-parentheses
+;;;  * http://nschum.de/src/emacs/highlight-parentheses/
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/highlight-parentheses/")
 (autoload 'highlight-parentheses-mode "highlight-parentheses" "highlight parentheses mode" t)
 (setq hl-paren-colors
@@ -237,20 +246,20 @@
 	"#CD4A4A" "#A5694F" "#FFA343" "#87A96B" "#17806D" "#1DACD6" "#1A4876" "#7442C8" "#FF1DCE" "#CB4154" 
 ))
 
-;;
-;; nxml-mode
-;;  * http://www.thaiopensource.com/nxml-mode/
-;;
+;;;
+;;; nxml-mode
+;;;  * http://www.thaiopensource.com/nxml-mode/
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/nxml-mode/")
 (autoload 'nxml-mode "nxml-mode" nil t)
 (setq auto-mode-alist (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
 			    auto-mode-alist))
 (unify-8859-on-decoding-mode)
 
-;;
-;; xml pretty printer
-;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
-;;
+;;;
+;;; xml pretty printer
+;;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
+;;;
 (defun xml-pprint-region (begin end)
   "Pretty format XML markup in region. You need to have nxml-mode
 http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
@@ -271,57 +280,58 @@ by using nxml's indentation rules."
   (push-mark)
   (xml-pprint-region (point-min) (point-max)))
 
-;;
-;; emacs-nav
-;;  * http://code.google.com/p/emacs-nav/
-;;  * hg clone https://emacs-nav.googlecode.com/hg/ emacs-nav
-;;
+;;;
+;;; emacs-nav
+;;;  * http://code.google.com/p/emacs-nav/
+;;;  * hg clone https://emacs-nav.googlecode.com/hg/ emacs-nav
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-nav/")
 (autoload 'nav "nav" nil t)
 
-;;
-;; magit
-;;  * http://github.com/philjackson/magit
-;;
+;;;
+;;; magit
+;;;  * http://github.com/philjackson/magit
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/magit/")
 (autoload 'magit-status "magit" nil t)
 
-;; 
-;; mo-git-blame
-;;  * git clone git://git.bunkus.org/mo-git-blame.git
-;;
+;;; 
+;;; mo-git-blame
+;;;  * git clone git://git.bunkus.org/mo-git-blame.git
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/mo-git-blame")
 ;;(autoload 'mo-git-blame-file "mo-git-blame" nil t)
 ;;(autoload 'mo-git-blame-current "mo-git-blame" nil t)
 
-;;
-;; log4j mode
-;;  * http://log4j-mode.sourceforge.net/
-;;
+;;;
+;;; log4j mode
+;;;  * http://log4j-mode.sourceforge.net/
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/log4j-mode/")
 (autoload 'log4j-mode "log4j-mode" "Major mode for viewing log files." t)
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))
 ;;(add-hook 'log4j-mode-hook (lambda () (linum-mode nil)))
 
-;;
-;; javascript mode
-;;  * http://www.emacswiki.org/emacs/JavaScriptMode
-;;  * http://www.brgeight.se/downloads/emacs/javascript.el
-;;
+;;;
+;;; javascript mode
+;;;  * http://www.emacswiki.org/emacs/JavaScriptMode
+;;;  * http://www.brgeight.se/downloads/emacs/javascript.el
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/javascript/")
 (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 
 (defun javascript-mode-setup ()
   ;;(linum-mode t)
+  (column-number-mode)
 )
 
 (add-hook 'javascript-mode-hook #'javascript-mode-setup) 
 (autoload 'javascript-mode "javascript" nil t)
 
-;;
-;; org-mode
-;;  * http://orgmode.org/
-;;
+;;;
+;;; org-mode
+;;;  * http://orgmode.org/
+;;;
 (setq load-path (cons "~/.emacs.d/site-lisp/org-mode/lisp" load-path))
 (setq load-path (cons "~/.emacs.d/site-lisp/org-mode/contrib/lisp" load-path))
 (require 'org-install)  ; org-install.el only has autoloads
@@ -355,10 +365,10 @@ by using nxml's indentation rules."
 ;;(add-hook 'org-mode-hook 'org-set-mobile-org-files)
 ;;(add-hook 'org-mode-hook 'org-set-org-agenda-files)
 
-;;
-;; jdee
-;;  * http://jdee.sourceforge.net/
-;; 
+;;;
+;;; jdee
+;;;  * http://jdee.sourceforge.net/
+;;; 
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/jdee/lisp"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/cedet/common"))
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
@@ -369,9 +379,9 @@ by using nxml's indentation rules."
   (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
   (require 'jde))
 
-;;
-;; diff-mode customization
-;;
+;;;
+;;; diff-mode customization
+;;;
 (add-to-list 'auto-mode-alist '(".*_EDITMSG\\'" . diff-mode))
 ;;(add-to-list 'auto-mode-alist '("\\COMMIT_EDITMSG\\'" . log-entry-mode))
 (custom-set-faces
@@ -385,11 +395,11 @@ by using nxml's indentation rules."
  '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
  '(diff-removed ((t (:foreground "#de1923")))))
 
-;;
-;; csharpmode
-;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
-;;  * find . -name "*.cs" -print | etags -
-;;  * DIR /S /A /ONE /B | etags -
+;;;
+;;; csharpmode
+;;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
+;;;  * find . -name "*.cs" -print | etags -
+;;;  * DIR /S /A /ONE /B | etags -
 (add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
@@ -401,10 +411,10 @@ by using nxml's indentation rules."
 ;;   )
 ;; (add-hook  'csharp-mode-hook 'my-csharp-mode-fn t)
 
-;;
-;; sql-mode / jisql
-;;  * http://www.xigole.com/software/jisql/jisql.jsp
-;;
+;;;
+;;; sql-mode / jisql
+;;;  * http://www.xigole.com/software/jisql/jisql.jsp
+;;;
 (setq exec-path (append exec-path '("~/.emacs.d/site-lisp/jisql")))
 (defun sql-save-history-hook ()
   (let ((lval 'sql-input-ring-file-name)
@@ -430,10 +440,10 @@ by using nxml's indentation rules."
 ;;	    'sql-add-newline-first))
 ;;  (add-hook 'sql-interactive-mode-hook 'sqli-add-hooks)
 
-;;
-;; ess
-;;  * http://ess.r-project.org/
-;;
+;;;
+;;; ess
+;;;  * http://ess.r-project.org/
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
 (setq ess-r-versions nil)
 
@@ -477,19 +487,21 @@ by using nxml's indentation rules."
 	 )
        auto-mode-alist))
 
-;;
-;; csv-mode
-;;  * http://www.emacswiki.org/emacs/csv-mode.el
-(add-to-list 'load-path "~/.emacs.d/site-lisp/csv-mode")
+;;;
+;;; csv-mode
+;;;  * http://www.emacswiki.org/emacs/csv-mode.el
+;;;
+;;(add-to-list 'load-path "~/.emacs.d/site-lisp/csv-mode")
 ;;(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
 ;;(autoload 'csv-mode "csv-mode" "Major mode for editing comma-separated value files." t)
 ;;(require 'csv-mode)
 
-;;
-;; ecb
-;;  * http://http://ecb.sourceforge.net/
-;;  * cvs -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb login
-;;  * cvs -z3 -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb co -P modulename
+;;;
+;;; ecb
+;;;  * http://http://ecb.sourceforge.net/
+;;;  * cvs -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb login
+;;;  * cvs -z3 -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb co -P modulename
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/ecb/")
 ;;(require 'ecb)
 ;;(require 'ecb-autoloads)
@@ -500,19 +512,19 @@ by using nxml's indentation rules."
   (semantic-load-enable-minimum-features)
   (require 'ecb))
 
-;;
-;; xml-rpc
-;;  * http://www.emacswiki.org/emacs/XmlRpc
-;;  * http://www.emacswiki.org/emacs/xml-rpc.el
-;;
+;;;
+;;; xml-rpc
+;;;  * http://www.emacswiki.org/emacs/XmlRpc
+;;;  * http://www.emacswiki.org/emacs/xml-rpc.el
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/xml-rpc")
 (require 'xml-rpc)
 
-;;
-;; jira
-;;  * http://www.emacswiki.org/emacs/JiraMode
-;;  * http://www.emacswiki.org/emacs/jira.el
-;;
+;;;
+;;; jira
+;;;  * http://www.emacswiki.org/emacs/JiraMode
+;;;  * http://www.emacswiki.org/emacs/jira.el
+;;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/jira")
 
 (defun jira-set-url ()
@@ -530,9 +542,9 @@ by using nxml's indentation rules."
 ;;	    (shell-command
 ;;	     "screen -r -X select `cat ~/.emacsclient-caller`")))
 
-;;
-;; custom aliases/key bindings
-;;
+;;;
+;;; custom aliases/key bindings
+;;;
 (defalias 'ppx 'pprint-xml)
 (defalias 'ttl 'toggle-truncate-lines)
 (defalias 'rnb 'rename-buffer)
@@ -557,10 +569,10 @@ by using nxml's indentation rules."
 ;;(global-set-key (kbd "C-x <right>") 'windmove-right)
 ;;(global-set-key (kbd "C-x <left>") 'windmove-left)
 
-;;
-;; start emacs server
-;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
-;;
+;;;
+;;; start emacs server
+;;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
+;;;
 (if (not (and (boundp 'server-process)
 	      (memq (process-status server-process) '(connect listen open run))))
     (server-start))
