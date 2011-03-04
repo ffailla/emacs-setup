@@ -15,7 +15,8 @@
 ;; init env 
 (tool-bar-mode -1)
 (setq inhibit-splash-screen t)
-;;(desktop-save-mode 1)
+(desktop-save-mode 1)
+(add-hook 'auto-save-hook (lambda () (desktop-save-in-desktop-dir)))
 (savehist-mode 1)
 (require 'saveplace)
 (setq-default save-place t)
@@ -41,7 +42,7 @@
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (setenv "PATH" (concat (getenv "PATH") "~/bin:/opt/local/bin:/usr/local/bin:/sbin"))
-(setq exec-path (append exec-path '("~/bin" "/opt/local/bin" "/usr/local/bin")))
+(setq exec-path (append exec-path '("~/bin" "/opt/local/bin" "/usr/local/bin" "/sbin")))
 
 ;;
 ;; enable column number mode
@@ -134,7 +135,7 @@
 ;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
-(setq inferior-lisp-program "/opt/local/bin/lisp")
+(setq inferior-lisp-program "~/bin/lisp")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
 (autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
 (eval-after-load 'slime 
@@ -185,7 +186,7 @@
   (show-paren-mode t)
   (highlight-parentheses-mode t)
   (paredit-mode t)
-  ;;(linum-mode t)
+  (outline-minor-mode t)
   (progn
       (define-key clojure-mode-map "\C-cc" 'comment-region)
       (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
@@ -200,7 +201,7 @@
 
 (defun slime-clojure ()
   (interactive)
-  (setq inferior-lisp-program "/opt/local/bin/swank")
+  (setq inferior-lisp-program "~/bin/swank")
   (require 'slime)
   ;;(run-lisp)
   (start-process inferior-lisp-program "*inferior-lisp*" "lisp")
@@ -245,7 +246,6 @@
 (setq auto-mode-alist (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
 			    auto-mode-alist))
 (unify-8859-on-decoding-mode)
-;;(add-hook 'nxml-mode-hook (lambda () (linum-mode nil)))
 
 ;;
 ;; xml pretty printer
@@ -330,7 +330,6 @@ by using nxml's indentation rules."
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
 (add-hook 'org-mode-hook 'turn-on-font-lock)  ; Org buffers only
-;;(add-hook 'org-mode-hook (lambda () (linum-mode nil)))
 ;;(global-font-lock-mode 1)                     ; for all buffers
 
 (if (not (file-exists-p "~/org")) (make-directory "~/org"))
@@ -357,14 +356,6 @@ by using nxml's indentation rules."
 ;;(add-hook 'org-mode-hook 'org-set-org-agenda-files)
 
 ;;
-;; save-visited-files
-;;  * http://github.com/nflath/save-visited-files
-;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/save-visited-files/")
-(require 'save-visited-files)
-(turn-on-save-visited-files-mode)
-
-;;
 ;; jdee
 ;;  * http://jdee.sourceforge.net/
 ;; 
@@ -377,7 +368,6 @@ by using nxml's indentation rules."
 (defun jde-start ()
   (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
   (require 'jde))
-;;(add-hook 'java-mode-hook (lambda () (linum-mode nil)))
 
 ;;
 ;; diff-mode customization
@@ -403,7 +393,6 @@ by using nxml's indentation rules."
 (add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
-;;(add-hook 'csharp-mode-hook (lambda () (linum-mode nil)))
 
 ;; (defun my-csharp-mode-fn ()
 ;;   "function that runs when csharp-mode is initialized for a buffer."
@@ -430,7 +419,6 @@ by using nxml's indentation rules."
        (format "SQL history will not be saved because %s is nil"
 	       (symbol-name rval))))))
 (add-hook 'sql-interactive-mode-hook 'sql-save-history-hook)
-;;(add-hook 'sql-mode-hook (lambda () (linum-mode nil)))
 
 ;;(defun sql-add-newline-first (output)
 ;;  "Add newline to beginning of OUTPUT for `comint-preoutput-filter-functions'"
@@ -543,7 +531,7 @@ by using nxml's indentation rules."
 ;;	     "screen -r -X select `cat ~/.emacsclient-caller`")))
 
 ;;
-;; custom aliases
+;; custom aliases/key bindings
 ;;
 (defalias 'ppx 'pprint-xml)
 (defalias 'ttl 'toggle-truncate-lines)
@@ -557,6 +545,7 @@ by using nxml's indentation rules."
     (interactive)
     (message "saving current frame and window layout")
     (setq my-favorite-frame-setup (current-frame-configuration))))
+
 (define-key global-map "\C-cf"
   (lambda ()
     (interactive)
