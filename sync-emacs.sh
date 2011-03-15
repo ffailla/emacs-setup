@@ -5,10 +5,10 @@ then
   set p=`pwd`
   cd ./.emacs.d/site-lisp/cdt/ && lein deps install && cd $p 
   ant -f ./.emacs.d/site-lisp/jisql/build.xml
-  rsync -av --delete ./.emacs ~/
+  cp ./.emacs ~/
   rsync -av --delete ./.emacs.d/ ~/.emacs.d
   rsync -av --delete ./bin/ ~/bin
-  rsync -av --delete ./.screenrc ~/
+  cp ./.screenrc ~/
   exit 0;
 fi
 
