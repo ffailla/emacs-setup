@@ -43,8 +43,8 @@
 
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
-(setenv "PATH" (concat (getenv "PATH") "~/bin:/opt/local/bin:/usr/local/bin:/sbin"))
-(setq exec-path (append exec-path '("~/bin" "/opt/local/bin" "/usr/local/bin" "/sbin")))
+(setenv "PATH" (concat "~/bin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/sbin:" (getenv "PATH")))
+(setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin") exec-path))
 
 (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m)
 
@@ -72,7 +72,7 @@
 (setq tramp-default-method "ssh")
 (setq tramp-default-user "root")
 (setq tramp-default-host "localhost")
-(setq tramp-shell-prompt-pattern "^.*>$")
+;;(setq tramp-shell-prompt-pattern "^.*>$")
 (setq tramp-chunksize 500)
 
 (defun tramp-header-line-function ()
@@ -82,8 +82,8 @@
 			    'font-lock-warning-face)))
   '(mode-line ((t (:background "Red")))))
 
-(add-hook 'find-file-hooks 'tramp-header-line-function)
-(add-hook 'dired-mode-hook 'tramp-header-line-function)
+;;(add-hook 'find-file-hooks 'tramp-header-line-function)
+;;(add-hook 'dired-mode-hook 'tramp-header-line-function)
 
 ;;; TRAMP beep when done downloading files
 (defadvice tramp-handle-write-region
