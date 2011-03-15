@@ -1,15 +1,14 @@
 #!/bin/sh
 
-set p=`pwd`
-
-if [ "$1" == "--restore" ] 
+if [ $1 == "--restore" ] 
 then  
+  set pw=`pwd`
   cd ./.emacs.d/site-lisp/cdt/ && lein deps install
-  cd $p && ant -f ./.emacs.d/site-lisp/jisql/build.xml
-  cd $p && cp ./.emacs ~/
-  cd $p && rsync -av --delete ./.emacs.d/ ~/.emacs.d
-  cd $p && rsync -av --delete ./bin/ ~/bin
-  cd $p && cp ./.screenrc ~/
+  cd $pw && ant -f ./.emacs.d/site-lisp/jisql/build.xml
+  cd $pw && cp ./.emacs ~/
+  cd $pw && rsync -av --delete ./.emacs.d/ ~/.emacs.d
+  cd $pw && rsync -av --delete ./bin/ ~/bin
+  cd $pw && cp ./.screenrc ~/  
   exit 0;
 fi
 
