@@ -12,7 +12,7 @@
      (expand-file-name "~/.emacs.d/elpa/package.el"))
   (package-initialize))
 
-;;;; init env 
+;;; init env 
 (tool-bar-mode -1)
 (setq inhibit-splash-screen t)
 
@@ -21,6 +21,13 @@
 (savehist-mode 1)
 (require 'saveplace)
 (setq-default save-place t)
+
+;;set the title bar to display the full path of the buffer
+(setq-default frame-title-format
+	      (list '((buffer-file-name " %f"
+					(dired-directory
+					 dired-directory
+					 (revert-buffer-function " %b" ("%b - " default-directory)))))))
 
 (set-face-attribute 'default (selected-frame) :height 100)
 (set-frame-position (selected-frame) 0 0)
@@ -62,6 +69,20 @@
 ;;(setq linum-format "%d ")
 
 ;;;
+;;; color-theme
+;;;  * http://www.nongnu.org/color-theme/
+;;;
+(add-to-list 'load-path "~/.emacs.d/site-lisp/color-theme")
+(require 'color-theme)
+(eval-after-load "color-theme"
+  '(progn
+     (color-theme-initialize)
+     (color-theme-hober)))
+(color-theme-classic)
+;;(color-theme-comidia)
+
+
+;;;
 ;;; ediff
 ;;;
 (setq ediff-split-window-function 'split-window-horizontally)
@@ -72,18 +93,7 @@
 (setq tramp-default-method "ssh")
 (setq tramp-default-user "root")
 (setq tramp-default-host "localhost")
-;;(setq tramp-shell-prompt-pattern "^.*>$")
 (setq tramp-chunksize 500)
-
-(defun tramp-header-line-function ()
-  (when (string-match "^/ssh:root.localhost.*$" default-directory)
-    (setq header-line-format
-	  (format-mode-line ">>-----> THIS BUFFER IS VISITED WITH ROOT PRIVILEGES <-----<<"
-			    'font-lock-warning-face)))
-  '(mode-line ((t (:background "Red")))))
-
-;;(add-hook 'find-file-hooks 'tramp-header-line-function)
-;;(add-hook 'dired-mode-hook 'tramp-header-line-function)
 
 ;;; TRAMP beep when done downloading files
 (defadvice tramp-handle-write-region
@@ -541,6 +551,13 @@ by using nxml's indentation rules."
 ;;	  (lambda ()
 ;;	    (shell-command
 ;;	     "screen -r -X select `cat ~/.emacsclient-caller`")))
+
+;;
+;; irc settings
+;;
+(add-hook 'erc-text-matched-hook 'erc-beep-on-match)
+(setq erc-beep-match-types '(current-nick keyword))
+(setq erc-fill-column 110)
 
 ;;;
 ;;; custom aliases/key bindings
