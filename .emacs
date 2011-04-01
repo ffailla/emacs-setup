@@ -78,9 +78,9 @@
   '(progn
      (color-theme-initialize)
      (color-theme-hober)))
-(color-theme-classic)
+;;(color-theme-classic)
 ;;(color-theme-comidia)
-
+(color-theme-subtle-hacker)
 
 ;;;
 ;;; ediff
@@ -134,7 +134,6 @@
 ;;;
 ;;; autosave/backup tmp file locations
 ;;;
-
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the file system!
 (defvar autosave-dir
   (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
@@ -146,6 +145,10 @@
 ;; backed up in the corresponding directory. Emacs will mkdir it if necessary.)
 (defvar backup-dir (concat "/tmp/emacs_backups/" (user-login-name) "/"))
 (setq backup-directory-alist (list (cons "." backup-dir)))
+
+;; move custom-file mods to its own file (not in this .emacs file)
+(setq custom-file "~/.emacs-custom.el")
+(load custom-file 'noerror)
 
 ;;;
 ;;; slime - cvs distro
@@ -557,7 +560,8 @@ by using nxml's indentation rules."
 ;;
 (add-hook 'erc-text-matched-hook 'erc-beep-on-match)
 (setq erc-beep-match-types '(current-nick keyword))
-(setq erc-fill-column 110)
+(setq erc-fill-column 100)
+(setq erc-hide-list '("JOIN" "PART" "QUIT" "NICK"))
 
 ;;;
 ;;; custom aliases/key bindings
