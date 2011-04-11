@@ -15,6 +15,7 @@
 ;;; init env 
 (tool-bar-mode -1)
 (setq inhibit-splash-screen t)
+(toggle-scroll-bar -1)
 
 (desktop-save-mode 1)
 (add-hook 'auto-save-hook (lambda () (desktop-save-in-desktop-dir)))
@@ -31,7 +32,7 @@
 
 (set-face-attribute 'default (selected-frame) :height 100)
 (set-frame-position (selected-frame) 0 0)
-(set-frame-size (selected-frame) 234 65)
+(set-frame-size (selected-frame) 240 70)
 
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -175,6 +176,7 @@
 ;;
 ;; clojure-mode
 ;;  * http://github.com/technomancy/clojure-mode
+;;  * find . -name '*.clj' | xargs etags --regex=@/Users/ffailla/bin/clojure.tags
 ;;
 (add-to-list 'load-path "~/.emacs.d/site-lisp/clojure-mode/")
 (autoload 'clojure-mode "clojure-mode" nil t)
@@ -208,7 +210,7 @@
   (highlight-parentheses-mode t)
   (paredit-mode t)
   (outline-minor-mode t)
-  (column-number-mode)
+  (column-number-mode t)
   (progn
       (define-key clojure-mode-map "\C-cc" 'comment-region)
       (define-key clojure-mode-map "\C-cu" 'uncomment-region)  
@@ -600,3 +602,5 @@ by using nxml's indentation rules."
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
 				     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
+
+;;(add-hook 'slime-mode-hook 'slime-redirect-inferior-output) 
