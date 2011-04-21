@@ -17,8 +17,17 @@
 (setq inhibit-splash-screen t)
 (toggle-scroll-bar -1)
 
+(defun desktop-save-in-desktop-dir-nomessage ()
+  "Save the desktop in directory `desktop-dirname'."
+  (interactive)
+  (if desktop-dirname
+      (desktop-save desktop-dirname)
+    (call-interactively 'desktop-save))
+  ;;(message "Desktop saved in %s" (abbreviate-file-name desktop-dirname))
+  )
+
 (desktop-save-mode 1)
-(add-hook 'auto-save-hook (lambda () (desktop-save-in-desktop-dir)))
+(add-hook 'auto-save-hook (lambda () (desktop-save-in-desktop-dir-nomessage)))
 (savehist-mode 1)
 (require 'saveplace)
 (setq-default save-place t)
@@ -40,6 +49,8 @@
 (set-keyboard-coding-system 'utf-8)
 (setq default-buffer-file-coding-system 'utf-8)
 (setq default-save-buffer-coding-system 'utf-8)
+
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;;(setq visible-bell f)
 ;;(setq ring-bell-function 'ignore)
@@ -99,13 +110,14 @@
 (eval-after-load "color-theme"
   '(progn
      (color-theme-initialize)
-     (color-theme-hober)))
-;;(color-theme-classic)
-;;(color-theme-comidia)
-;;(color-theme-subtle-hacker)
+     ;;(color-theme-hober)
+     ;;(color-theme-classic)
+     ;;(color-theme-comidia)
+     ;;(color-theme-subtle-hacker)
+     ))
 
 ;;; color theme with rainbow parens
-(defun color-theme-subtle-hacker-rainbow-parens ()
+(defun color-theme-subtle-hacker-rainbow ()
   "Subtle Hacker Color Theme.
 Based on gnome2, but uses white for important things like comments,
 and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
@@ -187,7 +199,118 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
        (rainbow-delimiters-unmatched-delimiter-face ((t (:bold t :foreground "darkgray"))))
        ))))
 
-(color-theme-subtle-hacker-rainbow-parens)
+;;(color-theme-subtle-hacker-rainbow)
+
+(defun color-theme-clarity-rainbow ()
+  "White on black color theme by Richard Wellum, created 2003-01-16."
+  (interactive)
+  (color-theme-install
+   '(color-theme-clarity
+     ((background-color . "black")
+      (background-mode . dark)
+      (border-color . "white")
+      (cursor-color . "yellow")
+      (foreground-color . "white")
+      (mouse-color . "white"))
+     ((CUA-mode-global-mark-cursor-color . "cyan")
+      (CUA-mode-normal-cursor-color . "yellow")
+      (CUA-mode-overwrite-cursor-color . "red")
+      (CUA-mode-read-only-cursor-color . "green")
+      (help-highlight-face . underline)
+      (ibuffer-dired-buffer-face . font-lock-function-name-face)
+      (ibuffer-help-buffer-face . font-lock-comment-face)
+      (ibuffer-hidden-buffer-face . font-lock-warning-face)
+      (ibuffer-occur-match-face . font-lock-warning-face)
+      (ibuffer-read-only-buffer-face . font-lock-type-face)
+      (ibuffer-special-buffer-face . font-lock-keyword-face)
+      (ibuffer-title-face . font-lock-type-face)
+      (list-matching-lines-face . bold)
+      (ps-line-number-color . "black")
+      (ps-zebra-color . 0.95)
+      (tags-tag-face . default)
+      (view-highlight-face . highlight)
+      (widget-mouse-face . highlight))
+     (default ((t (nil))))
+     (CUA-global-mark-face ((t (:background "cyan" :foreground "black"))))
+     (CUA-rectangle-face ((t (:background "maroon" :foreground "white"))))
+     (CUA-rectangle-noselect-face ((t (:background "dimgray" :foreground "white"))))
+     (bold ((t (:bold t :weight bold))))
+     (bold-italic ((t (:italic t :bold t :slant italic :weight bold))))
+     (border ((t (:background "white"))))
+     (clearcase-dired-checkedout-face ((t (:foreground "red"))))
+     (comint-highlight-input ((t (:bold t :weight bold))))
+     (comint-highlight-prompt ((t (:foreground "cyan"))))
+     (cursor ((t (:background "yellow"))))
+     (fixed-pitch ((t (:family "courier"))))
+     (flash-paren-face-off ((t (nil))))
+     (flash-paren-face-on ((t (nil))))
+     (flash-paren-face-region ((t (nil))))
+     (font-lock-builtin-face ((t (:foreground "LightSteelBlue"))))
+     (font-lock-comment-face ((t (:foreground "OrangeRed"))))
+     (font-lock-constant-face ((t (:foreground "Aquamarine"))))
+     (font-lock-doc-face ((t (:foreground "LightSalmon"))))
+     (font-lock-function-name-face ((t (:foreground "LightSkyBlue"))))
+     (font-lock-keyword-face ((t (:foreground "Cyan"))))
+     (font-lock-string-face ((t (:foreground "LightSalmon"))))
+     (font-lock-type-face ((t (:foreground "PaleGreen"))))
+     (font-lock-variable-name-face ((t (:foreground "LightGoldenrod"))))
+     (font-lock-warning-face ((t (:bold t :foreground "Pink" :weight bold))))
+     (fringe ((t (:background "grey10"))))
+     (header-line ((t (:box (:line-width -1 :style released-button) :foreground "grey20" :background "grey90" :box nil))))
+     (highlight ((t (:background "darkolivegreen"))))
+     (ibuffer-deletion-face ((t (:foreground "red"))))
+     (ibuffer-marked-face ((t (:foreground "green"))))
+     (isearch ((t (:background "palevioletred2" :foreground "brown4"))))
+     (isearch-lazy-highlight-face ((t (:background "paleturquoise4"))))
+     (italic ((t (:italic t :slant italic))))
+     (menu ((t (nil))))
+     (mode-line ((t (:foreground "yellow" :background "darkslateblue" :box (:line-width -1 :style released-button)))))
+     (mouse ((t (:background "white"))))
+     (region ((t (:background "blue"))))
+     (scroll-bar ((t (nil))))
+     (secondary-selection ((t (:background "darkslateblue"))))
+     (show-block-face1 ((t (:background "gray10"))))
+     (show-block-face2 ((t (:background "gray15"))))
+     (show-block-face3 ((t (:background "gray20"))))
+     (show-block-face4 ((t (:background "gray25"))))
+     (show-block-face5 ((t (:background "gray30"))))
+     (show-block-face6 ((t (:background "gray35"))))
+     (show-block-face7 ((t (:background "gray40"))))
+     (show-block-face8 ((t (:background "gray45"))))
+     (show-block-face9 ((t (:background "gray50"))))
+     (show-paren-match-face ((t (:background "turquoise"))))
+     (show-paren-mismatch-face ((t (:background "purple" :foreground "white"))))
+     (tool-bar ((t (:background "grey75" :foreground "black" :box (:line-width 1 :style released-button)))))
+     (tooltip ((t (:background "lightyellow" :foreground "black"))))
+     (trailing-whitespace ((t (:background "red"))))
+     (underline ((t (:underline t))))
+     (variable-pitch ((t (:family "helv"))))
+     (widget-button-face ((t (:bold t :weight bold))))
+     (widget-button-pressed-face ((t (:foreground "red"))))
+     (widget-documentation-face ((t (:foreground "lime green"))))
+     (widget-field-face ((t (:background "dim gray"))))
+     (widget-inactive-face ((t (:foreground "light gray"))))
+     (widget-single-line-field-face ((t (:background "dim gray"))))
+
+     (rainbow-delimiters-depth-1-face ((t (:bold t :foreground "royal blue"))))
+     (rainbow-delimiters-depth-2-face ((t (:bold t :foreground "turquoise"))))
+     (rainbow-delimiters-depth-3-face ((t (:bold t :foreground "tomato"))))
+     (rainbow-delimiters-depth-4-face ((t (:bold t :foreground "dodger blue"))))
+     (rainbow-delimiters-depth-5-face ((t (:bold t :foreground "green yellow"))))
+     (rainbow-delimiters-depth-6-face ((t (:bold t :foreground "dark orange"))))
+     (rainbow-delimiters-depth-7-face ((t (:bold t :foreground "slateblue1"))))
+     (rainbow-delimiters-depth-8-face ((t (:bold t :foreground "salmon"))))
+     (rainbow-delimiters-depth-9-face ((t (:bold t :foreground "burlywood"))))
+     (rainbow-delimiters-depth-10-face ((t (:bold t :foreground "chocolate"))))
+     (rainbow-delimiters-depth-11-face ((t (:bold t :foreground "light sea green"))))
+     (rainbow-delimiters-depth-12-face ((t (:bold t :foreground "aquamarine"))))
+     (rainbow-delimiters-depth-13-face ((t (:bold t :foreground "khaki"))))
+     (rainbow-delimiters-depth-14-face ((t (:bold t :foreground "light sky blue"))))
+
+     (rainbow-delimiters-unmatched-delimiter-face ((t (:bold t :foreground "darkgray"))))
+     )))
+
+(color-theme-clarity-rainbow)
 
 ;;;
 ;;; ediff
@@ -304,12 +427,6 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 (autoload 'clojure-mode "clojure-mode" nil t)
 (autoload 'clojure-test-mode "clojure-test-mode" nil t)
 
-;;(defun swank-clojure-autoloads nil
-;;  (interactive)
-;;  (let ((generated-autoload-file "~/Tools/swank-clojure-enablers/swank-clojure-autoload.el"))
-;;    (update-directory-autoloads "~/Tools/swank-clojure-enablers")))
-;;(setq swank-clojure-classpath (directory-files "~/.clojure-jars" t ".jar$"))
-
 ;;;
 ;;; cdt
 ;;;  * http://georgejahad.com/clojure/emacs-cdt.html
@@ -321,7 +438,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
         (reduce (lambda (acc f)
                   (concat (expand-file-name acc) ":" (expand-file-name f)))
                 '("./src/main/clojure"
-                  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+                  ;;"~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 
@@ -342,8 +459,6 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
-;;(add-hook 'emacs-lisp-mode-hook #'lisp-setup)
-;;(add-hook 'slime-repl-mode-hook (lambda () (highlight-parentheses-mode t)))
 
 (defun slime-clojure ()
   (interactive)
@@ -437,16 +552,23 @@ by using nxml's indentation rules."
 ;;;  * http://www.emacswiki.org/emacs/JavaScriptMode
 ;;;  * http://www.brgeight.se/downloads/emacs/javascript.el
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/javascript/")
-(add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
+;; (add-to-list 'load-path "~/.emacs.d/site-lisp/javascript/")
+;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 
-(defun javascript-mode-setup ()
-  ;;(linum-mode t)
-  (column-number-mode)
-  )
+;; (defun javascript-mode-setup ()
+;;   ;;(linum-mode t)
+;;   (column-number-mode))
 
-(add-hook 'javascript-mode-hook #'javascript-mode-setup)
-(autoload 'javascript-mode "javascript" nil t)
+;; (add-hook 'javascript-mode-hook #'javascript-mode-setup)
+;; (autoload 'javascript-mode "javascript" nil t)
+
+;;;
+;;; js2-mode
+;;;  * http://code.google.com/p/js2-mode/
+;;;
+(add-to-list 'load-path "~/.emacs.d/site-list/js2-mode/")
+(autoload 'js2-mode "js2" nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 ;;;
 ;;; org-mode
@@ -734,8 +856,6 @@ by using nxml's indentation rules."
         ido-use-filename-at-point 'guess
         ido-max-prospects 10))
 
-(defalias 'yes-or-no-p 'y-or-n-p)
-
 ;;;
 ;;; objective-c / xcode
 ;;;  * find . \( -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -print | etags -
@@ -753,6 +873,7 @@ by using nxml's indentation rules."
     (if has-proj-file
         (compile "xcodebuild -configuration Debug")
       (compile "make"))))
+
 ;;;
 ;;; start emacs server
 ;;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
