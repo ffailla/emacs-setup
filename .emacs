@@ -414,7 +414,6 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;; paredit
 ;;;  * http://mumble.net/~campbell/emacs/paredit.el
 ;;;
-                                        ;(add-to-list 'load-path "/path/to/elisp")
 (add-to-list 'load-path "~/.emacs.d/site-lisp/paredit/")
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 
@@ -432,15 +431,15 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;;  * http://georgejahad.com/clojure/emacs-cdt.html
 ;;;  * git://github.com/GeorgeJahad/cdt.git
 ;;;
-(defun cdt-set-source-path ()
-  (interactive)
-  (setq cdt-source-path
-        (reduce (lambda (acc f)
-                  (concat (expand-file-name acc) ":" (expand-file-name f)))
-                '("./src/main/clojure"
-                  ;;"~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-                  "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-                  "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
+;; (defun cdt-set-source-path ()
+;;   (interactive)
+;;   (setq cdt-source-path
+;;         (reduce (lambda (acc f)
+;;                   (concat (expand-file-name acc) ":" (expand-file-name f)))
+;;                 '("./src/main/clojure"
+;;                   ;;"~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
+;;                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
+;;                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 
 (defun clojure-mode-setup ()
   (slime-mode t)
@@ -450,11 +449,12 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
   (outline-minor-mode t)
   (column-number-mode t)
   (rainbow-delimiters-mode t)
-  (progn
-    (define-key clojure-mode-map "\C-cc" 'comment-region)
-    (define-key clojure-mode-map "\C-cu" 'uncomment-region)
-    (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
-    (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
+  ;; (progn
+  ;;   ;; (define-key clojure-mode-map "\C-cc" 'comment-region)
+  ;;   ;; (define-key clojure-mode-map "\C-cu" 'uncomment-region)
+  ;;   (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
+  ;;   (load-file (format "%s/ide/emacs/cdt.el" cdt-dir)))
+  )
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
@@ -641,6 +641,7 @@ by using nxml's indentation rules."
 ;;; csharpmode
 ;;;  * svn checkout http://csharpmode.googlecode.com/svn/trunk/ csharpmode-read-only
 ;;;  * find . -name "*.cs" -print | etags -
+;;;  * find . -name *.cs | xargs /usr/local/bin/ctags -a -e  -f TAGS
 ;;;  * DIR /S /A /ONE /B | etags -
 (add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
@@ -856,6 +857,62 @@ by using nxml's indentation rules."
         ido-use-filename-at-point 'guess
         ido-max-prospects 10))
 
+(require 'imenu)
+(defun ido-imenu ()
+  "Update the imenu index and then use ido to select a symbol to navigate to.
+Symbols matching the text at point are put first in the completion list."
+  (interactive)
+  (imenu--make-index-alist)
+  (let ((name-and-pos '())
+        (symbol-names '()))
+    (flet ((addsymbols (symbol-list)
+                       (when (listp symbol-list)
+                         (dolist (symbol symbol-list)
+                           (let ((name nil) (position nil))
+                             (cond
+                              ((and (listp symbol) (imenu--subalist-p symbol))
+                               (addsymbols symbol))
+
+                              ((listp symbol)
+                               (setq name (car symbol))
+                               (setq position (cdr symbol)))
+
+                              ((stringp symbol)
+                               (setq name symbol)
+                               (setq position (get-text-property 1 'org-imenu-marker symbol))))
+
+                             (unless (or (null position) (null name))
+                               (add-to-list 'symbol-names name)
+                               (add-to-list 'name-and-pos (cons name position))))))))
+      (addsymbols imenu--index-alist))
+    ;; If there are matching symbols at point, put them at the beginning of `symbol-names'.
+    (let ((symbol-at-point (thing-at-point 'symbol)))
+      (when symbol-at-point
+        (let* ((regexp (concat (regexp-quote symbol-at-point) "$"))
+               (matching-symbols (delq nil (mapcar (lambda (symbol)
+                                                     (if (string-match regexp symbol) symbol))
+                                                   symbol-names))))
+          (when matching-symbols
+            (sort matching-symbols (lambda (a b) (> (length a) (length b))))
+            (mapc (lambda (symbol) (setq symbol-names (cons symbol (delete symbol symbol-names))))
+                  matching-symbols)))))
+    (let* ((selected-symbol (ido-completing-read "Symbol? " symbol-names))
+           (position (cdr (assoc selected-symbol name-and-pos))))
+      (goto-char position))))
+
+(require 'recentf)
+(defun recentf-ido-find-file ()
+  "Find a recent file using ido."
+  (interactive)
+  (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+
+(global-set-key (kbd "C-x C-i") 'ido-imenu)
+(global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
+(global-set-key (kbd "C-x f") 'recentf-ido-find-file)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+
 ;;;
 ;;; objective-c / xcode
 ;;;  * find . \( -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -print | etags -
@@ -873,6 +930,19 @@ by using nxml's indentation rules."
     (if has-proj-file
         (compile "xcodebuild -configuration Debug")
       (compile "make"))))
+
+;;;
+;;; prolog
+;;;  *  http://bruda.ca/emacs-prolog/
+;;;
+(add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-prolog")
+(autoload 'run-prolog "prolog" "Start a Prolog sub-process." t)
+(autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
+(autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
+(setq prolog-system 'swi)
+(setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
+                                ("\\.m$" . mercury-mode))
+                              auto-mode-alist))
 
 ;;;
 ;;; start emacs server

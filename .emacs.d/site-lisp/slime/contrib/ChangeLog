@@ -1,3 +1,193 @@
+2011-03-14  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-sprof.lisp (swank-sprof-get-call-graph): Don't call
+	serialize-call-graph when there's no samples. That prevents it
+	from crashing.
+
+2011-03-13  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-sprof.el(abbreviate-name): Rename to
+	slime-sprof-abbreviate-name (no package system, oh well...).
+
+2011-03-09  Helmut Eller  <heller@common-lisp.net>
+
+	* slime-editing-commands.el (slime-beginning-of-defun): Call
+	beginning-of-defun with call-interactively so that the mark gets
+	pushed.
+
+2011-01-22  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-repl.el (slime-repl-shortcut-help): Don't make ? an alias
+	for help, ? is bound to minibuffer-completion-help, and you can't
+	enter it.
+
+2011-01-20  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-mit-scheme.scm (swank:load-file): Print the result
+	instead of returning it which breaks the protocol.
+
+	* swank-mit-scheme.scm: Require release 9.
+
+2011-01-12  Helmut Eller  <heller@common-lisp.net>
+
+	Some more MIT Scheme fixes.
+
+	* swank-mit-scheme.scm (swank:compile-string-for-emacs)
+	(swank:compile-file-for-emacs): Use new result format.
+	(swank:disassemble-form): Added with the needed kludgery for
+	quoted forms.
+	(swank:swank-require): Define this as nop.
+
+2011-01-11  Helmut Eller  <heller@common-lisp.net>
+
+	Some upgrades for MIT Scheme backend.
+
+	* swank-mit-scheme.scm (netcat, netcat-accept): Use netcat-openbsd
+	syntax.  This version doesn't print the port number anymore
+	defeating the original purpose of using netcat.
+	(start-swank): Hardcode portnumber to 4055 until somebody cares
+	enough to write proper server ports.
+	(emacs-rex): Include a nonsense message with the :abort reply.
+
+2010-12-10  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-sprof.el (slime-sprof-browser): Rename to
+	`slime-sprof-report', leave `slime-sprof-browser' as an alias.
+
+2010-12-09  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-fancy-inspector.lisp (emacs-inspect): Work on methods
+	without associated generic function.
+
+2010-10-28  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-package-fu.lisp (list-structure-symbols): Include the name
+	of the structure too.
+
+2010-10-17  Helmut Eller  <heller@common-lisp.net>
+
+	Some updates to the Kawa backend.
+
+	* swank-kawa.scm (%%runnable): Use standard
+	gnu.mapping.RunnableClosure but print the stacktrace on
+	exceptions.
+	(listener-loop): Invoke debugger on unhandled exceptions.  The
+	debugger will use stacksnapshots if the exception matches.
+	(invoke-debugger, break, breakpoint, request-breakpoint): New.
+	Used to "invoke" the debugger from normal code.
+	(process-vm-event, debug-info, event-stacktrace): Handle
+	breakpoint events.
+	(interrupt-thread, throwable-stacktrace, breakpoint-condition):
+	New.
+	(throw-to-toplevel): For breakpoint events use
+	Thread#forceEarlyReturn.
+	(typecase): Add support for or and eql types.
+	(bytemethod>src-loc): New.
+	(src-loc>elisp): Use stratum "java" as this seems to work better.
+	(print-object, print-unreadable-object): New
+	(pprint-to-string): Use it.
+
+2010-09-26  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-repl.el (slime-repl-history-pattern): Match \t too,
+	besides \  and \n.
+
+2010-09-22  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-repl.el: Handle (:abort condition) message from lisp.
+
+2010-09-18  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* slime-parse.el (slime-parse-form-upto-point): Fix lp#627308.
+
+	* slime-autodoc.el (slime-canonicalize-whitespace): New
+	helper. Extracted out of `slime-format-autodoc'.
+	(slime-autodoc-to-string): New helper.
+	(slime-check-autodoc-at-point): Use it.
+	(autodoc.1): Add test case for above fix.
+
+2010-09-18  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* swank-arglist.lisp (function-exists-p): Renamed from
+	FUNCTION-EXISTS-P. Uses new SWANK-BACKEND:VALID-FUNCTION-NAME-P
+	underneath.
+	(valid-operator-name-p): Unused, hence deleted.
+	(boundp-and-interesting): Renamed from INTERESTING-VARIABLE-P.
+
+2010-09-17  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-sprof.lisp (filter-swank-nodes): Filter other swank
+	packages too, not only SWANK.
+
+2010-09-16  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-arglists.lisp (print-variable-to-string): Use
+	without-printing-errors when printing the value.
+	Reported by Tobias C. Rittweiler on lp#628945.
+
+2010-09-16  Christophe Rhodes  <csr21@cantab.net>
+
+	Image display support for the REPL.
+
+	* slime-media.el: New file.
+	* swank-media.lisp: New file.
+
+2010-09-09  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-c-p-c.lisp (longest-compound-prefix): Wrong arguments for
+	longest-common-prefix.
+	Reported by Peter Stirling.
+
+2010-09-07  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-c-p-c.lisp: s/delimeter/delimiter/, correct spelling.
+
+2010-09-07  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-c-p-c.lisp (untokenize-completion): Take an optional
+	argument "delimiter".
+	(longest-compound-prefix): Pass delimiter to untokenize-completion.
+
+2010-09-04  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-fuzzy.lisp (*fuzzy-completion-...*): Change defparameter
+	to defvar for easier customization.
+
+2010-09-03  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-repl.el (slime-search-property-change): XEmacs may return
+	nil on previous/next-single-char-property-change, don't pass it to
+	goto-char.
+
+2010-09-03  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-repl.el (slime-repl-mode-end-of-defun)
+	(slime-repl-mode-beginning-of-defun): Take an optional argument
+	which specifies how many defuns it should move. GNU Emacs catches
+	wrong-number-of-arguments condition and does this by itself, but
+	XEmacs doesn't.
+
+2010-09-03  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-kawa.scm (%%runnable): Update for changes in SVN version.
+
+2010-08-21  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-fuzzy.el (slime-fuzzy-choices-buffer): XEmacs compatibility.
+
+2010-08-21  Helmut Eller  <heller@common-lisp.net>
+
+	* slime-repl.el: Specify :on-unload action.
+
+2010-08-21  Anton Kovalenko <anton@sw4me.com>
+
+	Add support to save snapshots in backround.
+
+	* swank-snapshot.lisp (background-save-snapshot): New.
+	(resurrect): Initialize repl streams.
+	* slime-snapshot.el (slime-snapshot): With prefix-arg perform
+	saving in background.  Also ask before overwriting existing files.
+
 2010-08-13  Helmut Eller  <heller@common-lisp.net>
 
 	Fix slime-restore.
