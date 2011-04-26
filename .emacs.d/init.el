@@ -1,21 +1,24 @@
 (defvar *emacs-load-start* (current-time))
 
 (require 'cl)
+(require 'imenu)
+(require 'recentf)
+(recentf-mode 1)
 
-;;; This was installed by package-install.el.
-;;; This provides support for the package system and
-;;; interfacing with ELPA, the package archive.
-;;; Move this code earlier if you want to reference
-;;; packages in your .emacs.
-(when
-    (load
-     (expand-file-name "~/.emacs.d/elpa/package.el"))
-  (package-initialize))
+;;;
+;;; package manager init
+(add-to-list 'load-path "~/.emacs.d/elpa/")
+(require 'package)
+(setq package-archives '(("marmalade" . "http://marmalade-repo.org/packages/")
+			 ("ELPA" . "http://tromey.com/elpa/") 
+			 ("gnu" . "http://elpa.gnu.org/packages/")))
+(package-initialize)
 
 ;;; init env
 (tool-bar-mode -1)
+;;(menu-bar-mode -1)
+(scroll-bar-mode -1)
 (setq inhibit-splash-screen t)
-(toggle-scroll-bar -1)
 
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."
@@ -112,10 +115,10 @@
 (eval-after-load "color-theme"
   '(progn
      (color-theme-initialize)
-     (require 'zenburn-rainbow)
-     (color-theme-zenburn-rainbow)
-     ;;(require 'subtle-hacker-rainbow)
-     ;;(color-theme-subtle-hacker-rainbow)
+     ;; (require 'zenburn-rainbow)
+     ;; (color-theme-zenburn-rainbow)
+     (require 'subtle-hacker-rainbow)
+     (color-theme-subtle-hacker-rainbow)
      ;;(color-theme-clarity-rainbow)
      ;;(color-theme-zenburn-rainbow)
      ;;(color-theme-hober)
@@ -197,16 +200,16 @@
 ;;;
 (add-to-list 'load-path "~/.emacs.d/vendor/auto-complete/")
 (require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
 (ac-config-default)
 
 ;;;
 ;;; ac-slime
 ;;;  * http://github.com/purcell/ac-slime
 ;;;
-;;(add-to-list 'load-path "~/.emacs.d/vendor/ac-slime/")
-;;(require 'ac-slime)
-;;(add-hook 'slime-mode-hook 'set-up-slime-ac)
+(add-to-list 'load-path "~/.emacs.d/vendor/ac-slime/")
+(require 'ac-slime)
+(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
 ;;;
 ;;; slime - cvs distro
@@ -304,30 +307,6 @@
 (unify-8859-on-decoding-mode)
 
 ;;;
-;;; xml pretty printer
-;;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
-;;;
-(defun xml-pprint-region (begin end)
-  "Pretty format XML markup in region. You need to have nxml-mode
-http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
-this.  The function inserts linebreaks to separate tags that have
-nothing but whitespace between them.  It then indents the markup
-by using nxml's indentation rules."
-  (interactive "r")
-  (save-excursion
-    (nxml-mode)
-    (goto-char begin)
-    (while (search-forward-regexp "\>[ \\t]*\<" nil t)
-      (backward-char) (insert "\n"))
-    (indent-region begin end))
-  (message "Ah, much better!"))
-
-(defun xml-pprint ()
-  (interactive)
-  (push-mark)
-  (xml-pprint-region (point-min) (point-max)))
-
-;;;
 ;;; emacs-nav
 ;;;  * http://code.google.com/p/emacs-nav/
 ;;;  * hg clone https://emacs-nav.googlecode.com/hg/ emacs-nav
@@ -382,6 +361,10 @@ by using nxml's indentation rules."
 (autoload 'js2-mode "js2" nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
+(defun js2-mode-setup ()
+  (rainbow-delimiters-mode t))
+(add-hook 'js2-mode-hook #'js2-mode-setup)
+
 ;;;
 ;;; org-mode
 ;;;  * http://orgmode.org/
@@ -390,9 +373,6 @@ by using nxml's indentation rules."
 (setq load-path (cons "~/.emacs.d/vendor/org-mode/contrib/lisp" load-path))
 (require 'org-install)  ; org-install.el only has autoloads
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cb" 'org-iswitchb)
 (add-hook 'org-mode-hook 'turn-on-font-lock)  ; Org buffers only
 ;;(global-font-lock-mode 1)                     ; for all buffers
 
@@ -405,19 +385,8 @@ by using nxml's indentation rules."
 (setq org-mobile-files (directory-files "~/org" t ".org$"))
 (define-key global-map "\C-cc" 'org-capture)
 
-(defun org-set-org-agenda-files ()
-  (interactive)
-  (setq org-agenda-files
-        (directory-files "~/org" t ".org$")))
-
-(defun org-set-org-mobile-files ()
-  (interactive)
-  (setq org-mobile-files (directory-files "~/org" t ".org$")))
-
 (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
 (modify-coding-system-alist 'file "\\.dat\\'" 'utf-8)
-;;(add-hook 'org-mode-hook 'org-set-mobile-org-files)
-;;(add-hook 'org-mode-hook 'org-set-org-agenda-files)
 
 ;;;
 ;;; jdee
@@ -459,12 +428,9 @@ by using nxml's indentation rules."
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
 
-;; (defun my-csharp-mode-fn ()
-;;   "function that runs when csharp-mode is initialized for a buffer."
-;;   ...insert your code here...
-;;   ...most commonly, your custom key bindings ...
-;;   )
-;; (add-hook  'csharp-mode-hook 'my-csharp-mode-fn t)
+;; (defun csharp-mode-setup ()
+;;   (rainbow-delimiters-mode t))
+;; (add-hook 'csharp-mode-hook #'csharp-mode-setup)
 
 ;;;
 ;;; sql-mode / jisql
@@ -627,105 +593,6 @@ by using nxml's indentation rules."
     (message "restoring frame and window layout")
     (set-frame-configuration my-favorite-frame-setup)))
 
-;;(global-set-key (kbd "C-x <up>") 'windmove-up)
-;;(global-set-key (kbd "C-x <down>") 'windmove-down)
-;;(global-set-key (kbd "C-x <right>") 'windmove-right)
-;;(global-set-key (kbd "C-x <left>") 'windmove-left)
-
-;;;
-;;; Emacs Starter Kit fns
-;;;
-(defun view-url ()
-  "Open a new buffer containing the contents of URL."
-  (interactive)
-  (let* ((default (thing-at-point-url-at-point))
-         (url (read-from-minibuffer "URL: " default)))
-    (switch-to-buffer (url-retrieve-synchronously url))
-    (rename-buffer url t)
-    ;; TODO: switch to nxml/nxhtml mode
-    (cond ((search-forward "<?xml" nil t) (xml-mode))
-          ((search-forward "<html" nil t) (html-mode)))))
-
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
-
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
-
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
-
-(when (> emacs-major-version 21)
-  (ido-mode t)
-  (setq ido-enable-prefix nil
-        ido-enable-flex-matching t
-        ido-create-new-buffer 'always
-        ido-use-filename-at-point 'guess
-        ido-max-prospects 10))
-
-(require 'imenu)
-(defun ido-imenu ()
-  "Update the imenu index and then use ido to select a symbol to navigate to.
-Symbols matching the text at point are put first in the completion list."
-  (interactive)
-  (imenu--make-index-alist)
-  (let ((name-and-pos '())
-        (symbol-names '()))
-    (flet ((addsymbols (symbol-list)
-                       (when (listp symbol-list)
-                         (dolist (symbol symbol-list)
-                           (let ((name nil) (position nil))
-                             (cond
-                              ((and (listp symbol) (imenu--subalist-p symbol))
-                               (addsymbols symbol))
-
-                              ((listp symbol)
-                               (setq name (car symbol))
-                               (setq position (cdr symbol)))
-
-                              ((stringp symbol)
-                               (setq name symbol)
-                               (setq position (get-text-property 1 'org-imenu-marker symbol))))
-
-                             (unless (or (null position) (null name))
-                               (add-to-list 'symbol-names name)
-                               (add-to-list 'name-and-pos (cons name position))))))))
-      (addsymbols imenu--index-alist))
-    ;; If there are matching symbols at point, put them at the beginning of `symbol-names'.
-    (let ((symbol-at-point (thing-at-point 'symbol)))
-      (when symbol-at-point
-        (let* ((regexp (concat (regexp-quote symbol-at-point) "$"))
-               (matching-symbols (delq nil (mapcar (lambda (symbol)
-                                                     (if (string-match regexp symbol) symbol))
-                                                   symbol-names))))
-          (when matching-symbols
-            (sort matching-symbols (lambda (a b) (> (length a) (length b))))
-            (mapc (lambda (symbol) (setq symbol-names (cons symbol (delete symbol symbol-names))))
-                  matching-symbols)))))
-    (let* ((selected-symbol (ido-completing-read "Symbol? " symbol-names))
-           (position (cdr (assoc selected-symbol name-and-pos))))
-      (goto-char position))))
-
-(require 'recentf)
-(recentf-mode 1)
-(defun recentf-ido-find-file ()
-  "Find a recent file using ido."
-  (interactive)
-  (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
-    (when file
-      (find-file file))))
-
-(global-set-key (kbd "C-x C-i") 'ido-imenu)
-(global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
-(global-set-key (kbd "C-x f") 'recentf-ido-find-file)
-(global-set-key (kbd "C-x C-b") 'ibuffer)
-
 ;;;
 ;;; objective-c / xcode
 ;;;  * find . \( -name "*.cpp" -o -name "*.h" -o -name "*.m" -o -name "*.mm" \) -print | etags -
@@ -756,6 +623,10 @@ Symbols matching the text at point are put first in the completion list."
 (setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
                                 ("\\.m$" . mercury-mode))
                               auto-mode-alist))
+
+;;;
+(load-file "~/.emacs.d/vendor/ffailla/bindings.el")  ; key-bindings
+(load-file "~/.emacs.d/vendor/ffailla/defuns.el")    ; elisp fns
 
 ;;;
 ;;; start emacs server
