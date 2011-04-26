@@ -61,7 +61,7 @@
           (ding))))
 
 (add-to-list 'load-path "~/.emacs.d/")
-(add-to-list 'load-path "~/.emacs.d/site-lisp")
+(add-to-list 'load-path "~/.emacs.d/vendor")
 (setenv "PATH" (concat "~/bin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/sbin:" (getenv "PATH")))
 (setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin") exec-path))
 
@@ -85,7 +85,7 @@
 ;;; highlight-parentheses
 ;;;  * http://nschum.de/src/emacs/highlight-parentheses/
 ;;;
-;;(add-to-list 'load-path "~/.emacs.d/site-lisp/highlight-parentheses/")
+;;(add-to-list 'load-path "~/.emacs.d/vendor/highlight-parentheses/")
 ;;(autoload 'highlight-parentheses-mode "highlight-parentheses" "highlight parentheses mode" t)
 ;;(setq hl-paren-colors
 ;;      '("orange1" "red1" "green1" "springgreen1" "blue1" "cyan1" "slateblue1" "magenta1" "purple"
@@ -98,219 +98,31 @@
 ;;; rainbow-delimeters
 ;;;  * http://www.emacswiki.org/emacs/RainbowDelimiters
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/rainbow-delimiters/")
+(add-to-list 'load-path "~/.emacs.d/vendor/rainbow-delimiters/")
 (require 'rainbow-delimiters)
+;;(autoload 'rainbow-delimiters "rainbow-delimiters" "rainbow delimiters mode" t)
 
 ;;;
 ;;; color-theme
 ;;;  * http://www.nongnu.org/color-theme/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/color-theme")
+(add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
+(add-to-list 'load-path "~/.emacs.d/vendor/ffailla/color-theme")
 (require 'color-theme)
 (eval-after-load "color-theme"
   '(progn
      (color-theme-initialize)
+     (require 'zenburn-rainbow)
+     (color-theme-zenburn-rainbow)
+     ;;(require 'subtle-hacker-rainbow)
+     ;;(color-theme-subtle-hacker-rainbow)
+     ;;(color-theme-clarity-rainbow)
+     ;;(color-theme-zenburn-rainbow)
      ;;(color-theme-hober)
      ;;(color-theme-classic)
      ;;(color-theme-comidia)
      ;;(color-theme-subtle-hacker)
      ))
-
-;;; color theme with rainbow parens
-(defun color-theme-subtle-hacker-rainbow ()
-  "Subtle Hacker Color Theme.
-Based on gnome2, but uses white for important things like comments,
-and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
-  (interactive)
-  (color-theme-gnome2)
-  (let ((color-theme-is-cumulative t))
-    (color-theme-install
-     '(color-theme-subtle-hacker
-       nil
-       nil
-       (custom-state-face ((t (:foreground "Coral"))))
-       (diary-face ((t (:bold t :foreground "IndianRed"))))
-       (eshell-ls-clutter-face ((t (:bold t :foreground "DimGray"))))
-       (eshell-ls-executable-face ((t (:bold t :foreground "Coral"))))
-       (eshell-ls-missing-face ((t (:bold t :foreground "black"))))
-       (eshell-ls-special-face ((t (:bold t :foreground "Gold"))))
-       (eshell-ls-symlink-face ((t (:bold t :foreground "White"))))
-       (font-lock-comment-face ((t (:foreground "White"))))
-       (font-lock-constant-face ((t (:bold t :foreground "Aquamarine"))))
-       (font-lock-function-name-face ((t (:bold t :foreground "MediumSlateBlue"))))
-       (font-lock-string-face ((t (:italic t :foreground "LightSalmon"))))
-       (font-lock-variable-name-face ((t (:italic t :bold t :foreground "Aquamarine"))))
-       (gnus-cite-face-1 ((t (:foreground "dark khaki"))))
-       (gnus-cite-face-2 ((t (:foreground "chocolate"))))
-       (gnus-cite-face-3 ((t (:foreground "tomato"))))
-       (gnus-group-mail-1-empty-face ((t (:foreground "light cyan"))))
-       (gnus-group-mail-1-face ((t (:bold t :foreground "light cyan"))))
-       (gnus-group-mail-2-empty-face ((t (:foreground "turquoise"))))
-       (gnus-group-mail-2-face ((t (:bold t :foreground "turquoise"))))
-       (gnus-group-mail-3-empty-face ((t (:foreground "tomato"))))
-       (gnus-group-mail-3-face ((t (:bold t :foreground "tomato"))))
-       (gnus-group-mail-low-empty-face ((t (:foreground "dodger blue"))))
-       (gnus-group-mail-low-face ((t (:bold t :foreground "dodger blue"))))
-       (gnus-group-news-1-empty-face ((t (:foreground "green yellow"))))
-       (gnus-group-news-1-face ((t (:bold t :foreground "green yellow"))))
-       (gnus-group-news-2-empty-face ((t (:foreground "dark orange"))))
-       (gnus-group-news-2-face ((t (:bold t :foreground "dark orange"))))
-       (gnus-group-news-3-empty-face ((t (:foreground "tomato"))))
-       (gnus-group-news-3-face ((t (:bold t :foreground "tomato"))))
-       (gnus-group-news-low-empty-face ((t (:foreground "yellow green"))))
-       (gnus-group-news-low-face ((t (:bold t :foreground "yellow green"))))
-       (gnus-header-name-face ((t (:bold t :foreground "DodgerBlue1"))))
-       (gnus-header-newsgroups-face ((t (:italic t :bold t :foreground "LightSkyBlue3"))))
-       (gnus-signature-face ((t (:foreground "salmon"))))
-       (gnus-summary-cancelled-face ((t (:background "black" :foreground "yellow"))))
-       (gnus-summary-high-ancient-face ((t (:bold t :foreground "RoyalBlue"))))
-       (gnus-summary-high-read-face ((t (:bold t :foreground "forest green"))))
-       (gnus-summary-high-ticked-face ((t (:bold t :foreground "burlywood"))))
-       (gnus-summary-high-unread-face ((t (:italic t :bold t :foreground "cyan"))))
-       (gnus-summary-low-ancient-face ((t (:italic t :foreground "chocolate"))))
-       (gnus-summary-low-read-face ((t (:foreground "light sea green"))))
-       (gnus-summary-low-ticked-face ((t (:italic t :foreground "chocolate"))))
-       (gnus-summary-low-unread-face ((t (:italic t :foreground "light sea green"))))
-       (gnus-summary-normal-ancient-face ((t (:foreground "RoyalBlue"))))
-       (gnus-summary-normal-read-face ((t (:foreground "khaki"))))
-       (gnus-summary-normal-ticked-face ((t (:foreground "sandy brown"))))
-       (gnus-summary-normal-unread-face ((t (:foreground "aquamarine"))))
-       (message-cited-text-face ((t (:foreground "White"))))
-       (message-header-name-face ((t (:foreground "DodgerBlue1"))))
-       (message-header-newsgroups-face ((t (:italic t :bold t :foreground "LightSkyBlue3"))))
-       (message-header-other-face ((t (:foreground "LightSkyBlue3"))))
-       (message-header-xheader-face ((t (:foreground "DodgerBlue3"))))
-
-       (rainbow-delimiters-depth-1-face ((t (:bold t :foreground "royal blue"))))
-       (rainbow-delimiters-depth-2-face ((t (:bold t :foreground "turquoise"))))
-       (rainbow-delimiters-depth-3-face ((t (:bold t :foreground "tomato"))))
-       (rainbow-delimiters-depth-4-face ((t (:bold t :foreground "dodger blue"))))
-       (rainbow-delimiters-depth-5-face ((t (:bold t :foreground "green yellow"))))
-       (rainbow-delimiters-depth-6-face ((t (:bold t :foreground "dark orange"))))
-       (rainbow-delimiters-depth-7-face ((t (:bold t :foreground "slateblue1"))))
-       (rainbow-delimiters-depth-8-face ((t (:bold t :foreground "salmon"))))
-       (rainbow-delimiters-depth-9-face ((t (:bold t :foreground "burlywood"))))
-       (rainbow-delimiters-depth-10-face ((t (:bold t :foreground "chocolate"))))
-       (rainbow-delimiters-depth-11-face ((t (:bold t :foreground "light sea green"))))
-       (rainbow-delimiters-depth-12-face ((t (:bold t :foreground "aquamarine"))))
-       (rainbow-delimiters-depth-13-face ((t (:bold t :foreground "khaki"))))
-       (rainbow-delimiters-depth-14-face ((t (:bold t :foreground "light sky blue"))))
-
-       (rainbow-delimiters-unmatched-delimiter-face ((t (:bold t :foreground "darkgray"))))
-       ))))
-
-;;(color-theme-subtle-hacker-rainbow)
-
-(defun color-theme-clarity-rainbow ()
-  "White on black color theme by Richard Wellum, created 2003-01-16."
-  (interactive)
-  (color-theme-install
-   '(color-theme-clarity
-     ((background-color . "black")
-      (background-mode . dark)
-      (border-color . "white")
-      (cursor-color . "yellow")
-      (foreground-color . "white")
-      (mouse-color . "white"))
-     ((CUA-mode-global-mark-cursor-color . "cyan")
-      (CUA-mode-normal-cursor-color . "yellow")
-      (CUA-mode-overwrite-cursor-color . "red")
-      (CUA-mode-read-only-cursor-color . "green")
-      (help-highlight-face . underline)
-      (ibuffer-dired-buffer-face . font-lock-function-name-face)
-      (ibuffer-help-buffer-face . font-lock-comment-face)
-      (ibuffer-hidden-buffer-face . font-lock-warning-face)
-      (ibuffer-occur-match-face . font-lock-warning-face)
-      (ibuffer-read-only-buffer-face . font-lock-type-face)
-      (ibuffer-special-buffer-face . font-lock-keyword-face)
-      (ibuffer-title-face . font-lock-type-face)
-      (list-matching-lines-face . bold)
-      (ps-line-number-color . "black")
-      (ps-zebra-color . 0.95)
-      (tags-tag-face . default)
-      (view-highlight-face . highlight)
-      (widget-mouse-face . highlight))
-     (default ((t (nil))))
-     (CUA-global-mark-face ((t (:background "cyan" :foreground "black"))))
-     (CUA-rectangle-face ((t (:background "maroon" :foreground "white"))))
-     (CUA-rectangle-noselect-face ((t (:background "dimgray" :foreground "white"))))
-     (bold ((t (:bold t :weight bold))))
-     (bold-italic ((t (:italic t :bold t :slant italic :weight bold))))
-     (border ((t (:background "white"))))
-     (clearcase-dired-checkedout-face ((t (:foreground "red"))))
-     (comint-highlight-input ((t (:bold t :weight bold))))
-     (comint-highlight-prompt ((t (:foreground "cyan"))))
-     (cursor ((t (:background "yellow"))))
-     (fixed-pitch ((t (:family "courier"))))
-     (flash-paren-face-off ((t (nil))))
-     (flash-paren-face-on ((t (nil))))
-     (flash-paren-face-region ((t (nil))))
-     (font-lock-builtin-face ((t (:foreground "LightSteelBlue"))))
-     (font-lock-comment-face ((t (:foreground "OrangeRed"))))
-     (font-lock-constant-face ((t (:foreground "Aquamarine"))))
-     (font-lock-doc-face ((t (:foreground "LightSalmon"))))
-     (font-lock-function-name-face ((t (:foreground "LightSkyBlue"))))
-     (font-lock-keyword-face ((t (:foreground "Cyan"))))
-     (font-lock-string-face ((t (:foreground "LightSalmon"))))
-     (font-lock-type-face ((t (:foreground "PaleGreen"))))
-     (font-lock-variable-name-face ((t (:foreground "LightGoldenrod"))))
-     (font-lock-warning-face ((t (:bold t :foreground "Pink" :weight bold))))
-     (fringe ((t (:background "grey10"))))
-     (header-line ((t (:box (:line-width -1 :style released-button) :foreground "grey20" :background "grey90" :box nil))))
-     (highlight ((t (:background "darkolivegreen"))))
-     (ibuffer-deletion-face ((t (:foreground "red"))))
-     (ibuffer-marked-face ((t (:foreground "green"))))
-     (isearch ((t (:background "palevioletred2" :foreground "brown4"))))
-     (isearch-lazy-highlight-face ((t (:background "paleturquoise4"))))
-     (italic ((t (:italic t :slant italic))))
-     (menu ((t (nil))))
-     (mode-line ((t (:foreground "yellow" :background "darkslateblue" :box (:line-width -1 :style released-button)))))
-     (mouse ((t (:background "white"))))
-     (region ((t (:background "blue"))))
-     (scroll-bar ((t (nil))))
-     (secondary-selection ((t (:background "darkslateblue"))))
-     (show-block-face1 ((t (:background "gray10"))))
-     (show-block-face2 ((t (:background "gray15"))))
-     (show-block-face3 ((t (:background "gray20"))))
-     (show-block-face4 ((t (:background "gray25"))))
-     (show-block-face5 ((t (:background "gray30"))))
-     (show-block-face6 ((t (:background "gray35"))))
-     (show-block-face7 ((t (:background "gray40"))))
-     (show-block-face8 ((t (:background "gray45"))))
-     (show-block-face9 ((t (:background "gray50"))))
-     (show-paren-match-face ((t (:background "turquoise"))))
-     (show-paren-mismatch-face ((t (:background "purple" :foreground "white"))))
-     (tool-bar ((t (:background "grey75" :foreground "black" :box (:line-width 1 :style released-button)))))
-     (tooltip ((t (:background "lightyellow" :foreground "black"))))
-     (trailing-whitespace ((t (:background "red"))))
-     (underline ((t (:underline t))))
-     (variable-pitch ((t (:family "helv"))))
-     (widget-button-face ((t (:bold t :weight bold))))
-     (widget-button-pressed-face ((t (:foreground "red"))))
-     (widget-documentation-face ((t (:foreground "lime green"))))
-     (widget-field-face ((t (:background "dim gray"))))
-     (widget-inactive-face ((t (:foreground "light gray"))))
-     (widget-single-line-field-face ((t (:background "dim gray"))))
-
-     (rainbow-delimiters-depth-1-face ((t (:bold t :foreground "royal blue"))))
-     (rainbow-delimiters-depth-2-face ((t (:bold t :foreground "turquoise"))))
-     (rainbow-delimiters-depth-3-face ((t (:bold t :foreground "tomato"))))
-     (rainbow-delimiters-depth-4-face ((t (:bold t :foreground "dodger blue"))))
-     (rainbow-delimiters-depth-5-face ((t (:bold t :foreground "green yellow"))))
-     (rainbow-delimiters-depth-6-face ((t (:bold t :foreground "dark orange"))))
-     (rainbow-delimiters-depth-7-face ((t (:bold t :foreground "slateblue1"))))
-     (rainbow-delimiters-depth-8-face ((t (:bold t :foreground "salmon"))))
-     (rainbow-delimiters-depth-9-face ((t (:bold t :foreground "burlywood"))))
-     (rainbow-delimiters-depth-10-face ((t (:bold t :foreground "chocolate"))))
-     (rainbow-delimiters-depth-11-face ((t (:bold t :foreground "light sea green"))))
-     (rainbow-delimiters-depth-12-face ((t (:bold t :foreground "aquamarine"))))
-     (rainbow-delimiters-depth-13-face ((t (:bold t :foreground "khaki"))))
-     (rainbow-delimiters-depth-14-face ((t (:bold t :foreground "light sky blue"))))
-
-     (rainbow-delimiters-unmatched-delimiter-face ((t (:bold t :foreground "darkgray"))))
-     )))
-
-(color-theme-clarity-rainbow)
 
 ;;;
 ;;; ediff
@@ -383,7 +195,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;;
 ;;; auto-complete
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/auto-complete/")
+(add-to-list 'load-path "~/.emacs.d/vendor/auto-complete/")
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d//ac-dict")
 (ac-config-default)
@@ -392,7 +204,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;; ac-slime
 ;;;  * http://github.com/purcell/ac-slime
 ;;;
-;;(add-to-list 'load-path "~/.emacs.d/site-lisp/ac-slime/")
+;;(add-to-list 'load-path "~/.emacs.d/vendor/ac-slime/")
 ;;(require 'ac-slime)
 ;;(add-hook 'slime-mode-hook 'set-up-slime-ac)
 
@@ -401,7 +213,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;;  * http://common-lisp.net/project/slime/
 ;;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/slime/")  ; your SLIME directory
+(add-to-list 'load-path "~/.emacs.d/vendor/slime/")  ; your SLIME directory
 (setq inferior-lisp-program "~/bin/lisp")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
 (autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
@@ -414,7 +226,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;; paredit
 ;;;  * http://mumble.net/~campbell/emacs/paredit.el
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/paredit/")
+(add-to-list 'load-path "~/.emacs.d/vendor/paredit/")
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 
 ;;
@@ -422,7 +234,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;  * http://github.com/technomancy/clojure-mode
 ;;  * find . -name '*.clj' | xargs etags --regex=@/Users/ffailla/bin/clojure.tags
 ;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/clojure-mode/")
+(add-to-list 'load-path "~/.emacs.d/vendor/clojure-mode/")
 (autoload 'clojure-mode "clojure-mode" nil t)
 (autoload 'clojure-test-mode "clojure-test-mode" nil t)
 
@@ -437,9 +249,9 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;         (reduce (lambda (acc f)
 ;;                   (concat (expand-file-name acc) ":" (expand-file-name f)))
 ;;                 '("./src/main/clojure"
-;;                   ;;"~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/jvm"
-;;                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-1.2.0/src/clj"
-;;                   "~/.emacs.d/site-lisp/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
+;;                   ;;"~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/jvm"
+;;                   "~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/clj"
+;;                   "~/.emacs.d/vendor/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 
 (defun clojure-mode-setup ()
   (slime-mode t)
@@ -452,7 +264,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
   ;; (progn
   ;;   ;; (define-key clojure-mode-map "\C-cc" 'comment-region)
   ;;   ;; (define-key clojure-mode-map "\C-cu" 'uncomment-region)
-  ;;   (setq cdt-dir (expand-file-name "~/.emacs.d/site-lisp/cdt"))
+  ;;   (setq cdt-dir (expand-file-name "~/.emacs.d/vendor/cdt"))
   ;;   (load-file (format "%s/ide/emacs/cdt.el" cdt-dir)))
   )
 
@@ -485,7 +297,7 @@ and less of the unreadable tomato.  By Colin Walters <levanti@verbum.org>"
 ;;; nxml-mode
 ;;;  * http://www.thaiopensource.com/nxml-mode/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/nxml-mode/")
+(add-to-list 'load-path "~/.emacs.d/vendor/nxml-mode/")
 (autoload 'nxml-mode "nxml-mode" nil t)
 (setq auto-mode-alist (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
                             auto-mode-alist))
@@ -520,21 +332,21 @@ by using nxml's indentation rules."
 ;;;  * http://code.google.com/p/emacs-nav/
 ;;;  * hg clone https://emacs-nav.googlecode.com/hg/ emacs-nav
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-nav/")
+(add-to-list 'load-path "~/.emacs.d/vendor/emacs-nav/")
 (autoload 'nav "nav" nil t)
 
 ;;;
 ;;; magit
 ;;;  * http://github.com/philjackson/magit
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/magit/")
+(add-to-list 'load-path "~/.emacs.d/vendor/magit/")
 (autoload 'magit-status "magit" nil t)
 
 ;;;
 ;;; mo-git-blame
 ;;;  * git clone git://git.bunkus.org/mo-git-blame.git
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/mo-git-blame")
+(add-to-list 'load-path "~/.emacs.d/vendor/mo-git-blame")
 ;;(autoload 'mo-git-blame-file "mo-git-blame" nil t)
 ;;(autoload 'mo-git-blame-current "mo-git-blame" nil t)
 
@@ -542,7 +354,7 @@ by using nxml's indentation rules."
 ;;; log4j mode
 ;;;  * http://log4j-mode.sourceforge.net/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/log4j-mode/")
+(add-to-list 'load-path "~/.emacs.d/vendor/log4j-mode/")
 (autoload 'log4j-mode "log4j-mode" "Major mode for viewing log files." t)
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))
 ;;(add-hook 'log4j-mode-hook (lambda () (linum-mode nil)))
@@ -552,7 +364,7 @@ by using nxml's indentation rules."
 ;;;  * http://www.emacswiki.org/emacs/JavaScriptMode
 ;;;  * http://www.brgeight.se/downloads/emacs/javascript.el
 ;;;
-;; (add-to-list 'load-path "~/.emacs.d/site-lisp/javascript/")
+;; (add-to-list 'load-path "~/.emacs.d/vendor/javascript/")
 ;; (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode))
 
 ;; (defun javascript-mode-setup ()
@@ -566,7 +378,7 @@ by using nxml's indentation rules."
 ;;; js2-mode
 ;;;  * http://code.google.com/p/js2-mode/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-list/js2-mode/")
+(add-to-list 'load-path "~/.emacs.d/vendor/js2-mode/")
 (autoload 'js2-mode "js2" nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
@@ -574,8 +386,8 @@ by using nxml's indentation rules."
 ;;; org-mode
 ;;;  * http://orgmode.org/
 ;;;
-(setq load-path (cons "~/.emacs.d/site-lisp/org-mode/lisp" load-path))
-(setq load-path (cons "~/.emacs.d/site-lisp/org-mode/contrib/lisp" load-path))
+(setq load-path (cons "~/.emacs.d/vendor/org-mode/lisp" load-path))
+(setq load-path (cons "~/.emacs.d/vendor/org-mode/contrib/lisp" load-path))
 (require 'org-install)  ; org-install.el only has autoloads
 (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
 (global-set-key "\C-cl" 'org-store-link)
@@ -611,14 +423,14 @@ by using nxml's indentation rules."
 ;;; jdee
 ;;;  * http://jdee.sourceforge.net/
 ;;;
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/jdee/lisp"))
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/cedet/common"))
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/elib"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/vendor/jdee/lisp"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/vendor/cedet/common"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/vendor/elib"))
 ;;(autoload 'cedet "cedet" nil t)
 ;;(autoload 'jde "jde" nil t)
 ;;(add-to-list 'auto-mode-alist '("\\.java\\'" . jde))
 (defun jde-start ()
-  (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
+  (load-file (expand-file-name "~/.emacs.d/vendor/cedet/common/cedet.el"))
   (require 'jde))
 
 ;;;
@@ -643,7 +455,7 @@ by using nxml's indentation rules."
 ;;;  * find . -name "*.cs" -print | etags -
 ;;;  * find . -name *.cs | xargs /usr/local/bin/ctags -a -e  -f TAGS
 ;;;  * DIR /S /A /ONE /B | etags -
-(add-to-list 'load-path "~/.emacs.d/site-lisp/csharpmode/")
+(add-to-list 'load-path "~/.emacs.d/vendor/csharpmode/")
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist (append '(("\\.cs$" . csharp-mode)) auto-mode-alist))
 
@@ -658,7 +470,7 @@ by using nxml's indentation rules."
 ;;; sql-mode / jisql
 ;;;  * http://www.xigole.com/software/jisql/jisql.jsp
 ;;;
-(setq exec-path (append exec-path '("~/.emacs.d/site-lisp/jisql")))
+(setq exec-path (append exec-path '("~/.emacs.d/vendor/jisql")))
 (defun sql-save-history-hook ()
   (let ((lval 'sql-input-ring-file-name)
         (rval 'sql-product))
@@ -687,7 +499,7 @@ by using nxml's indentation rules."
 ;;; ess
 ;;;  * http://ess.r-project.org/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/ess/lisp")
+(add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (setq ess-r-versions nil)
 
 (autoload 'ess-mode "ess-site" "Emacs Speaks Statistics" t)
@@ -734,7 +546,7 @@ by using nxml's indentation rules."
 ;;; csv-mode
 ;;;  * http://www.emacswiki.org/emacs/csv-mode.el
 ;;;
-;;(add-to-list 'load-path "~/.emacs.d/site-lisp/csv-mode")
+;;(add-to-list 'load-path "~/.emacs.d/vendor/csv-mode")
 ;;(add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
 ;;(autoload 'csv-mode "csv-mode" "Major mode for editing comma-separated value files." t)
 ;;(require 'csv-mode)
@@ -745,13 +557,13 @@ by using nxml's indentation rules."
 ;;;  * cvs -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb login
 ;;;  * cvs -z3 -d:pserver:anonymous@ecb.cvs.sourceforge.net:/cvsroot/ecb co -P modulename
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/ecb/")
+(add-to-list 'load-path "~/.emacs.d/vendor/ecb/")
 ;;(require 'ecb)
 ;;(require 'ecb-autoloads)
 
 (defun ecb-start ()
   (interactive)
-  (load-file (expand-file-name "~/.emacs.d/site-lisp/cedet/common/cedet.el"))
+  (load-file (expand-file-name "~/.emacs.d/vendor/cedet/common/cedet.el"))
   (semantic-load-enable-minimum-features)
   (require 'ecb))
 
@@ -760,7 +572,7 @@ by using nxml's indentation rules."
 ;;;  * http://www.emacswiki.org/emacs/XmlRpc
 ;;;  * http://www.emacswiki.org/emacs/xml-rpc.el
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/xml-rpc")
+(add-to-list 'load-path "~/.emacs.d/vendor/xml-rpc")
 (require 'xml-rpc)
 
 ;;;
@@ -768,7 +580,7 @@ by using nxml's indentation rules."
 ;;;  * http://www.emacswiki.org/emacs/JiraMode
 ;;;  * http://www.emacswiki.org/emacs/jira.el
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/jira")
+(add-to-list 'load-path "~/.emacs.d/vendor/jira")
 
 (defun jira-set-url ()
   (interactive)
@@ -901,6 +713,7 @@ Symbols matching the text at point are put first in the completion list."
       (goto-char position))))
 
 (require 'recentf)
+(recentf-mode 1)
 (defun recentf-ido-find-file ()
   "Find a recent file using ido."
   (interactive)
@@ -935,7 +748,7 @@ Symbols matching the text at point are put first in the completion list."
 ;;; prolog
 ;;;  *  http://bruda.ca/emacs-prolog/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-prolog")
+(add-to-list 'load-path "~/.emacs.d/vendor/emacs-prolog")
 (autoload 'run-prolog "prolog" "Start a Prolog sub-process." t)
 (autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
 (autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
