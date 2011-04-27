@@ -1,38 +1,21 @@
 ;;;
-;;; xml pretty printer
-;;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
+;;; printing support
 ;;;
-(defun xml-pprint-region (begin end)
-  "Pretty format XML markup in region. You need to have nxml-mode
-http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
-this.  The function inserts linebreaks to separate tags that have
-nothing but whitespace between them.  It then indents the markup
-by using nxml's indentation rules."
-  (interactive "r")
-  (save-excursion
-    (nxml-mode)
-    (goto-char begin)
-    (while (search-forward-regexp "\>[ \\t]*\<" nil t)
-      (backward-char) (insert "\n"))
-    (indent-region begin end))
-  (message "Ah, much better!"))
+(require 'printing)
+(pr-update-menus)
+(setq ps-printer-name "PDF_file_generator")
+(setq ps-printer-name t)
 
-(defun xml-pprint ()
+(defun print-to-pdf ()
   (interactive)
-  (push-mark)
-  (xml-pprint-region (point-min) (point-max)))
-
-;;;
-;;; org-mode
-;;;
-(defun org-set-org-agenda-files ()
-  (interactive)
-  (setq org-agenda-files
-        (directory-files "~/org" t ".org$")))
-
-(defun org-set-org-mobile-files ()
-  (interactive)
-  (setq org-mobile-files (directory-files "~/org" t ".org$")))
+  (ps-spool-buffer-with-faces)
+  (switch-to-buffer "*PostScript*")
+  (write-file "/tmp/tmp.ps")
+  (kill-buffer "tmp.ps")
+  (setq cmd (concat "ps2pdf14 /tmp/tmp.ps " (buffer-name) ".pdf"))
+  (shell-command cmd)
+  (shell-command "rm /tmp/tmp.ps")
+  (message (concat "Saved to:  " (buffer-name) ".pdf")))
 
 ;;;
 ;;; Emacs Starter Kit fns
@@ -119,3 +102,5 @@ Symbols matching the text at point are put first in the completion list."
         ido-create-new-buffer 'always
         ido-use-filename-at-point 'guess
         ido-max-prospects 10))
+
+(provide 'ffailla-defuns)
