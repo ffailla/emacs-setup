@@ -12,10 +12,10 @@
 (eval-after-load "color-theme"
   '(progn
      (color-theme-initialize)
-     ;; (require 'zenburn-rainbow)
-     ;; (color-theme-zenburn-rainbow)
-     (require 'subtle-hacker-rainbow)
-     (color-theme-subtle-hacker-rainbow)
+     (require 'zenburn-rainbow)
+     (color-theme-zenburn-rainbow)
+     ;;(require 'subtle-hacker-rainbow)
+     ;;(color-theme-subtle-hacker-rainbow)
      ;;(color-theme-clarity-rainbow)
      ;;(color-theme-zenburn-rainbow)
      ;;(color-theme-hober)

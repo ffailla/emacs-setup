@@ -12,7 +12,7 @@
                  (not (equal f ".")))
         (add-to-list 'load-path name)))))
 
-;; add everything to the load pah, then add the first level subfolders automatically
+;; add everything to the load path, then add the first level subfolders automatically
 (add-to-list 'load-path dotfiles-dir)
 (add-subfolders-to-load-path dotfiles-dir)
 (add-subfolders-to-load-path ext-dir)

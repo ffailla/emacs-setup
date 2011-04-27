@@ -24,6 +24,32 @@
 ;;;
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 
+;;;
+;;; cdt
+;;;  * http://georgejahad.com/clojure/emacs-cdt.html
+;;;  * git://github.com/GeorgeJahad/cdt.git
+;;;
+(defun cdt-set-source-path ()
+  (interactive)
+  (setq cdt-source-path
+        (reduce (lambda (acc f)
+                  (concat (expand-file-name acc) ":" (expand-file-name f)))
+                '("./src/main/clojure"
+                  ;;"~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/jvm"
+                  "~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/clj"
+                  "~/.emacs.d/vendor/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
+
+(defun clojure-mode-setup ()
+  (slime-mode t)
+  (show-paren-mode t)
+  (paredit-mode t)
+  (outline-minor-mode t)
+  (column-number-mode t)
+  (rainbow-delimiters-mode t)
+  (progn
+    (setq cdt-dir (expand-file-name "~/.emacs.d/vendor/cdt"))
+    (load-file (format "%s/ide/emacs/cdt.el" cdt-dir))))
+
 ;;
 ;; clojure-mode
 ;;  * http://github.com/technomancy/clojure-mode
@@ -32,26 +58,17 @@
 (autoload 'clojure-mode "clojure-mode" nil t)
 (autoload 'clojure-test-mode "clojure-test-mode" nil t)
 
-(defun clojure-mode-setup ()
-  (slime-mode t)
-  (show-paren-mode t)
-  (paredit-mode t)
-  (outline-minor-mode t)
-  (column-number-mode t)
-  (rainbow-delimiters-mode t))
+;; (defun clojure-mode-setup ()
+;;   (slime-mode t)
+;;   (show-paren-mode t)
+;;   (paredit-mode t)
+;;   (outline-minor-mode t)
+;;   (column-number-mode t)
+;;   (rainbow-delimiters-mode t))
 
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
-
-(defun slime-clojure ()
-  (interactive)
-  (setq inferior-lisp-program "~/bin/swank")
-  (require 'slime)
-  ;;(run-lisp)
-  (start-process inferior-lisp-program "*inferior-lisp*" "lisp")
-  (sit-for 5)  ;; hack for now... yuck... need to learn more elisp to do this correctly
-  (slime-connect "localhost" 4005))
 
 ;;;
 ;;; Emacs lisp mode setup
