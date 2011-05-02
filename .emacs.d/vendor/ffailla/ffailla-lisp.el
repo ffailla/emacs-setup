@@ -2,6 +2,7 @@
 ;;; slime - cvs distro
 ;;;  * http://common-lisp.net/project/slime/
 ;;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
+;;;  * https://github.com/technomancy/slime
 ;;;
 (setq inferior-lisp-program "~/bin/lisp")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
@@ -35,7 +36,7 @@
         (reduce (lambda (acc f)
                   (concat (expand-file-name acc) ":" (expand-file-name f)))
                 '("./src/main/clojure"
-                  ;;"~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/jvm"
+                  "~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/jvm"
                   "~/.emacs.d/vendor/cdt/clojure/clojure-1.2.0/src/clj"
                   "~/.emacs.d/vendor/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 

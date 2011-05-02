@@ -1,6 +1,11 @@
-(set-face-attribute 'default (selected-frame) :height 100)
-(set-frame-position (selected-frame) 0 0)
-(set-frame-size (selected-frame) 240 70)
+(set-default-font "-unknown-Inconsolata-normal-normal-normal-*-10-*-*-*-m-0-iso10646-1")
+
+;;(set-face-attribute 'default (selected-frame) :height 100)
+(defun maximize-frame ()
+  (interactive)
+  (set-frame-position (selected-frame) 0 0)
+  (set-frame-size (selected-frame) 1000 1000))
+(maximize-frame)
 
 ;;;
 ;;; color-theme

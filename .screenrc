@@ -7,6 +7,11 @@ defscrollback 10000
 # An alternative hardstatus to display a bar at the bottom listing the
 # windownames and highlighting the current windowname in blue.
 hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
+#termcapinfo xterm*|Eterm|mlterm "hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007"
+#hardstatus off
+#hardstatus string " screen %n (%t)%? [%h]%?"
+#caption always "%?%F%{-b bc}%:%{-b bb}%?%C|%D|%M %d|%H%?%F%{+u wb}%? %L=%-Lw%45>%{+b by}%n%f*%t%{-}%+Lw%-0<"
+#caption always "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
 
 # Execute .bash_profile on startup
 shell -$SHELL
