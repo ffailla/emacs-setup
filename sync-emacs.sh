@@ -7,8 +7,8 @@ then
   rsync -av --delete ./bin/ ~/bin
   cp ./.screenrc ~/  
   cp ./.terminfo ~/
-  ant -f ./.emacs.d/site-lisp/jisql/build.xml
-  cd ./.emacs.d/site-lisp/cdt/ && lein deps install
+  ant -f ./.emacs.d/vendor/jisql/build.xml
+  cd ./.emacs.d/vendor/cdt/ && lein deps install
   exit 0;
 fi
 
