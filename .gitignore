@@ -14,4 +14,4 @@ _darcs
 ac-comphist.dat
 semantic.cache
 TAGS
-#build
+build/
