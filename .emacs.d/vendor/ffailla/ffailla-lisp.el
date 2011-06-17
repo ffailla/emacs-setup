@@ -4,7 +4,8 @@
 ;;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
 ;;;  * https://github.com/technomancy/slime
 ;;;
-(setq inferior-lisp-program "~/bin/lisp")
+;;(setq inferior-lisp-program "~/bin/lisp")
+(setq inferior-lisp-program "/Users/ffailla/dev/clojurescript/script/repl")
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
 (autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
 (eval-after-load 'slime
@@ -41,7 +42,7 @@
                   "~/.emacs.d/vendor/cdt/clojure/clojure-contrib-1.2.0/src/main/clojure"))))
 
 (defun clojure-mode-setup ()
-  (slime-mode t)
+  ;;(slime-mode t)
   (show-paren-mode t)
   (paredit-mode t)
   (outline-minor-mode t)
@@ -70,6 +71,7 @@
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojure-mode))
 
 ;;;
 ;;; Emacs lisp mode setup

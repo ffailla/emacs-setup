@@ -14,7 +14,8 @@
 (setq org-mobile-directory "~/Dropbox/MobileOrg")
 (setq org-default-notes-file "~/org/notes.org")
 (setq org-agenda-files (directory-files "~/org" t ".org$"))
-(setq org-mobile-files (directory-files "~/org" t ".org$"))
+;;(setq org-mobile-files (directory-files "~/org" t ".org$"))
+(setq org-mobile-files org-agenda-files)
 (define-key global-map "\C-cc" 'org-capture)
 
 (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
@@ -22,11 +23,10 @@
 
 (defun org-set-org-agenda-files ()
   (interactive)
-  (setq org-agenda-files
-        (directory-files "~/org" t ".org$")))
+  (setq org-agenda-files (directory-files "~/org" t ".org$")))
 
 (defun org-set-org-mobile-files ()
   (interactive)
-  (setq org-mobile-files (directory-files "~/org" t ".org$")))
+  (setq org-mobile-files org-agenda-files))
 
 (provide 'ffailla-org)

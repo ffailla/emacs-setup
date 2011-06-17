@@ -8,6 +8,11 @@
 (maximize-frame)
 
 ;;;
+;;; rainbow-delimeters
+;;;
+(require 'rainbow-delimiters)
+
+;;;
 ;;; color-theme
 ;;;  * http://www.nongnu.org/color-theme/
 ;;;

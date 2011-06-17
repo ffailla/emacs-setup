@@ -21,6 +21,26 @@
 (setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin") exec-path))
 
 ;;;
+;;; use bash shell on windows
+;;;
+;; (defun ffailla-shell-setup ()
+;;   "For Cygwin bash under Emacs 20"
+;;   (setq comint-scroll-show-maximum-output 'this)
+;;   (make-variable-buffer-local 'comint-completion-addsuffix))
+;; (setq comint-completion-addsuffix t)
+;; (setq comint-eol-on-send t)
+;; (setq binary-process-input t) 
+;; (setq w32-quote-process-args ?\") 
+;; (setq shell-file-name "bash") ;; or sh if you rename your bash executable to sh. 
+;; (setenv "SHELL" shell-file-name) 
+;; (setq explicit-shell-file-name shell-file-name) 
+;; (setq explicit-sh-args '("-login" "-i"))
+;; (setq comint-completion-addsuffix t)
+;; (setq comint-eol-on-send t)
+
+;; (setq shell-mode-hook 'ffailla-shell-setup)
+
+;;;
 ;;; package manager
 ;;;
 (add-to-list 'load-path "~/.emacs.d/elpa/")

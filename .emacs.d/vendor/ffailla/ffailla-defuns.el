@@ -2,6 +2,7 @@
 ;;; printing support
 ;;;
 (require 'printing)
+(require 'ps2pdf)
 (pr-update-menus)
 (setq ps-printer-name "PDF_file_generator")
 (setq ps-printer-name t)

@@ -77,11 +77,6 @@
 (setq ediff-split-window-function 'split-window-horizontally)
 
 ;;;
-;;; rainbow-delimeters
-;;;
-(require 'rainbow-delimiters)
-
-;;;
 ;;; auto-complete
 ;;;
 (require 'auto-complete-config)
