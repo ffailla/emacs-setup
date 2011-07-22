@@ -24,6 +24,8 @@
 (recentf-mode 1)
 (setq column-number-mode t)
 (global-linum-mode 1)
+(require 'linum-off)
+(setq linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode erc-mode))
 
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."

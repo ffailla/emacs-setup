@@ -1,11 +1,15 @@
-(set-default-font "-unknown-Inconsolata-normal-normal-normal-*-10-*-*-*-m-0-iso10646-1")
+(if (not (eq system-type 'windows-nt))
+  (set-default-font "-unknown-Inconsolata-normal-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
 
-;;(set-face-attribute 'default (selected-frame) :height 100)
-(defun maximize-frame ()
-  (interactive)
-  (set-frame-position (selected-frame) 0 0)
-  (set-frame-size (selected-frame) 1000 1000))
-(maximize-frame)
+;; (set-face-attribute 'default (selected-frame) :height 100)
+;; (defun maximize-frame ()
+;;   (interactive)
+;;   (set-frame-position (selected-frame) 0 0)
+;;   (set-frame-size (selected-frame) 1000 1000))
+;; (maximize-frame)
+
+(require 'maxframe)
+(add-hook 'window-setup-hook 'maximize-frame t)
 
 ;;;
 ;;; rainbow-delimeters
@@ -19,12 +23,35 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/ffailla/color-theme/")
 (require 'color-theme)
 
-(eval-after-load "color-theme"
+;; FF hack to add this after color-theme require, so that zenburns's version
+;;    of color-theme is not loaded
+(add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")
+
+(eval-after-load 'color-theme
   '(progn
-     (color-theme-initialize)
-     (require 'zenburn-rainbow)
-     (color-theme-zenburn-rainbow)
+     ;;(color-theme-initialize)
+     
+     ;; https://github.com/bbatsov/zenburn-emacs
+     (require 'color-theme-zenburn)
+     (color-theme-zenburn)
+
+     ;;(require 'zenburn-rainbow)
+     ;;(color-theme-zenburn-rainbow)
+     
      ;;(require 'subtle-hacker-rainbow)
+     ;;(color-theme-subtle-hacker-rainbow)
+
+     ;; white bg
+     ;;(color-theme-feng-shui) 
+     ;;(color-theme-katester)
+     ;;(color-theme-snowish)
+     ;;(color-theme-wheat)
+     ;;(color-theme-jsc-light)
+
+     ;;(require 'blippblopp-rainbow)
+     ;;(color-theme-blippblopp-rainbow)
+     ;;(color-theme-blippblopp)
+
      ;;(color-theme-subtle-hacker-rainbow)
      ;;(color-theme-clarity-rainbow)
      ;;(color-theme-zenburn-rainbow)

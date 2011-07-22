@@ -35,4 +35,7 @@
     (message "restoring frame and window layout")
     (set-frame-configuration my-favorite-frame-setup)))
 
+;; magit
+(defalias 'ms 'magit-status)
+
 (provide 'ffailla-bindings)
