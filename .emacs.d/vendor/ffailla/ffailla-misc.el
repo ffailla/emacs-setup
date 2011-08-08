@@ -18,14 +18,15 @@
 (setq default-save-buffer-coding-system 'utf-8)
 
 (tool-bar-mode -1)
-;;(menu-bar-mode -1)
+(menu-bar-mode -1)
 (scroll-bar-mode -1)
 (setq inhibit-splash-screen t)
 (recentf-mode 1)
 (setq column-number-mode t)
 (global-linum-mode 1)
 (require 'linum-off)
-(setq linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode erc-mode))
+(require 'linum+)
+(setq linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode erc-mode org-mode))
 
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."

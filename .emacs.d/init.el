@@ -17,8 +17,8 @@
 (add-subfolders-to-load-path dotfiles-dir)
 (add-subfolders-to-load-path ext-dir)
 
-(setenv "PATH" (concat "~/bin:/usr/local/bin:/sbin:/opt/local/bin:/opt/local/sbin:" (getenv "PATH")))
-(setq exec-path (append '("~/bin" "/usr/local/bin" "/sbin" "/opt/local/bin" "/opt/local/sbin") exec-path))
+(setenv "PATH" (concat "~/bin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/sbin:" (getenv "PATH")))
+(setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin" ) exec-path))
 
 ;;;
 ;;; use bash shell on windows
