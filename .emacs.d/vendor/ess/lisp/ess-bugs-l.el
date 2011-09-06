@@ -1,10 +1,10 @@
 ;;; ess-bugs-l.el -- ESS[BUGS] languages
 
-;; Copyright (C) 2006-2009 Rodney Sparapani
+;; Copyright (C) 2006-2011 Rodney Sparapani
 
 ;; Original Author: Rodney Sparapani
 ;; Created: 16 August 2006
-;; Maintainers: ESS-help <ess-help@stat.math.ethz.ch>
+;; Maintainers: ESS-help <ess-help@r-project.org>
 
 ;; This file is part of ESS
 
@@ -134,6 +134,7 @@ Users whose default is not 'sh, but are accessing a remote machine with
 ;(define-key ess-bugs-mode-map (quote [f12]) 'ess-bugs-next-action)
 (define-key ess-bugs-mode-map "\C-c\C-c" 'ess-bugs-next-action)
 (define-key ess-bugs-mode-map "=" 'ess-bugs-hot-arrow)
+(define-key ess-bugs-mode-map "_" 'ess-bugs-hot-arrow)
 
 (defvar ess-bugs-syntax-table nil
    "ESS[BUGS]: Syntax table for mode.")
@@ -171,14 +172,29 @@ and `ess-bugs-file-dir'."
 
 (defun ess-bugs-exit-notify-sh (string)
   "ESS[BUGS]: Detect completion or failure of submitted job and notify the user."
-  (let* ((exit-done "\\[[0-9]+\\]\\ *\\+*\\ *\\(Exit\\|Done\\).*$")
+  (let* ((exit-done "\\[[0-9]+\\]\\ *\\+*\\ *\\(Exit\\|Done\\)[^\r\n]*")
 	 (beg (string-match exit-done string)))
     (if beg (message (substring string beg (match-end 0))))))
 
 (defun ess-bugs-hot-arrow ()
     "*ESS[BUGS]: Substitute <- for = key press"
     (interactive)
-    (insert "<-"))
+    (insert "<- "))
+
+(defun ess-bugs-next-action ()
+   "ESS[BUGS/JAGS]: Perform the appropriate next action."
+   (interactive)
+   (ess-bugs-file)
+
+   (cond ((equal ".bug" ess-bugs-file-suffix) (ess-bugs-na-bug))
+	 ((equal ".jag" ess-bugs-file-suffix) (ess-jags-na-bug))
+	 ((equal ".bmd" ess-bugs-file-suffix) 
+	  (ess-save-and-set-local-variables)
+	  (ess-bugs-na-bmd ess-bugs-command ess-bugs-chains))
+	 ((equal ".jmd" ess-bugs-file-suffix) 
+	  (ess-save-and-set-local-variables)
+	  (ess-jags-na-jmd ess-jags-command ess-jags-chains)))
+)
 
 (defun ess-bugs-sci-to-round-4-dp () 
     "ESS[BUGS]: round output from +/-0.000E+/-0 to 4 decimal places."
@@ -189,22 +205,22 @@ and `ess-bugs-file-dir'."
 			    (ess-bugs-replacement-9 0)
 			    (ess-bugs-replacement-diff 0))
      (while (search-forward-regexp "-?[0-9][.][0-9][0-9][0-9]E[+-][0-9]" nil t)
-	    (setq ess-bugs-replacement-string 
+	    (setq ess-bugs-replacement-string
 		  (int-to-string (string-to-number (match-string 0))))
 	    (setq ess-bugs-replacement-diff (- (match-end 0) (match-beginning 0)))
 	    (save-match-data
-	        (setq ess-bugs-replacement-9 
+	        (setq ess-bugs-replacement-9
 		    (string-match "99999999999$" ess-bugs-replacement-string))
 
 		(if (not ess-bugs-replacement-9)
-		    (setq ess-bugs-replacement-9 
+		    (setq ess-bugs-replacement-9
 			(string-match "000000000001$" ess-bugs-replacement-string))))
-	
-	    (if ess-bugs-replacement-9	
-		(setq ess-bugs-replacement-string 
+
+	    (if ess-bugs-replacement-9
+		(setq ess-bugs-replacement-string
 		    (substring ess-bugs-replacement-string 0 ess-bugs-replacement-9)))
 
-	    (setq ess-bugs-replacement-diff 
+	    (setq ess-bugs-replacement-diff
 		(- ess-bugs-replacement-diff (string-width ess-bugs-replacement-string)))
 
 	   (while (> ess-bugs-replacement-diff 0)
@@ -224,7 +240,7 @@ and `ess-bugs-file-dir'."
   :group 'ess-bugs-shell
   :type  'string)
 
-(defcustom ess-bugs-shell-command "bugs"
+(defcustom ess-bugs-shell-command "OpenBUGS"
   "*ESS[BUGS-Shell]: The name of the command to run BUGS interactively.
 
 Set to the name of the batch BUGS script that comes with ESS or

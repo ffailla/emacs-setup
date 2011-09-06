@@ -5,7 +5,7 @@
 
 ;; Original Author: A.J. Rossini <rossini@biostat.washington.edu>
 ;; Created: 07 June 2000
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; Keywords: start up, configuration.
 
@@ -252,10 +252,10 @@ the correct \"8.3\"-style directory name."))))
 
 
 (defun ess-sleep ()
-  "Put emacs to sleep for `ess-sleep-for' seconds (floats work).
+  "Put emacs to sleep for `ess-sleep-for-shell' seconds (floats work).
 Sometimes its necessary to wait for a shell prompt."
-  (if (featurep 'xemacs) (sleep-for ess-sleep-for)
-    (sleep-for 0 (truncate (* ess-sleep-for 1000)))))
+  (if (featurep 'xemacs) (sleep-for ess-sleep-for-shell)
+    (sleep-for 0 (truncate (* ess-sleep-for-shell 1000)))))
 
 (provide 'ess-compat)
 

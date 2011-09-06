@@ -2,7 +2,7 @@
 ;;; sql-mode / jisql
 ;;;  * http://www.xigole.com/software/jisql/jisql.jsp
 ;;;
-(setq exec-path (append exec-path '("~/.emacs.d/vendor/jisql")))
+(setq exec-path (append '("~/.emacs.d/vendor/jisql") exec-path))
 (defun sql-save-history-hook ()
   (let ((lval 'sql-input-ring-file-name)
         (rval 'sql-product))

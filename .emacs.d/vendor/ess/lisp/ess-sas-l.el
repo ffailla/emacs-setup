@@ -7,7 +7,7 @@
 ;;          A.J. Rossini,
 ;;          Rodney Sparapani
 ;; Created: 20 Aug 1997
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; Keywords: start up, configuration.
 
@@ -98,6 +98,7 @@ the mode line."
   "`ess-transcript-mode' for SAS."
   (interactive)
   (SAS-mode)
+  (setq mode-name "ESS[LOG]")
   (ess-transcript-minor-mode 1)
   (toggle-read-only t)) ;; to protect the buffer.
 
@@ -299,16 +300,16 @@ number."
      (cons "^ERROR\\( [0-9]+-[1-9][0-9][0-9]\\)?: .*$"   
                                                  font-lock-keyword-face)
      ;       ERROR:
-     (cons "^       [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"  
+     (cons "^       [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"  
                                                  font-lock-keyword-face)
      ;       ERROR #-###:
-     (cons "^             [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"
+     (cons "^             [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"
                                                  font-lock-keyword-face)
      ;       ERROR ##-###:
-     (cons "^              [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$" 
+     (cons "^              [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$" 
 						 font-lock-keyword-face)
      ;       ERROR ###-###:
-     (cons "^               [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$" 
+     (cons "^               [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$" 
 						 font-lock-keyword-face)
      (cons "^              a format name."       font-lock-keyword-face)
      (cons "^       where a numeric operand is required. The condition was: "
@@ -319,16 +320,16 @@ number."
      (cons "^WARNING\\( [0-9]+-[1-9][0-9][0-9]\\)?: .*$"  
                                                  font-lock-function-name-face)
      ;       WARNING:
-     (cons "^         [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"
+     (cons "^         [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"
                                                  font-lock-function-name-face)
      ;       WARNING #-###:
-     (cons "^               [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"
+     (cons "^               [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"
                                                  font-lock-function-name-face)
      ;       WARNING ##-###:
-     (cons "^                [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"
+     (cons "^                [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"
                                                  font-lock-function-name-face)
      ;       WARNING ###-###:
-     (cons "^                 [^ @].*\\([.][ ]?\\|[,a-z][ ]\\)$"
+     (cons "^                 [^ @].*\\([.][ ]?[ ]?\\|[,a-z][ ]\\)$"
                                                  font-lock-function-name-face)
 
      ;; SAS comments
@@ -395,7 +396,7 @@ number."
 		    "calendar" "catalog" "chart" "cimport" "cport" "compare" "contents" "copy" "corr" 		    
 		    "datasets" "dbcstab" "display"
 		    "explode" "export"
-		    "format" "forms" "freq" "fsbrowse" "fsedit" "fsletter" "fslist" "fsview"		    		     
+		    "fcmp" "format" "forms" "freq" "fsbrowse" "fsedit" "fsletter" "fslist" "fsview"
 		    "ganno" "gchart" "gcontour" "gdevice" "geocode" "gfont" "gimport" "ginside"
 		    "gkeymap" "gmap" "goptions" "gplot" "gprint" "gproject" "greduce" "gremove" 
 		    "greplay" "gslide" "gtestit" "g3d" "g3grid" 
@@ -404,33 +405,35 @@ number."
 		    "options"
 		    "plot" "pmenu" "print" "printto"
 		    "rank" "registry" "report"
-		    "sort" "sql" "standard" "summary"
+		    "sgpanel" "sgplot" "sgscatter" "sort" "sql" "standard" "summary"
 		    "tabulate" "template" "timeplot" "transpose" "trantab"
 		    "univariate"
 
 		   ;;SAS/Stat and SAS/ETS
 		    "aceclus" "anova" "arima" "autoreg"
 		    "bgenmod" "blifereg" "boxplot" "bphreg"		    		    
-		    "calis" "cancorr" "candisc" "catmod" "citibase" "cluster" "computab" "corresp"
+		    "calis" "cancorr" "candisc" "catmod" "citibase" "cluster" "computab" "corresp" "countreg"
 		    "discrim" "distance"
-		    "expand"
+		    "entropy" "expand"
 		    "factor" "fastclus" "forecast"
 		    "gam" "genmod" "glimmix" "glm" "glmmod" "glmpower" "glmselect"
 		    "hpmixed"
 		    "inbreed"
 		    "kde" "krige2d"
 		    "lattice" "lifereg" "lifetest" "loess" "logistic"
-		    "mcmc" "mds" "mi" "mianalyze" "mixed" "modeclus" "model" "mortgage" "multtest"
+		    "mcmc" "mdc" "mds" "mi" "mianalyze" "mixed" "modeclus" "model" "mortgage" "multtest"
 		    "nested" "nlin" "nlmixed" "npar1way"
 		    "orthoreg"
-		    "pdlreg" "phreg" "plan" "pls" "power" "princomp" "prinqual" "probit"
-		    "quantreg"
-		    "reg" "robustreg" "rsreg"
-		    "score" "seqdesign" "seqtest" "sim2d" "simlin" "simnormal" "spectra" "statespace" "stdize" "stepdisc" 
-		    "surveyfreq" "surveylogistic" "surveymeans" "surveyreg" "surveyselect" "syslin"
-		    "tcalis" "tphreg" "tpspline" "transreg" "tree" "ttest"
-		    "varclus" "varcomp" "variogram"
-		    "x11"
+		    "panel" "pdlreg" "phreg" "plan" "plm" "pls" "power" "princomp" "prinqual" "probit"
+		    "qlim" "quantreg"
+		    "reg" "risk" "robustreg" "rsreg"
+		    "score" "seqdesign" "seqtest" "severity" "sim2d" "similarity" "simlin" "simnormal"
+		    "spectra" "statespace" "stdize" "stepdisc" 
+		    "surveyfreq" "surveylogistic" "surveymeans" "surveyphreg" "surveyreg" "surveyselect" "syslin"
+		    "tcalis" "timeid" "timeseries" "tphreg" "tpspline" "transreg" "tree" "ttest"
+		    "ucm"
+		    "varclus" "varcomp" "variogram" "varmax"
+		    "x11" "x12"
 		) 'words)) font-lock-constant-face)   
 
 ;       (cons (concat
@@ -439,35 +442,35 @@ number."
 ;	      "\\>")
 ;	     font-lock-keyword-face)
 ;
-       ;; SAS statements
+       ;; SAS base and SAS/Graph statements
        (cons (concat ;"\\<"
 	      (regexp-opt
 	       '(
 		 "do" "to" "by" "goto" ; "go"
 		"abort" "and" "array" "assess" "attrib" 
-		"baseline" "bayes" "between" 
-		"change" "class" "contains" "contrast"
-		"delete" "display" "dm" "drop"
+		"baseline" "bayes" "between" "block" "bubble" "bubble2"
+		"change" "choro" "class" "contains" "contrast"
+		"delete" "display" "dm" "donut" "drop"
 		"else" "error" "exchange" "exclude" 
 		"file" "filename" "format" "freq"
 		 "footnote" "footnote1" "footnote2" "footnote3" "footnote4" "footnote5" 
 		 "footnote6" "footnote7" "footnote8" "footnote9" "footnote10"
-		"goptions" ; "ge" "gt" 
-		"hazardratio"
+		"goptions" "grid" ; "ge" "gt" 
+		"hazardratio" "hbar" "hbar3d"
 		"id" "if" "index" "infile" "informat" "input" ; "is" rarely used, but common false pos.
 		"keep" 
 		"label" "length" "libname" "like" "link" "lsmeans" ; "le" "lt"
 		"manova" "means" "merge" "missing" "model" "modify" 
 		"not" "null" ; "ne" "note" 
 		"ods" "options" "or" "output" "otherwise" 
-		"pageby" "plot" "put" 
+		"pageby" "pie" "pie3d" "plot" "plot2" "prism" "put" 
 		"random" "rename" "repeated" "retain"
-		"same" "save" "select" "set" "skip" "strata" "sum" "sumby"
+		"same" "save" "scatter" "select" "set" "skip" "star" "strata" "sum" "sumby" "surface"
 		"table" "tables" "test" "then" "time"
 		 "title" "title1" "title2" "title3" "title4" "title5" 
 		 "title6" "title7" "title8" "title9" "title10"
 		"update"
-		"value" "var"
+		"value" "var" "vbar" "vbar3d"
 		"weight" "where" "window" "with" 
 		; "x"
 		 ) 'words)) ;"\\>")
@@ -973,16 +976,19 @@ opening /* appears.  returns 0 otherwise."
       (beep)
       (message "Missing Run Statement."))))
 
-
-(defun sas-fix-life-tables (start end)
+(defun sas-fix-life-tables ()
   "Remove censored and duplicate observations from life tables generated by
 Proc Lifetest.  Operates on current region.  A major space saver if there is
 heavy censoring."
-  (interactive "r")
-  (save-excursion
-    (shell-command-on-region
-     start end
-     "sed \"\\?          *\\.          *\\.          *\\.    ?d\"" t)))
+  (interactive)
+    (goto-char (point-min))
+(while (re-search-forward "^.*[ ]+[.][ ]+[.][ ]+[.][ ]+.*$" nil t)
+     (replace-match "" nil nil)))
+;  (save-excursion
+;    (shell-command-on-region
+;     start end
+;     "sed '/[ ][.][ ]/d'" t)))
+     ;;"sed \"\\?          *\\.          *\\.          *\\.    ?d\"" t)))
 ;;(vip-goto-line 1)
 ;;(setq ex-g-flag nil
 ;;ex-g-variant nil)
@@ -1032,16 +1038,21 @@ If START is given this will be the number for the current page."
   (save-excursion
     (goto-char (point-min))
     (if (looking-at "\f") (delete-char 1))
-    (replace-regexp "^\\(.+\\)\f" "\\1\n\f\n")
+    ;(replace-regexp "^\\(.+\\)\f" "\\1\n\f\n")
+(while (re-search-forward "^\\(.+\\)\f" nil t)
+     (replace-match "\\1\n\f\n" nil nil))
     (goto-char (point-min))
-    (replace-regexp "^\f\\(.+\\)" "\f\n\\1")
+    ;(replace-regexp "^\f\\(.+\\)" "\f\n\\1")
+(while (re-search-forward "^\f\\(.+\\)" nil t)
+     (replace-match "\f\n\\1" nil nil))
+;    (goto-char (point-min))
+    ;(replace-regexp " $" "")
+;(while (re-search-forward "$" nil t)
+;     (replace-match "" nil nil))
     (goto-char (point-min))
-    (replace-regexp "
-$" "")
-    (goto-char (point-min))
-    (replace-regexp "
-\\([^
-\\$]+\\)" "\n\\1")
+    ;(replace-regexp " \\([^\\$]+\\)" "\n\\1")
+(while (re-search-forward " \\([^\\$]+\\)" nil t)
+     (replace-match "\n\\1" nil nil))
     (goto-char (point-max))
     (if (not (bobp))
         (progn (backward-char 1)

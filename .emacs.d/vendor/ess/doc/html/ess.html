@@ -271,7 +271,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
 <h2 class="unnumbered">ESS: Emacs Speaks Statistics</h2>
 
 <p>ESS version
-5.11
+5.14
 
 <pre class="display">     by  A.J. Rossini,
          R.M. Heiberger,
@@ -585,7 +585,64 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Introduction">Introduction</a>
 <h3 class="section">1.2 New features in ESS</h3>
 
      <ul>
-Changes/New Features in 5.11:
+Changes/New Features in 5.14:
+          <ul>
+<li><acronym>ESS[BUGS/JAGS]</acronym>:  Batch BUGS is back!  For recent OpenBUGS
+versions, 3.0.8+, a batch BUGS script is once again available,
+but for Linux only.  Therefore, since it seems that BUGS and JAGS must
+co-exist (rather than a transition from BUGS to JAGS), .bug files are
+now in <acronym>ESS[BUGS]</acronym> mode and .jag files are in <acronym>ESS[JAGS]</acronym> mode.  <acronym>ESS[BUGS]</acronym> now
+works like <acronym>ESS[JAGS]</acronym> rather than the original mode <acronym>ESS[BUGS]</acronym> mode which
+was difficult to maintain.  Although, <acronym>ESS[BUGS]</acronym> appears to work,
+there still may be some features missing as well as bugs.
+
+          <li><acronym>ESS[R]</acronym>: New customizable variable <code>ess-swv-plug-into-AUCTeX-p</code>
+Commands to Sweave current file and LaTeX the result are now available
+to AUCTeX users, if this variable is set to <code>t</code>.
+
+          <li><acronym>ESS[S]</acronym>: <kbd>C-c C-c</kbd>
+(<code>ess-eval-function-or-paragraph-and-step</code>) is now skipping over
+comments as the other paragraph functions do. 
+It (and similar functions) should no longer wrongly find
+&lsquo;<samp><span class="samp">function()</span></samp>&rsquo; beginnings inside comments or strings.
+
+          <li><acronym>ESS[SAS]</acronym>: improved by better support for GNU Emacs
+</ul>
+
+     <p>Changes/New Features in 5.13:
+          <ul>
+<li><acronym>ESS[R]</acronym>: On Windows, for R 2.12.0 and later, the Rterm executables
+ (in subdirectories i386 / x64) now are found as well as for earlier R versions. 
+<li><acronym>ESS[S+]</acronym>: on Windows, both 32- and 64-bit versions of S+ (&ldquo;S-PLUS&rdquo;)
+ are found now and made available on the menu. 
+<li><acronym>ESS[R]</acronym>: When prompting for a starting directory, the R version is
+ (always?) correct now. 
+<li><acronym>ESS[R]</acronym>: on non-Windows platforms, the <code>use-dialog-box</code>
+ variable is no longer temporarily changed (to <code>nil</code> for R-x.y.z version
+ functions and to <code>t</code> for <samp><span class="command">R</span></samp> itself), but rather the user
+ customization is obeyed. 
+<li><acronym>ESS[R]</acronym>: more Roxygen improvements. 
+<li>`Rd-preview-help' now generates preview buffers with navigation
+facilities the same as regular help buffers. 
+<li><acronym>ESS</acronym>: New functions and keys C-c [up] / [down]
+ for evaluating the buffer &ldquo;from beginning till here&rdquo;. 
+</ul>
+
+     <p>Changes/New Features in 5.12:
+          <ul>
+<li><acronym>ESS[SAS]</acronym> Font-locking:
+ update of PROCs keywords (up to SAS 9.22); error/warnings. 
+<li><acronym>ESS[R]</acronym>: Roxygen improvements: S4 classes;
+ also optionally keep spaces when filling arguments
+<li><acronym>ESS[Rd]</acronym>: support new keywords:
+ section-name \subsection plus a dozen &ldquo;new&rdquo; keywords; should match R
+ 2.12.x now. 
+<li><samp><span class="command">ess-display-help-on-object</span></samp> (<kbd>C-c C-v</kbd>)
+ now <em>caches</em> the list of topics, thus speeding up the improvement
+ feature introduced in 5.9. 
+</ul>
+
+     <p>Changes/New Features in 5.11:
           <ul>
 <li>Filename completion within buffers now adds only trailing
 characters to complete the filename, rather than expanding to an
@@ -1595,13 +1652,16 @@ Retrieve the latest tgz file (<samp><span class="file">ess-VERSION.tgz</span></s
 and ESS, the installation process is simple.
 
      <ol type=1 start=1>
-<li>Extract all the files from <samp><span class="file">ess-VERSION.tgz</span></samp> when you are in
-the current working directory of <samp><span class="file">/usr/local/share/emacs/site-lisp</span></samp>
-which exists for packages like <acronym>ESS</acronym>
-(and for Mac OS X create a link to it from the directory
-<samp><span class="file">/Applications/Emacs.app/Contents/Resources/site-lisp</span></samp>):
-     <pre class="example">          %prompt gtar zxf ess-VERSION.tgz            # for GNU tar
-          %prompt gunzip &lt; ess-VERSION.tgz | tar xf - # for Unix tar
+<li>Extract all the files from <samp><span class="file">ess-VERSION.tgz</span></samp> into
+the directory <samp><span class="file">PREFIX/site-lisp</span></samp>
+where <samp><span class="file">PREFIX</span></samp> is appropriate for GNU Emacs on your system;
+<samp><span class="file">PREFIX</span></samp> will most likely be either
+<samp><span class="file">/usr/share/emacs</span></samp> or <samp><span class="file">/usr/local/share/emacs</span></samp>
+<!-- which exists for packages like @ESS{} -->
+(on Mac OS X, <samp><span class="file">PREFIX</span></samp> will most likely be something like
+<samp><span class="file">/Applications/Emacs.app/Contents/Resources</span></samp>):
+     <pre class="example">          GNU tar  % gtar zxf ess-VERSION.tgz -C PREFIX/site-lisp
+          Unix tar % gunzip &lt; ess-VERSION.tgz | tar xf - -C PREFIX/site-lisp
 </pre>
      <li>Then, add the line
      <pre class="example">          (require 'ess-site)
@@ -1625,7 +1685,7 @@ or <samp><span class="file">/usr/local/ess</span></samp> and unpack <acronym>ESS
 
      <li>If you see a buffer named <samp><span class="file">*ESS*</span></samp>, then the manual instructions
 were most likely successful.  If not, then send a query to
-<a href="mailto:ess-help@stat.math.ethz.ch">ess-help@stat.math.ethz.ch</a>
+<a href="mailto:ess-help@r-project.org">ess-help@r-project.org</a>
 explicitly describing your problem and your environment
 including operating system, Emacs version, <acronym>ESS</acronym> version, etc.
         </ol>
@@ -1665,7 +1725,7 @@ or <samp><span class="file">/usr/local/ess</span></samp> and unpack <acronym>ESS
 
      <li>If you see a buffer named <samp><span class="file">*ESS*</span></samp>, then the manual instructions
 were most likely successful.  If not, then send a query to
-<a href="mailto:ess-help@stat.math.ethz.ch">ess-help@stat.math.ethz.ch</a>
+<a href="mailto:ess-help@r-project.org">ess-help@r-project.org</a>
 explicitly describing your problem and your environment
 including operating system, XEmacs version, <acronym>ESS</acronym> version, etc.
         </ol>
@@ -1711,10 +1771,10 @@ and ESS, the installation process is simple.
 <li>Extract all the files from <samp><span class="file">ess-VERSION.zip</span></samp> (by
 double clicking on it and selecting &ldquo;Extract all files&rdquo;
 which launches the Folders Extraction Wizard)
-into the <samp><span class="file">site-lisp</span></samp> directory that exists for packages like <acronym>ESS</acronym>. 
+into an <samp><span class="file">ESS</span></samp> sub-directory of the <samp><span class="file">site-lisp</span></samp> directory that exists for packages like <acronym>ESS</acronym>. 
 If GNU Emacs was installed in the default location, then this
 directory can be found somewhere like
-<samp><span class="file">C:\Program Files\GNU Emacs\emacs-22.x\site-lisp</span></samp>.
+<samp><span class="file">C:\Program Files\GNU Emacs\emacs-22.x\site-lisp</span></samp>
 
      <li>Add the line
      <pre class="example">          (require 'ess-site)
@@ -1739,7 +1799,7 @@ will not be lost if you update Emacs later.
 
      <li>If you see a buffer named <samp><span class="file">*ESS*</span></samp>, then the manual instructions
 were most likely successful.  If not, then send a query to
-<a href="mailto:ess-help@stat.math.ethz.ch">ess-help@stat.math.ethz.ch</a>
+<a href="mailto:ess-help@r-project.org">ess-help@r-project.org</a>
 explicitly describing your problem and your environment
 including operating system, Emacs version, <acronym>ESS</acronym> version, etc.
         </ol>
@@ -1794,7 +1854,7 @@ will not be lost if you update XEmacs later.
 
      <li>If you see a buffer named <samp><span class="file">*ESS*</span></samp>, then the manual instructions
 were most likely successful.  If not, then send a query to
-<a href="mailto:ess-help@stat.math.ethz.ch">ess-help@stat.math.ethz.ch</a>
+<a href="mailto:ess-help@r-project.org">ess-help@r-project.org</a>
 explicitly describing your problem and your environment
 including operating system, XEmacs version, <acronym>ESS</acronym> version, etc.
         </ol>
@@ -1934,12 +1994,15 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Installation">Installation</a>
 <h3 class="section">2.3 Requirements</h3>
 
 <p>ESS is most likely to work with current/recent versions of the following
-statistical packages: R/S-PLUS, SAS, Stata and JAGS. The one exception
-is BUGS which is quite old, but should still work.
+statistical packages: R/S-PLUS, SAS, Stata, OpenBUGS and JAGS.
 
    <p>ESS supports current/recent versions of GNU Emacs and XEmacs. 
 Most notably, the GNU Emacs 22 series and XEmacs 21.4.14 or higher
 (beta/pre-release versions are NOT SUPPORTED).
+
+   <p>To build the PDF documentation, you will need a version of TeX Live or
+texinfo that includes texi2dvi (BEWARE: recent TeX Live, and some
+texinfo RPMs, do NOT include texi2dvi).
 
 <!-- ESS has been tested with -->
 <!-- @itemize @bullet -->
@@ -3209,7 +3272,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#ESS-for-the-S-family">ESS for the S fa
 </ul>
 
    <p><acronym>ESS[S]</acronym> mode should be automatically turned on when loading a file with
-the suffices found in ess-site (*.R, *.S, *.s, etc).  However, one
+the suffices found in ess-site (*.R, *.S, *.s, etc).  Alternatively,
+type <kbd>M-x R-mode</kbd> to put the current buffer into R mode.  However, one
 will have to start up an inferior process to take advantage of the
 interactive features.
 
@@ -3532,19 +3596,17 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#ESS-for-the-S-family">ESS for the S fa
 <p>1. Suppose that you are primarily an SPLUS 3.4 user, occasionally
    using S version 4, and sick and tired of the buffer-name *S+3*
    we've stuck you with.  Simply edit the "ess-dialect" alist entry in
-   the essd-sp3.el and essd-s4.el files to be "S" instead of "S4" and
+   the ess-sp3-d.el and ess-s4-d.el files to be "S" instead of "S4" and
    "S+3".  This will ensure that all the inferior process buffer names
    are "*S*".
 
    <p>2. Suppose that you WANT to have the first buffer name indexed by
    ":1", in the same manner as your S-PLUS processes 2,3,4, and 5 (for
-   you heavy simulation people).  Then uncomment the line in ess-site
-   (or add after your (require 'ess-site) or (load "ess-site") command
+   you heavy simulation people).  Then
+   add after your (require 'ess-site) or (load "ess-site") command
     in your .emacs file, the line:
 <pre class="example">     (setq ess-plain-first-buffername nil)
 </pre>
-   <p>)
-
    <p>3. Fontlocking sometimes fails to behave nicely upon errors.  When
    Splus dumps, a mis-matched "  (double-quote) can result in the
    wrong font-lock face being used for the remainder of the buffer.
@@ -3876,6 +3938,7 @@ private values of the indentation variable, see below.
 <div class="node">
 <a name="Styles"></a>
 <p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Indenting">Indenting</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Indenting">Indenting</a>
 
 </div>
@@ -4303,54 +4366,68 @@ to toggle visibility of Roxygen entries and the Roxygen template.
    <p>All ESS Roxygen support is defined in <samp><span class="file">ess-roxy.el</span></samp> which is loaded
 by default in ESS. The following special Emacs commands are provided.
 
-     <dl>
-<dt><kbd>C-c C-o</kbd><dd><a name="index-ess_002droxy_002dupdate_002dentry-183"></a><code>ess-roxy-update-entry</code>: Generate a Roxygen template or update the
-parameter list in Roxygen entry at point (or above the function at the
-point). Documented parameters that are not in the function are placed
-last in the list, parameters that are not documented and not in the
-definition are dropped.
+     <ul>
+<li><kbd>C-c C-o</kbd> (<code>ess-roxy-update-entry</code>) <br>
+<a name="index-ess_002droxy_002dupdate_002dentry-183"></a>Generate a Roxygen template or update the parameter list in Roxygen
+entry at point (or above the function at the point). Documented
+parameters that are not in the function are placed last in the list,
+parameters that are not documented and not in the definition are
+dropped. Parameter descriptions are filled if
+<code>ess-roxy-fill-param-p</code> is non-nil.
 
-     <br><dt><kbd>C-c C-e C-c</kbd><dd><a name="index-ess_002droxy_002dtoggle_002droxy_002dregion-184"></a><code>ess-roxy-toggle-roxy-region</code>: Toggle the presence of the leading
-Roxygen string on all lines in the marked region. Convenient for
-transferring text to Roxygen entries and to evaluate example fields.
+     <li><kbd>C-c C-e C-c</kbd> (<code>ess-roxy-toggle-roxy-region</code>) <br>
+<a name="index-ess_002droxy_002dtoggle_002droxy_002dregion-184"></a>Toggle the presence of the leading Roxygen string on all lines in the
+marked region. Convenient for transferring text to Roxygen entries and
+to evaluate example fields.
 
-     <br><dt><kbd>C-c C-e C-r</kbd><dd><a name="index-ess_002droxy_002dpreview_002dRd-185"></a><code>ess-roxy-preview-Rd</code>: Use the attached R process to parse the
-entry at point obtain the input for an Rd file. Convenient for checking
-syntax. When used with the prefix argument, i.e. <kbd>C-u C-c C-e C-r</kbd>,
-place the content in a buffer associated with a Rd file with the same
-name as the documentation. Requires the Roxygen package to be installed.
+     <li><kbd>C-c C-e C-r</kbd> (<code>ess-roxy-preview-Rd</code>) <br>
+<a name="index-ess_002droxy_002dpreview_002dRd-185"></a>Use the attached R process to parse the entry at point to obtain the Rd
+code. Convenient for previewing and checking syntax. When used with the
+prefix argument, i.e. <kbd>C-u C-c C-e C-r</kbd>, place the content in a
+buffer associated with a Rd file with the same name as the
+documentation. Requires the Roxygen package to be installed.
 
-     <br><dt><kbd>C-c C-e p </kbd><code>ess-roxy-previous-entry</code><dd><a name="index-ess_002droxy_002dprevious_002dentry-186"></a>Go to start of the Roxygen entry above point.
+     <li><kbd>C-c C-e C-t</kbd> (<code>ess-roxy-preview-HTML</code>) <br>
+<a name="index-ess_002droxy_002dpreview_002dRd-186"></a>Use the attached R process to parse the entry at to generate HTML for
+the entry and open it in a browser. When used with the prefix argument,
+i.e. <kbd>C-u C-c C-e C-t</kbd>, visit the generated HTML file instead. 
+Requires the Roxygen and tools packages to be installed.
 
-     <br><dt><kbd>C-c C-e n</kbd><dd><a name="index-ess_002droxy_002dnext_002dentry-187"></a><code>ess-roxy-next-entry</code>: Go to end of the Roxygen entry above point.
+     <li><kbd>C-c C-e p</kbd> (<code>ess-roxy-previous-entry</code>) <br>
+<a name="index-ess_002droxy_002dprevious_002dentry-187"></a>Go to start of the Roxygen entry above point.
 
-     <br><dt><kbd>C-c C-e C-h</kbd><dd><a name="index-ess_002droxy_002dhide_002dall-188"></a><code>ess-roxy-hide-all</code>: Use the hideshow mode to fold away the
-visibility of all Roxygen entries. Hide-show support must be enabled for
-this binding to get defined. 
-</dl>
+     <li><kbd>C-c C-e n</kbd>  (<code>ess-roxy-next-entry</code>) <br>
+<a name="index-ess_002droxy_002dnext_002dentry-188"></a>Go to end of the Roxygen entry above point.
 
-   <p>ESS also advices several standard editing functions in order to make
-Roxygen editing more intuitive. The advised functions are as follows.
+     <li><kbd>C-c C-e C-h</kbd> (<code>ess-roxy-hide-all</code>) <br>
+<a name="index-ess_002droxy_002dhide_002dall-189"></a>Use the hideshow mode to fold away the visibility of all Roxygen
+entries. Hide-show support must be enabled for this binding to get
+defined.
 
-     <dl>
-<dt><kbd>C-c TAB</kbd><dd><a name="index-ess_002dR_002dcomplete_002dobject_002dname-189"></a><code>ess-R-complete-object-name</code>: Complete Roxygen tag at
-point. E.g. doing <kbd>C-c TAB</kbd> when the point is at the end of
-<code>@par</code> completes to <code>@param</code>.
+     <p>ESS also advices the following standard editing functions in order to make
+Roxygen editing more intuitive:
 
-     <br><dt><kbd>M-h</kbd><dd><a name="index-mark_002dparagraph-190"></a><code>mark-paragraph</code>: If the transient mark mode is active, place mark
-and point at start end end of the field at point and activate the mark.
+     <li><kbd>C-c TAB</kbd> (<code>ess-R-complete-object-name</code>) <br>
+<a name="index-ess_002dR_002dcomplete_002dobject_002dname-190"></a>Complete Roxygen tag at point. E.g. doing <kbd>C-c TAB</kbd> when the point
+is at the end of <code>@par</code> completes to <code>@param</code>.
 
-     <br><dt><kbd>TAB</kbd><dd><a name="index-ess_002dindent_002dcommand-191"></a><code>ess-indent-command</code>: If hide-show support is enabled, fold away
-the visibility of the Roxygen entry at point.
+     <li><kbd>M-h</kbd> (<code>mark-paragraph</code>) <br>
+<a name="index-mark_002dparagraph-191"></a>If the transient mark mode is active, place mark and point at start end
+end of the field at point and activate the mark.
 
-     <br><dt><kbd>M-q</kbd><dd><a name="index-fill_002dparagraph-192"></a><code>fill-paragraph</code>: Fill the Roxygen field at point.
+     <li><kbd>TAB</kbd> (<code>ess-indent-command</code>) <br>
+<a name="index-ess_002dindent_002dcommand-192"></a>If hide-show support is enabled, fold away the visibility of the Roxygen
+entry at point.
 
-     <br><dt><kbd>C-a</kbd><dd><a name="index-move_002dbeginning_002dof_002dline-193"></a><code>move-beginning-of-line</code>: Move to the point directly to the right
-of the Roxygen start string.
+     <li><kbd>M-q</kbd> (<code>fill-paragraph</code>) <br>
+<a name="index-fill_002dparagraph-193"></a>Fill the Roxygen field at point.
 
-     <br><dt><kbd>ENTER</kbd><dd><a name="index-newline_002dand_002dindent-194"></a><code>newline-and-indent</code>: Insert a new line and the Roxygen prefix
-string. 
-</dl>
+     <li><kbd>C-a</kbd> (<code>move-beginning-of-line</code>) <br>
+<a name="index-move_002dbeginning_002dof_002dline-194"></a>Move to the point directly to the right of the Roxygen start string.
+
+     <li><kbd>ENTER</kbd> (<code>newline-and-indent</code>) <br>
+<a name="index-newline_002dand_002dindent-195"></a>Insert a new line and the Roxygen prefix string. 
+</ul>
 
 <!-- node-name,  next,  previous,  up -->
 <div class="node">
@@ -4364,11 +4441,11 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 <h2 class="chapter">9 Reading help files</h2>
 
-<p><a name="index-help-files-195"></a>
+<p><a name="index-help-files-196"></a>
 ESS provides an easy-to-use facility for reading S help files from
 within Emacs.  From within the ESS process buffer or any ESS edit
 buffer, typing <kbd>C-c C-v</kbd> (<code>ess-display-help-on-object</code>)
-<a name="index-ess_002ddisplay_002dhelp_002don_002dobject-196"></a>will prompt you for the name of an object for which you would like
+<a name="index-ess_002ddisplay_002dhelp_002don_002dobject-197"></a>will prompt you for the name of an object for which you would like
 documentation.  Completion is provided over all objects which have help
 files.
 
@@ -4382,15 +4459,15 @@ through the help file:
 Help commands:
 
      <li><kbd>?</kbd> (<code>ess-describe-help-mode</code>) <br>
-<a name="index-ess_002ddescribe_002dhelp_002dmode-197"></a>Pops up a help buffer with a list of the commands available in S help
+<a name="index-ess_002ddescribe_002dhelp_002dmode-198"></a>Pops up a help buffer with a list of the commands available in S help
 mode.
 
      <li><kbd>h</kbd> (<code>ess-display-help-on-object</code>) <br>
-<a name="index-ess_002ddisplay_002dhelp_002don_002dobject-198"></a>Pop up a help buffer for a different object
+<a name="index-ess_002ddisplay_002dhelp_002don_002dobject-199"></a>Pop up a help buffer for a different object
 
      <p>Paging commands:
 
-     <p><a name="index-paging-commands-in-help-buffers-199"></a><li><kbd>b</kbd> or <kbd>DEL</kbd> (<code>scroll-down</code>) <br>
+     <p><a name="index-paging-commands-in-help-buffers-200"></a><li><kbd>b</kbd> or <kbd>DEL</kbd> (<code>scroll-down</code>) <br>
 Move one page backwards through the help file.
 
      <li><kbd>SPC</kbd> (<code>scroll-up</code>) <br>
@@ -4404,7 +4481,7 @@ Move to the beginning and end of the help file, respectively.
 
      <li><kbd>n</kbd> (<code>ess-skip-to-next-section</code>) and <kbd>p</kbd>
 (<code>ess-skip-to-previous-section</code>) <br> Move to the next and previous
-<a name="index-ess_002dskip_002dto_002dnext_002dsection-200"></a><a name="index-ess_002dskip_002dto_002dprevious_002dsection-201"></a>section header in the help file, respectively.  A section header
+<a name="index-ess_002dskip_002dto_002dnext_002dsection-201"></a><a name="index-ess_002dskip_002dto_002dprevious_002dsection-202"></a>section header in the help file, respectively.  A section header
 consists of a number of capitalized words, followed by a colon.
 
      <p>In addition, the <kbd>s</kbd> key followed by one of the following letters
@@ -4425,7 +4502,7 @@ sections &lsquo;<samp><span class="samp">BACKGROUND</span></samp>&rsquo;, &lsquo
      <!-- S and S-plus only: -->
      <!-- @item S			SIDE EFFECTS: -->
      <p>Do use <kbd>s ?</kbd> to get the current list of active key bindings. 
-<a name="index-ess_002dskip_002dto_002dhelp_002dsection-202"></a>
+<a name="index-ess_002dskip_002dto_002dhelp_002dsection-203"></a>
           <dl>
 <dt>&lsquo;<samp><span class="samp">a</span></samp>&rsquo;<dd>ARGUMENTS:
 
@@ -4465,11 +4542,11 @@ sections &lsquo;<samp><span class="samp">BACKGROUND</span></samp>&rsquo;, &lsquo
      <p>Miscellaneous:
 
      <li><kbd>l</kbd> (<code>ess-eval-line-and-step</code>) <br>
-<a name="index-ess_002deval_002dline_002dand_002dstep-203"></a>Evaluates the current line in the ESS process, and moves to the next
+<a name="index-ess_002deval_002dline_002dand_002dstep-204"></a>Evaluates the current line in the ESS process, and moves to the next
 line.  Useful for running examples in help files.
 
      <li><kbd>r</kbd> (<code>ess-eval-region</code>) <br>
-<a name="index-ess_002deval_002dregion-204"></a>Send the contents of the current region to the ESS process.  Useful
+<a name="index-ess_002deval_002dregion-205"></a>Send the contents of the current region to the ESS process.  Useful
 for running examples in help files.
 
      <li><kbd>/</kbd> (<code>isearch-forward</code>) <br>
@@ -4478,7 +4555,7 @@ Same as <kbd>C-s</kbd>.
      <p>Quit commands:
 
      <li><kbd>q</kbd> (<code>ess-switch-to-end-of-ESS</code>) <br>
-<a name="index-ess_002dswitch_002dto_002dend_002dof_002dESS-205"></a>Returns to the ESS process buffer in another window, leaving the
+<a name="index-ess_002dswitch_002dto_002dend_002dof_002dESS-206"></a>Returns to the ESS process buffer in another window, leaving the
 help window visible.
 
      <li><kbd>k</kbd> (<code>kill-buffer</code>) <br>
@@ -4507,7 +4584,7 @@ frame.  If you wish help buffers to appear in their own frame (either
 one per help buffer, or one for all help buffers), you can customize the
 variable <code>ess-help-own-frame</code>.
 
-   <p><a name="index-ess_002dquit-206"></a><a name="index-ess_002dcleanup-207"></a><a name="index-temporary-buffers-208"></a>
+   <p><a name="index-ess_002dquit-207"></a><a name="index-ess_002dcleanup-208"></a><a name="index-temporary-buffers-209"></a>
 <!-- node-name,  next,  previous,  up -->
 <div class="node">
 <a name="ESS-for-SAS"></a>
@@ -4625,21 +4702,24 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#ESS-for-SAS">ESS for SAS</a>
 
 <h3 class="section">10.3 ESS(SAS)&ndash;&lt;TAB&gt; key</h3>
 
-<p>Two options.  The &lt;TAB&gt; key is bound by default to <code>sas-indent-line</code>.  This
-function is used to syntactically indent <acronym>SAS</acronym><!-- /@w --> code so <code>PROC</code> and <code>RUN</code> are in
-the left margin, other statements are indented <code>sas-indent-width</code> spaces from the margin,
-continuation lines are indented <code>sas-indent-width</code> spaces in from the beginning column of
-that statement.  This is the type of functionality that emacs provides
-in most programming language modes.  This functionality is equivalent to
-uncommenting the following line in <samp><span class="file">ess-site.el</span></samp>:
+<p>Two options.  The &lt;TAB&gt; key is bound by default to
+<code>sas-indent-line</code>.  This function is used to syntactically indent
+<acronym>SAS</acronym><!-- /@w --> code so <code>PROC</code> and <code>RUN</code> are in the left margin,
+other statements are indented <code>sas-indent-width</code> spaces from the
+margin, continuation lines are indented <code>sas-indent-width</code> spaces
+in from the beginning column of that statement.  This is the type of
+functionality that emacs provides in most programming language modes. 
+This functionality is activated by placing the following line in your
+initialization file prior to a <code>require</code>/<code>load</code>:
 <pre class="example">     (setq ess-sas-edit-keys-toggle nil)
 </pre>
-   <p><acronym>ESS</acronym> provides an alternate behavior for &lt;TAB&gt; that makes it behave
-as it does in <acronym>SAS</acronym><!-- /@w --> Display Manager, i.e. move the cursor to the next stop. 
-The alternate behavior also provides a "TAB" backwards, <kbd>C-&lt;TAB&gt;</kbd><!-- /@w -->, that
-moves the cursor to the stop to the left and deletes any characters
-between them.  This functionality is obtained by uncommenting the
-following line in <samp><span class="file">ess-site.el</span></samp>:
+   <p><acronym>ESS</acronym> provides an alternate behavior for &lt;TAB&gt; that makes it
+behave as it does in <acronym>SAS</acronym><!-- /@w --> Display Manager, i.e. move the cursor to
+the next stop.  The alternate behavior also provides a "TAB"
+backwards, <kbd>C-&lt;TAB&gt;</kbd><!-- /@w -->, that moves the cursor to the stop to
+the left and deletes any characters between them.  This functionality
+is obtained by placing the following line in your initialization file
+prior to a <code>require</code>/<code>load</code>:
 <pre class="example">     (setq ess-sas-edit-keys-toggle t)
 </pre>
    <p>Under the alternate behavior, &lt;TAB&gt; is bound to <kbd>M-x&nbsp;tab-to-tab-stop</kbd><!-- /@w -->
@@ -4809,10 +4889,11 @@ will choose the local definitions.  The option can be chosen by the
 person installing <acronym>ESS</acronym> for a site or by an individual.
 
      <ol type=a start=1>
-<li>For a site installation or an individual, uncomment <strong>ONLY ONE</strong> of the
-following lines in your <samp><span class="file">ess-site.el</span></samp>.  <acronym>ESS[SAS]</acronym> function keys are
-available in <acronym>ESS[SAS]</acronym> if you uncomment either 2 or 3 and in all modes if
-you uncomment 4 or 5:
+<li>For a site installation or an individual, place <strong>ONLY ONE</strong> of
+the following lines in your initialization file prior to a
+<code>require</code>/<code>load</code>.  <acronym>ESS[SAS]</acronym> function keys are available
+in <acronym>ESS[SAS]</acronym> if you choose either 2 or 3 and in all modes if you
+choose 4 or 5:
      <pre class="example">          ;;2; (setq ess-sas-local-unix-keys t)
           ;;3; (setq ess-sas-local-pc-keys t)
           ;;4; (setq ess-sas-global-unix-keys t)
@@ -5232,8 +5313,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#ESS-for-BUGS">ESS for BUGS</a>
 <h3 class="section">11.1 ESS[BUGS]&ndash;Model files</h3>
 
 <p>Model files with the <samp><span class="file">.bug</span></samp> extension are edited in <acronym>ESS[BUGS]</acronym> mode
-if <code>(require 'essd-bugs)</code> was performed or edited in <acronym>ESS[JAGS]</acronym> mode
-if <code>(require 'essd-jags)</code>. 
+if <code>(require 'ess-bugs-d)</code> was performed or edited in <acronym>ESS[JAGS]</acronym> mode
+if <code>(require 'ess-jags-d)</code>. 
 Three keys are bound for your use in <acronym>ESS[BUGS]</acronym>, <kbd>F2</kbd>, <kbd>C-c C-c</kbd> and <kbd>=</kbd>. 
 <kbd>F2</kbd> performs the same action as it does in <acronym>ESS[SAS]</acronym>,
 See <a href="#ESS_0028SAS_0029_002d_002dFunction-keys-for-batch-processing">ESS(SAS)&ndash;Function keys for batch processing</a>.  <kbd>C-c C-c</kbd> performs the
@@ -5388,8 +5469,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#ESS-for-JAGS">ESS for JAGS</a>
 <h3 class="section">12.1 ESS[JAGS]&ndash;Model files</h3>
 
 <p>Model files with the <samp><span class="file">.bug</span></samp> extension are edited in <acronym>ESS[BUGS]</acronym> mode
-if <code>(require 'essd-bugs)</code> was performed or edited in <acronym>ESS[JAGS]</acronym> mode
-if <code>(require 'essd-jags)</code>. 
+if <code>(require 'ess-bugs-d)</code> was performed or edited in <acronym>ESS[JAGS]</acronym> mode
+if <code>(require 'ess-jags-d)</code>. 
 Three keys are bound for your use in <acronym>ESS[BUGS]</acronym>, <kbd>F2</kbd>, <kbd>C-c C-c</kbd> and <kbd>=</kbd>. 
 <kbd>F2</kbd> performs the same action as it does in <acronym>ESS[SAS]</acronym>,
 See <a href="#ESS_0028SAS_0029_002d_002dFunction-keys-for-batch-processing">ESS(SAS)&ndash;Function keys for batch processing</a>.  <kbd>C-c C-c</kbd> performs the
@@ -5490,6 +5571,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a accesskey="6" href="#TAGS">TAGS</a>:                         Using TAGS for S files
 <li><a accesskey="7" href="#Rdired">Rdired</a>:                       Directory editor for R objects
 <li><a accesskey="8" href="#Rutils">Rutils</a>:                       R object/package management and help utilities
+<li><a accesskey="9" href="#Org">Org</a>:                          Interaction with Org mode
+<li><a href="#Sweave-and-AUCTeX">Sweave and AUCTeX</a>:            Support for Sweave in ESS and AUCTeX
+<li><a href="#Debugging-R">Debugging R</a>:                  Debugging R code in ESS
 </ul>
 
 <!-- node-name,  next,  previous,  up -->
@@ -5506,7 +5590,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
 
 <p>ESS provides Font-Lock (see <a href="emacs.html#Faces">Using Multiple Typefaces</a>) patterns for Inferior S Mode, S
 Mode, and S Transcript Mode buffers. 
-<a name="index-Font_002dlock-mode-209"></a><a name="index-highlighting-210"></a>
+<a name="index-Font_002dlock-mode-210"></a><a name="index-highlighting-211"></a>
 Syntax highlighting within ESS buffers is controlled by the variable
 <code>ess-font-lock-mode</code>, which by default is true. 
 Input to inferior ESS processes is also highlighted syntactically if
@@ -5525,7 +5609,7 @@ emacs for your changes to take effect.
 may modify if desired:
 
 <div class="defun">
-&mdash; Variable: <b>inferior-ess-R-font-lock-keywords</b><var><a name="index-inferior_002dess_002dR_002dfont_002dlock_002dkeywords-211"></a></var><br>
+&mdash; Variable: <b>inferior-ess-R-font-lock-keywords</b><var><a name="index-inferior_002dess_002dR_002dfont_002dlock_002dkeywords-212"></a></var><br>
 <blockquote><p>Font-lock patterns for inferior *R* processes.  (There is a
 corresponding <code>inferior-ess-S-font-lock-keywords</code> for *S*
 processes.) The default value highlights prompts, inputs, assignments,
@@ -5534,7 +5618,7 @@ output messages, vector and matrix labels, and literals such as
 </p></blockquote></div>
 
 <div class="defun">
-&mdash; Variable: <b>ess-R-mode-font-lock-keywords</b><var><a name="index-ess_002dR_002dmode_002dfont_002dlock_002dkeywords-212"></a></var><br>
+&mdash; Variable: <b>ess-R-mode-font-lock-keywords</b><var><a name="index-ess_002dR_002dmode_002dfont_002dlock_002dkeywords-213"></a></var><br>
 <blockquote><p>Font-lock patterns for ESS R programming mode.  (There is a
 corresponding <code>ess-S-mode-font-lock-keywords</code> for S buffers.) The
 default value highlights function names, literals, assignments, source
@@ -5580,7 +5664,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
 
 <h3 class="section">13.3 Using graphics with ESS</h3>
 
-<p><a name="index-graphics-213"></a>One of the main features of the <code>S</code> package is its ability to
+<p><a name="index-graphics-214"></a>One of the main features of the <code>S</code> package is its ability to
 generate high-resolution graphics plots, and ESS provides a number of
 features for dealing with such plots.
 
@@ -5608,7 +5692,7 @@ based plots which can be contained within the ESS process buffer
 itself.  To start using character graphics, issue the S command
 <pre class="example">     printer(width=79)
 </pre>
-   <p><a name="index-printer_0028_0029-214"></a>(the <code>width=79</code> argument prevents Emacs line-wrapping at column
+   <p><a name="index-printer_0028_0029-215"></a>(the <code>width=79</code> argument prevents Emacs line-wrapping at column
 80 on an 80-column terminal.  Use a different value for a terminal with
 a different number of columns.) Plotting commands do not generate
 graphics immediately, but are stored until the <code>show()</code> command
@@ -5626,13 +5710,13 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Graphics">Graphics</a>
 
 <h4 class="subsection">13.3.2 Using ESS with windowing devices</h4>
 
-<p><a name="index-X-windows-215"></a>Of course, the ideal way to use graphics with ESS is to use a windowing
+<p><a name="index-X-windows-216"></a>Of course, the ideal way to use graphics with ESS is to use a windowing
 system.  Under X11, this requires that the DISPLAY environment
 variable be appropriately set, which may not always be the case within
 your Emacs process.  ESS provides a facility for setting the value of
 DISPLAY before the ESS process is started if the variable
 <code>ess-ask-about-display</code>
-<a name="index-ess_002dask_002dabout_002ddisplay-216"></a>is non-<code>nil</code>.
+<a name="index-ess_002dask_002dabout_002ddisplay-217"></a>is non-<code>nil</code>.
 
 <!-- node-name,  next,  previous,  up -->
 <div class="node">
@@ -5645,7 +5729,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Graphics">Graphics</a>
 
 <h4 class="subsection">13.3.3 Java Graphics Device</h4>
 
-<p><a name="index-winjava-217"></a>
+<p><a name="index-winjava-218"></a>
 S+6.1 and newer on Windows contains a java library that supports graphics.  Send
 the commands:
 
@@ -5790,6 +5874,7 @@ deletion (`x' will actually perform the deletion).
 <div class="node">
 <a name="Rutils"></a>
 <p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Org">Org</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Rdired">Rdired</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
 
@@ -5812,36 +5897,36 @@ the customizable variable <code>ess-rutils-keys</code> is true, several key
 bindings become available in iESS process buffers:
 
      <ul>
-<li><kbd>C-c C-. l</kbd> (<samp><span class="command">ess-rutils-localpkgs</span></samp>) <br>
-<a name="index-ess_002drutils_002dlocalpkgs-218"></a>List all packages in all available libraries.
+<li><kbd>C-c C-. l</kbd> (<samp><span class="command">ess-rutils-local-pkgs</span></samp>) <br>
+<a name="index-ess_002drutils_002dlocalpkgs-219"></a>List all packages in all available libraries.
 
-     <li><kbd>C-c C-. r</kbd> (<samp><span class="command">ess-rutils-repospkgs</span></samp>) <br>
-<a name="index-ess_002drutils_002drepospkgs-219"></a>List available packages from repositories listed by
+     <li><kbd>C-c C-. r</kbd> (<samp><span class="command">ess-rutils-repos-pkgs</span></samp>) <br>
+<a name="index-ess_002drutils_002drepospkgs-220"></a>List available packages from repositories listed by
 <samp><span class="command">getOptions(``repos'')</span></samp> in the current R session.
 
-     <li><kbd>C-c C-. u</kbd> (<samp><span class="command">ess-rutils-updatepkgs</span></samp>) <br>
-<a name="index-ess_002drutils_002dupdatepkgs-220"></a>Update packages in a particular library and repository.
+     <li><kbd>C-c C-. u</kbd> (<samp><span class="command">ess-rutils-update-pkgs</span></samp>) <br>
+<a name="index-ess_002drutils_002dupdatepkgs-221"></a>Update packages in a particular library and repository.
 
      <li><kbd>C-c C-. a</kbd> (<samp><span class="command">ess-rutils-apropos</span></samp>) <br>
-<a name="index-ess_002drutils_002dapropos-221"></a>Search for a string using apropos.
+<a name="index-ess_002drutils_002dapropos-222"></a>Search for a string using apropos.
 
-     <li><kbd>C-c C-. m</kbd> (<samp><span class="command">ess-rutils-rmall</span></samp>) <br>
-<a name="index-ess_002drutils_002drmall-222"></a>Remove all R objects.
+     <li><kbd>C-c C-. m</kbd> (<samp><span class="command">ess-rutils-rm-all</span></samp>) <br>
+<a name="index-ess_002drutils_002drmall-223"></a>Remove all R objects.
 
      <li><kbd>C-c C-. o</kbd> (<samp><span class="command">ess-rutils-objs</span></samp>) <br>
-<a name="index-ess_002drutils_002dobjs-223"></a>Manipulate R objects; wrapper for <samp><span class="command">ess-rdired</span></samp>.
+<a name="index-ess_002drutils_002dobjs-224"></a>Manipulate R objects; wrapper for <samp><span class="command">ess-rdired</span></samp>.
 
-     <li><kbd>C-c C-. w</kbd> (<samp><span class="command">ess-rutils-loadwkspc</span></samp>) <br>
-<a name="index-ess_002drutils_002dloadwkspc-224"></a>Load a workspace file into R.
+     <li><kbd>C-c C-. w</kbd> (<samp><span class="command">ess-rutils-load-wkspc</span></samp>) <br>
+<a name="index-ess_002drutils_002dloadwkspc-225"></a>Load a workspace file into R.
 
-     <li><kbd>C-c C-. s</kbd> (<samp><span class="command">ess-rutils-savewkspc</span></samp>) <br>
-<a name="index-ess_002drutils_002dsavewkspc-225"></a>Save a workspace file.
+     <li><kbd>C-c C-. s</kbd> (<samp><span class="command">ess-rutils-save-wkspc</span></samp>) <br>
+<a name="index-ess_002drutils_002dsavewkspc-226"></a>Save a workspace file.
 
      <li><kbd>C-c C-. d</kbd> (<samp><span class="command">ess-change-directory</span></samp>) <br>
-<a name="index-ess_002dchange_002ddirectory-226"></a>Change the working directory for the current R session.
+<a name="index-ess_002dchange_002ddirectory-227"></a>Change the working directory for the current R session.
 
-     <li><kbd>C-c C-. H</kbd> (<samp><span class="command">ess-rutils-htmldocs</span></samp>) <br>
-<a name="index-ess_002drutils_002dhtmldocs-227"></a>Use <samp><span class="command">browse-url</span></samp> to navigate R html documentation.
+     <li><kbd>C-c C-. H</kbd> (<samp><span class="command">ess-rutils-html-docs</span></samp>) <br>
+<a name="index-ess_002drutils_002dhtmldocs-228"></a>Use <samp><span class="command">browse-url</span></samp> to navigate R html documentation.
 
    </ul>
 
@@ -5853,12 +5938,116 @@ any Emacs buffer, so can be bound to a user-defined key:
 <pre class="lisp">     (eval-after-load "ess-rutils"
        '(global-set-key [(control c) (f6)] 'ess-rutils-rsitesearch))
 </pre>
-   <p><a name="index-ess_002drutils_002drsitesearch-228"></a>
+   <p><a name="index-ess_002drutils_002drsitesearch-229"></a>
 Functions for listing objects and packages
-(<samp><span class="command">ess-rutils-localpkgs</span></samp>, <samp><span class="command">ess-rutils-repospkgs</span></samp>, and
+(<samp><span class="command">ess-rutils-local-pkgs</span></samp>, <samp><span class="command">ess-rutils-repos-pkgs</span></samp>, and
 <samp><span class="command">ess-rutils-objs</span></samp>) show results in a separate buffer and window,
 in <code>ess-rutils-mode</code>, providing useful key bindings in this mode
 (type <kbd>?</kbd> in this buffer for a description).
+
+<!-- node-name,  next,  previous,  up -->
+<div class="node">
+<a name="Org"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Sweave-and-AUCTeX">Sweave and AUCTeX</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Rutils">Rutils</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
+
+</div>
+
+<h3 class="section">13.9 Interaction with Org mode</h3>
+
+<p>Org-mode (<a href="http://orgmode.org">http://orgmode.org</a>) now supports reproducible research
+and literate programming in many languages (including R) &ndash; see chapter
+14 of the Org manual
+(<a href="http://orgmode.org/org.html#Working-With-Source-Code">http://orgmode.org/org.html#Working-With-Source-Code</a>).  For ESS
+users, this offers a document-based work environment within which to
+embed ESS usage.  R code lives in code blocks of an Org document, from
+which it can be edited in ess-mode, evaluated, extracted ("tangled") to
+pure code files.  The code can also be exported ("woven") with the
+surrounding text to several formats including HTML and LaTeX.  Results of
+evaluation including figures can be captured in the Org document, and
+data can be passed from the Org document (e.g. from a table) to the ESS
+R process.  (This section contributed by Dan Davison and Eric Schulte.)
+
+<!-- node-name,  next,  previous,  up -->
+<div class="node">
+<a name="Sweave-and-AUCTeX"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Debugging-R">Debugging R</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Org">Org</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
+
+</div>
+
+<h3 class="section">13.10 Support for Sweave in ESS and AUCTeX</h3>
+
+<p>ESS provides support for writing and processing Sweave
+(<a href="http://www.statistik.lmu.de/~leisch/Sweave">http://www.statistik.lmu.de/~leisch/Sweave</a>), building up on
+Emacs' noweb-mode for literate programming.  When working on an Sweave
+document, the following key bindings are available:
+
+     <ul>
+<li><kbd>M-n s</kbd> (<samp><span class="command">ess-swv-weave</span></samp>) <br>
+<a name="index-ess_002dswv_002dweave-230"></a>Run Sweave on the current .Rnw file.
+
+     <li><kbd>M-n l</kbd> (<samp><span class="command">ess-swv-latex</span></samp>) <br>
+<a name="index-ess_002dswv_002dlatex-231"></a>Run LaTeX after Sweave'ing.
+
+     <li><kbd>M-n p</kbd> (<samp><span class="command">ess-swv-PS</span></samp>) <br>
+<a name="index-ess_002dswv_002dPS-232"></a>Generate and display a postscript file after LaTeX'ing.
+
+     <li><kbd>M-n P</kbd> (<samp><span class="command">ess-swv-PDF</span></samp>) <br>
+<a name="index-ess_002dswv_002dPDF-233"></a>Generate and display a PDF file after LaTeX'ing.  The command used to
+generate the PDF file is the first element of
+<code>ess-swv-pdflatex-commands</code>.
+
+   </ul>
+
+   <p>Sweave'ing with <code>ess-swv-weave</code> starts an inferior-ESS process, if
+one is not available.  Other commands are available from the
+&lsquo;<samp><span class="samp">Sweaving, Tangling, ...</span></samp>&rsquo; submenu of the Noweb menu.
+
+   <p>AUCTeX (<a href="http://www.gnu.org/software/auctex">http://www.gnu.org/software/auctex</a>) users may prefer to
+set the variable <code>ess-swv-plug-into-AUCTeX-p</code> (available from the
+&ldquo;ESS Sweave&rdquo; customization group) to t.  Alternatively, the same can
+be achieved by activating the entry &ldquo;AUCTeX Interface&rdquo; from the
+&lsquo;<samp><span class="samp">Sweaving, Tangling, ...</span></samp>&rsquo; submenu, which toggles this variable on
+or off.  When the interface is activated, new entries for Sweave'ing and
+LaTeX'ing thereafter are available from AUCTeX's &ldquo;Command&rdquo; menu. 
+Sweave'ing can, thus, be done by <kbd>C-c C-c Sweave RET</kbd> without an
+inferior-ESS process.  Similarly, LaTeX'ing can be done by <kbd>C-c C-c
+LaTeXSweave RET</kbd>.  In both cases, the process can be monitored with
+<kbd>C-c C-l</kbd> (<code>TeX-recenter-output-buffer</code>).  Open the viewer with
+<kbd>C-c C-v</kbd> (<code>TeX-view</code>), as usual in AUCTeX.
+
+<!-- node-name,  next,  previous,  up -->
+<div class="node">
+<a name="Debugging-R"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Sweave-and-AUCTeX">Sweave and AUCTeX</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Miscellaneous">Miscellaneous</a>
+
+</div>
+
+<h3 class="section">13.11 Debugging R code in ESS</h3>
+
+<p>There are currently two extra facilities that have been developed for
+debugging R code within ESS.
+
+     <ul>
+<li>&ldquo;Ess-tracebug is a package for interactive visual debugging of R code from
+ESS. It provides visual debugging, browser, recover and conditional
+breakpoints; watch window and loggers; interactive debug/undebug of R
+functions and methods at point; highlighting and easy error navigation and
+interactive traceback.&rdquo;  <a href="http://code.google.com/p/ess-tracebug/">http://code.google.com/p/ess-tracebug/</a>
+
+     <li>The R package edtdbg &ldquo;integrates R's debugging facilities with your
+text editor, featuring code tracking, variable display, quick breakpoint
+setting, and easy toggling of function debug status.&rdquo;  It provides
+support for both Emacs and VIM.  Package available from CRAN mirrors.
+
+   </ul>
 
 <!-- node-name,  next,  previous,  up@chapter Using S4 -->
 <div class="node">
@@ -5891,7 +6080,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Mailing-lists_002fbug-reports">Mailing
 
 <h3 class="section">14.1 Bugs</h3>
 
-<p><a name="index-bugs-229"></a>
+<p><a name="index-bugs-234"></a>
 
      <ul>
 <li>Commands like <code>ess-display-help-on-object</code> and list completion
@@ -5941,7 +6130,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Mailing-lists_002fbug-reports">Mailing
 
 <h3 class="section">14.2 Reporting Bugs</h3>
 
-<p><a name="index-Bug-reports-230"></a><a name="index-ess_002dsubmit_002dbug_002dreport-231"></a>
+<p><a name="index-Bug-reports-235"></a><a name="index-ess_002dsubmit_002dbug_002dreport-236"></a>
 
    <p>Please send bug reports, suggestions etc. to
 <a href="mailto:ESS-bugs@stat.math.ethz.ch">ESS-bugs@stat.math.ethz.ch</a>
@@ -6030,7 +6219,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 <h2 class="appendix">Appendix A Customizing ESS</h2>
 
-<p><a name="index-customization-232"></a>
+<p><a name="index-customization-237"></a>
 ESS can be easily customized to your taste simply by including the
 appropriate lines in your <samp><span class="file">.emacs</span></samp> file.  There are numerous
 variables which affect the behavior of ESS in certain situations which

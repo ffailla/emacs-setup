@@ -1,12 +1,12 @@
 ;;; ess-site.el --- user customization of ESS
 
 ;; Copyright (C) 1993 David M. Smith
-;; Copyright (C) 1997--2007 A.J. Rossini, Rich M. Heiberger, Martin
+;; Copyright (C) 1997--2011 A.J. Rossini, Richard M. Heiberger, Martin
 ;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
 
 ;; Original Author: David Smith <D.M.Smith@lancaster.ac.uk>
 ;; Created: 12 Nov 1993
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; Keywords: start up, configuration.
 
@@ -246,26 +246,28 @@ between .s or .S files and assembly mode.
 	   ("\\.[Ss][Aa][Ss]\\'"	. SAS-mode)
 	   ;; Many .log/.lst files, not just SAS
 	   ;;("\\.log\\'"	. SAS-log-mode)
-	   ;;("\\.lst\\'"	. SAS-listing-mode)
+	   ;;("\\.[Ll][Ss][Tt]\\'"	. SAS-listing-mode)
 	   ("\\.[Ss]t\\'"	. S-transcript-mode)
 	   ("\\.[Ss]out"	. S-transcript-mode)
 	   ("\\.[Rr]t\\'"	. R-transcript-mode)
 	   ("\\.[Rr]out"	. R-transcript-mode)
 	   ("\\.Rd\\'"		. Rd-mode)
-           ;("\\.[Bb][Uu][Gg]\\'"         . ess-bugs-mode)
+           ("\\.[Bb][Uu][Gg]\\'"         . ess-bugs-mode)
            ("\\.[Bb][Oo][Gg]\\'"         . ess-bugs-mode)
            ("\\.[Bb][Mm][Dd]\\'"         . ess-bugs-mode)
+           ("\\.[Jj][Aa][Gg]\\'"         . ess-jags-mode)
+           ("\\.[Jj][Oo][Gg]\\'"         . ess-jags-mode)
            ("\\.[Jj][Mm][Dd]\\'"         . ess-jags-mode)
           )
 	 auto-mode-alist)))
 
-;; Rscript and littler interpreters recognized
-(setq interpreter-mode-alist
-      (append
-       '(("Rscript" . r-mode)
-	 ("r"       . r-mode)
-	 )
-       interpreter-mode-alist))
+;; Rscript and littler interpreters recognized.  XEmacs entries can
+;; be regexps, which complicates matters as "r" on its own matches
+;; other interpeters like "perl".
+(add-to-list 'interpreter-mode-alist '("Rscript" . r-mode))
+(add-to-list 'interpreter-mode-alist
+	     (cons (if (featurep 'xemacs) "r$" "r")    'r-mode))
+
 
 ;; (1.4) Customize the dialects for your setup.
 
@@ -403,8 +405,8 @@ sending `inferior-ess-language-start' to S-Plus.")
 (require 'ess-sas-d)
 (ess-message "[ess-site:] require 'essd-els ...")
 (require 'essd-els)  ;; S-elsewhere, on another machine by telnet
-;; (ess-message "[ess-site:] require 'essd-omg ...")
-;; (require 'essd-omg)  ;; for omegahat
+;; (ess-message "[ess-site:] require 'ess-omg-d ...")
+;; (require 'ess-omg-d)  ;; for omegahat
 (ess-message "[ess-site:] require 'ess-bugs-l ...")
 (require 'ess-bugs-l)  ;; for batch BUGS
 
@@ -454,6 +456,7 @@ sending `inferior-ess-language-start' to S-Plus.")
 
 (autoload 'ess-transcript-mode "ess-trns"
   "Major mode for editing S transcript files." t)
+(autoload 'ess-transcript-clean-region "ess-trns" no-doc t)
 
 (autoload 'ess-rdired "ess-rdired"
   "View *R* objects in a dired-like buffer." t)
@@ -467,33 +470,32 @@ sending `inferior-ess-language-start' to S-Plus.")
 
 ;;; On a PC, the default is S+6.
 ;; Elsewhere (unix and linux) the default is S+6
-(cond (ess-microsoft-p ; MS-Windows
-;;        (fset 'S
-;; 	     (if (equal (file-name-nondirectory shell-file-name) "cmdproxy.exe")
-;; 		 'S+6-msdos
-;; 	       'S+6))
-       (defun S-by-icon (&rest x)
-	 (interactive)
-	 (message "Please start S+ from the icon.\n Then you can connect emacs to it with `M-x S-existing'.")
-	 )
-       (fset 'S 'S-by-icon)
-       (fset 'S-existing
-	     (if (equal (file-name-nondirectory shell-file-name) "cmdproxy.exe")
-		 'S+6-msdos-existing
-	       'S+6-existing))
-       (fset 'Sqpe 'Sqpe+6)
-       (fset 's-mode 'S+6-mode)
-       (fset 's-transcript-mode 'S+6-transcript-mode))
+(cond  (ess-microsoft-p
+	;; MS-Windows-------------------------------------------------
 
-      ((eq system-type 'gnu/linux)	; Linux -- no S+3
-       (fset 'S 'S+6)
-       (fset 's-mode 'S+6-mode)
-       (fset 's-transcript-mode 'S+6-transcript-mode))
+	;;        (fset 'S
+	;; 	     (if (equal (file-name-nondirectory shell-file-name) "cmdproxy.exe")
+	;; 		 'S+6-msdos
+	;; 	       'S+6))
+	(defun S-by-icon (&rest x)
+	  (interactive)
+	  (message "Please start S+ from the icon.
+ Then you can connect emacs to it with `M-x S-existing'.")
+	  )
+	(fset 'S 'S-by-icon)
+	(fset 'S-existing
+	      (if (equal (file-name-nondirectory shell-file-name) "cmdproxy.exe")
+		  'S+6-msdos-existing
+		'S+6-existing))
+	(fset 'Sqpe 'Sqpe+6)
+	(fset 's-mode 'S+6-mode)
+	(fset 's-transcript-mode 'S+6-transcript-mode))
 
-      (t				; Other Unixen
-       (fset 'S 'S+6)
-       (fset 's-mode 'S+6-mode)
-       (fset 's-transcript-mode 'S+6-transcript-mode)))
+       (t ;;((eq system-type 'gnu/linux)
+	;; Linux etc (including Mac OSX !?) --------------------------
+	(fset 'S 'S+6)
+	(fset 's-mode 'S+6-mode)
+	(fset 's-transcript-mode 'S+6-transcript-mode)))
 
 
 ;;;;* Alias S-mode to s-mode
@@ -519,29 +521,42 @@ sending `inferior-ess-language-start' to S-Plus.")
 ;; -----  *and* update the "Start Process" menu (below)
 ;;    -> To this: wrap the following in functions that can be re-called
 
-(let ( (ess-s-versions-created)
-       ;;(ess-r-versions-created)
-       (R-newest-list '("R-newest"))
-       )
+;; Create  ess-versions-created,
+;;         ess-r-versions-created,
+;; and on Windows, ess-rterm-version-paths -----------------------------------------
+(let ((R-newest-list '("R-newest"))
+      (ess-s-versions-created (if ess-microsoft-p
+				  (nconc
+				   (ess-sqpe-versions-create ess-SHOME-versions)               ;; 32-bit
+				   (ess-sqpe-versions-create ess-SHOME-versions-64 "-64-bit")) ;; 64-bit
+				(ess-s-versions-create)))) ;; use ess-s-versions
   (if ess-microsoft-p
-      (progn
-	(setq ess-s-versions-created
-	      (ess-sqpe-versions-create))   ;; use ess-SHOME-versions
-	(setq ess-rterm-version-paths ;; (ess-find-rterm))
-	      (ess-flatten-list
-	       (ess-uniq-list
-		(nconc
-		 (ess-find-rterm (concat (getenv "ProgramFiles") "/R/"))       ;; always 32 on 32 bit OS
-		 ;;                                                            ;; depends on 32 or 64 process on 64 bit OS
-		 (ess-find-rterm (concat (getenv "ProgramFiles(x86)") "/R/"))  ;; always 32 on 64 bit OS, nil on 32 bit OS
-		 (ess-find-rterm (concat (getenv "ProgramW6432") "/R/"))       ;; always 64 on 64 bit OS, nil on 32 bit OS
-		 ))))
-	(setq ess-rterm-version-paths (mapcar '(lambda(x) (w32-short-file-name x)) ess-rterm-version-paths))
-	)
-    ;;else  real OS :
-      (setq ess-s-versions-created
-	    (ess-s-versions-create))      ;; use ess-s-versions
-      )
+      (setq ess-rterm-version-paths ;; (ess-find-rterm))
+	    (ess-flatten-list
+	     (ess-uniq-list
+	      (if (getenv "ProgramW6432")
+		  (let ((P-1 (getenv "ProgramFiles(x86)"))
+			(P-2 (getenv "ProgramW6432")))
+		    (nconc
+		     ;; always 32 on 64 bit OS, nil on 32 bit OS
+		     (ess-find-rterm (concat P-1 "/R/") "bin/Rterm.exe")
+		     (ess-find-rterm (concat P-1 "/R/") "bin/i386/Rterm.exe")
+		     ;; keep this both for symmetry and because it can happen:
+		     (ess-find-rterm (concat P-1 "/R/") "bin/x64/Rterm.exe")
+
+		     ;; always 64 on 64 bit OS, nil on 32 bit OS
+		     (ess-find-rterm (concat P-2 "/R/") "bin/Rterm.exe")
+		     (ess-find-rterm (concat P-2 "/R/") "bin/i386/Rterm.exe")
+		     (ess-find-rterm (concat P-2 "/R/") "bin/x64/Rterm.exe")
+		     ))
+		(let ((PF (getenv "ProgramFiles")))
+		  (nconc
+		   ;; always 32 on 32 bit OS, depends on 32 or 64 process on 64 bit OS
+		   (ess-find-rterm (concat PF "/R/") "bin/Rterm.exe")
+		   (ess-find-rterm (concat PF "/R/") "bin/i386/Rterm.exe")
+		   (ess-find-rterm (concat PF "/R/") "bin/x64/Rterm.exe")
+		   ))
+		)))))
 
   (setq ess-r-versions-created ;;  for Unix *and* Windows, using either
 	(ess-r-versions-create));; ess-r-versions or ess-rterm-version-paths (above!)
@@ -554,19 +569,19 @@ sending `inferior-ess-language-start' to S-Plus.")
 	 (mapcar (lambda(x) (if (boundp x) (symbol-value x) nil))
 		 '(R-newest-list
 		   ess-r-versions-created
-		   ess-s-versions-created))))
+		   ess-s-versions-created)))))
 
-  (when ess-versions-created
-    ;; new-menu will be a list of 3-vectors, of the form:
-    ;; ["R-1.8.1" R-1.8.1 t]
-    (let ((new-menu (mapcar '(lambda(x) (vector x (intern x) t))
-			    ess-versions-created)))
-      (easy-menu-add-item ess-mode-menu '("Start Process")
-			  (cons "Other" new-menu)))))
+
+(when ess-versions-created
+  ;; new-menu will be a list of 3-vectors, of the form:
+  ;; ["R-1.8.1" R-1.8.1 t]
+  (let ((new-menu (mapcar '(lambda(x) (vector x (intern x) t))
+			  ess-versions-created)))
+    (easy-menu-add-item ess-mode-menu '("Start Process")
+			(cons "Other" new-menu))))
 
 ;; Check to see that inferior-R-program-name points to a working version
 ;; of R; if not, try to find the newest version:
-(require 'ess-r-d)
 (ess-check-R-program-name) ;; -> (ess-find-newest-R) if needed, in ./ess-r-d.el
 
 ;;; 3. Customization (and examples) for your site

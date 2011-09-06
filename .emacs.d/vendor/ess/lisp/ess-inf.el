@@ -8,7 +8,7 @@
 
 ;; Original Author: David Smith <dsmith@stats.adelaide.edu.au>
 ;; Created: 7 Jan 1994
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; This file is part of ESS
 
@@ -54,7 +54,7 @@
 
 (autoload 'ess-transcript-send-command-and-move "ess-trns" "(autoload).")
 
-(autoload 'ess-R-complete-object-name	    "essd-r"	"(autoload).")
+(autoload 'ess-R-complete-object-name	    "ess-r-d"	"(autoload).")
 
 (autoload 'ess-eval-region-ddeclient	    "ess-dde"	"(autoload).")
 (autoload 'ess-eval-linewise-ddeclient	    "ess-dde"	"(autoload).")
@@ -445,25 +445,14 @@ This was rewritten by KH in April 1996."
 
 ;;*;; Requester functions called at startup
 
-;(defun ess-get-directory-ORIG (default)
-;  "Request and return S starting directory."
-;  (let ((the-dir
-;	 (expand-file-name
-;	  (file-name-as-directory
-;	   (read-file-name
-;	    (format "ESS [%s(%s): %s] starting data directory? "
-;		    ess-language ess-dialect inferior-ess-program)
-;	    (file-name-as-directory default)
-;	    (file-name-as-directory default) t nil)))))
-;    (if (file-directory-p the-dir) nil
-;      (error "%s is not a valid directory" the-dir))
-;    the-dir))
-
 (defun ess-get-directory (default)
+  (let ((prog-version (if (string= ess-dialect "R")
+			  inferior-R-version ; notably for the R-X.Y versions
+			inferior-ess-program)))
   (ess-prompt-for-directory
 	default
 	(format "ESS [%s(%s): %s] starting data directory? "
-		ess-language ess-dialect inferior-ess-program)))
+		ess-language ess-dialect prog-version))))
 
 (defun ess-prompt-for-directory (default prompt)
   "`prompt' for a directory, using `default' as the usual."
@@ -642,7 +631,7 @@ Returns the name of the selected process."
 			      'require-match
 			      ;; If in S buffer, don't offer current process
 			      (if (eq major-mode 'inferior-ess-mode)
-				  ess-language
+				  ess-dialect
 				ess-current-process-name
 				;; maybe ess-local-process-name IF exists?
 				)))))
@@ -757,7 +746,7 @@ visible (it may have been iconified).
 3. If buffer is not visible in any frame, simply show it in another window
 in the current frame.
 
-Iff VISIT is non-nil, as well as making BUF visible, we also select it
+If VISIT is non-nil, as well as making BUF visible, we also select it
 as the current buffer."
   (let ( (frame))
     (if (ess-buffer-visible-this-frame buf)
@@ -1162,6 +1151,17 @@ Arg has same meaning as for `ess-eval-region'."
   (interactive "P")
   (ess-eval-region (point-min) (point-max) vis "Eval buffer"))
 
+(defun ess-eval-buffer-from-beg-to-here (vis)
+  (interactive "P")
+  (ess-eval-region (point-min) (point) vis "Eval buffer from the beginning
+of the buffer until here, i.e. 'point'"))
+
+(defun ess-eval-buffer-from-here-to-end (vis)
+  (interactive "P")
+  (ess-eval-region (point) (point-max) vis "Eval buffer from here ('point') until
+the end of the buffer"))
+
+
 (defun ess-eval-function (vis)
   "Send the current function to the inferior ESS process.
 Arg has same meaning as for `ess-eval-region'."
@@ -1218,11 +1218,11 @@ Prefix arg VIS toggles visibility of ess-code as for `ess-eval-region'."
 	  (princ (concat "Loading: " name) t)
 	  (ess-eval-region beg end-fun vis
 			   (concat "Eval function " name))
-	  (goto-char (1+ end-fun)))
+	  (goto-char end-fun)
+	  (ess-next-code-line))
       ;; else: not in a function
-      (ess-eval-paragraph-and-step vis)
-      ))
-)
+      (ess-eval-paragraph-and-step vis))))
+
 
 (defun ess-eval-line (vis)
   "Send the current line to the inferior ESS process.
@@ -1331,7 +1331,8 @@ process buffer. Arg has same meaning as for `ess-eval-region'."
 the next paragraph.  Arg has same meaning as for `ess-eval-region'."
   (interactive "P")
   (let ((beg-end (ess-eval-paragraph vis)))
-    (goto-char (1+ (cadr beg-end))))
+    (goto-char (cadr beg-end))
+    (ess-next-code-line))
 )
 
 ;;; Related to the ess-eval-* commands, there are the ess-load
@@ -1365,6 +1366,10 @@ the next paragraph.  Arg has same meaning as for `ess-eval-region'."
 	    (ess-force-buffer-current "Process to load into: ")
 	    (ess-check-modifications)))
       (let ((errbuffer (ess-create-temp-buffer ess-error-buffer-name))
+	    (filename (if (and (fboundp 'tramp-tramp-file-p)
+			       (tramp-tramp-file-p filename))
+			  (tramp-file-name-localname (tramp-dissect-file-name filename))
+			filename))
 	    error-occurred nomessage)
 	(ess-command (format inferior-ess-load-command filename) errbuffer) ;sleep ?
 	(save-excursion
@@ -1607,7 +1612,7 @@ to continue it."
   ;; i.e. put it as a buffer local var, in S or R defuns...
   ;;
   ;; SJE: Do you mean that we should put this code into (R) and the S
-  ;; dialects?  I agree that would be cleaner. e.g. in essd-r.el, for
+  ;; dialects?  I agree that would be cleaner. e.g. in ess-r-d.el, for
   ;; the R defun we could have:
   ;; (inferior-ess r-start-args) ;; (R)
   ;; (setq comint-input-sender 'inferior-R-input-sender) ;; <<- add this.
@@ -2100,7 +2105,7 @@ completions are listed [__UNIMPLEMENTED__]."
 			   (if classname
 			       (ess-slot-names classname)
 			     ;; Default case: It hangs here when
-			     ;;    options(error=recoves) :
+			     ;;    options(error=recover) :
 			     (ess-get-object-list ess-current-process-name)))))
 	;; always return a non-nil value to prevent history expansions
 	(or (comint-dynamic-simple-complete  pattern components) 'none))))
@@ -2155,7 +2160,7 @@ Returns nil if that file cannot be found, i.e., for R or any non-S language!"
 (defun ess-get-object-list (name)
   "Return a list of current S object names associated with process NAME,
 using `ess-object-list' if that is non-nil."
-  (or ess-object-list ;; <<-  MM: I think this is now always nil
+  (or ess-object-list ;; <<-  MM: this is now always(?) nil; we cache the *-modtime-alist
       (save-excursion
 	(set-buffer (process-buffer (get-ess-process name)))
 	(ess-make-buffer-current)
@@ -2164,7 +2169,7 @@ using `ess-object-list' if that is non-nil."
 	    (progn (ess-write-to-dribble-buffer "--> (ess-get-modtime-list)\n")
 		   (ess-get-modtime-list))
 	  ;;else
-	  (ess-write-to-dribble-buffer " using existing ess-*-alist\n")
+	  (ess-write-to-dribble-buffer " using existing ess-sl-modtime-alist\n")
 	  )
 	(let* ((alist ess-sl-modtime-alist)
 	       (i 2)
@@ -2238,7 +2243,7 @@ In all cases, the value is an list of object names."
 	  ;; Take a directory listing
 	  (and ess-filenames-map
 	       ;; first try .Data subdirectory:
-	       ;;FIXME: move ".Data" or ``this function'' to essd-sp6.el etc:
+	       ;;FIXME: move ".Data" or ``this function'' to ess-sp6-d.el etc:
 	       (let ((dir (concat (file-name-as-directory obj) ".Data")))
 		 (if (not (file-accessible-directory-p dir))
 		     (setq dir obj))
@@ -2453,7 +2458,7 @@ The result is stored in `ess-sl-modtime-alist'."
       (setq searchlist (cdr searchlist)))
     ;;DBG:
     (ess-write-to-dribble-buffer
-     (format "ess-get-modtime-list: new alist of length %d\n"
+     (format "(ess-get-modtime-list): created new alist of length %d\n"
 	     (length newalist)));; todo : also give length of components!
 
     (setq ess-sl-modtime-alist newalist)))

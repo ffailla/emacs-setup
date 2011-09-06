@@ -9,7 +9,7 @@
 
 ;; Original Author: David Smith <dsmith@stats.adelaide.edu.au>
 ;; Created: 7 Jan 1994
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; This file is part of ESS
 
@@ -499,11 +499,7 @@ Stata or XLispStat for additional information."
 	(string-match "STA" ess-language)
 	(string-match "SAS" ess-language)))
       (let* ((help-files-list
-	      (ess-uniq-list (append (ess-get-help-files-list)
-				   (ess-get-help-aliases-list)
-				   (mapcar 'list
-					   (ess-get-object-list
-					    ess-current-process-name)))))
+	      (ess-get-help-topics-list ess-current-process-name))
 	     (default (ess-read-helpobj-name-default help-files-list))
 	     (prompt-string (if default
 				(format "%s(default %s) " p-string default)
@@ -518,29 +514,45 @@ Stata or XLispStat for additional information."
 
 ;;*;; Utility functions
 
+(defun ess-get-help-topics-list (name)
+  "Return a list of current S help topics associated with process NAME.
+If `ess-sp-change' is non-nil or `ess-help-topics-list' is nil, (re)-populate
+the latter and return it.  Otherwise, return `ess-help-topics-list'."
+  (save-excursion
+    (set-buffer (process-buffer (get-ess-process name)))
+    (ess-make-buffer-current)
+    (ess-write-to-dribble-buffer
+     (format "(ess-get-help-topics-list %s) .." name))
+    (if (or (not ess-help-topics-list) ess-sp-change)
+	(setq ess-help-topics-list
+	      (ess-uniq-list
+	       (mapcar 'list
+		       (append (ess-get-help-files-list)
+			       (ess-get-help-aliases-list)
+			       (ess-get-object-list name)))))
+      ;; else return the existing list
+      ess-help-topics-list)))
+
 (defun ess-get-help-files-list ()
   "Return a list of files which have help available."
-  (mapcar 'list
-	  (apply 'append
-		 (mapcar '(lambda (dirname)
-			    (if (file-directory-p dirname)
-				(directory-files dirname)))
-			 (mapcar '(lambda (str) (concat str "/.Help"))
-				 (ess-search-list))))))
+  (apply 'append
+	 (mapcar '(lambda (dirname)
+		    (if (file-directory-p dirname)
+			(directory-files dirname)))
+		 (mapcar '(lambda (str) (concat str "/.Help"))
+			 (ess-search-list)))))
 
 (defun ess-get-help-aliases-list ()
   "Return a list of aliases which have help available."
-  (ess-uniq-list
-   (mapcar 'list
-	   (apply 'append
-		  (mapcar '(lambda (a-file)
-			     (if (file-exists-p a-file)
-				 (ess-get-words-from-vector
-				  (format
-				   "names(.readRDS(\"%s\"))\n" a-file))))
-			  (mapcar '(lambda (str) (concat str "/help/aliases.rds"))
-				  (ess-get-words-from-vector
-				   "searchpaths()\n")))))))
+  (apply 'append
+	 (mapcar '(lambda (a-file)
+		    (if (file-exists-p a-file)
+			(ess-get-words-from-vector
+			 (format
+			  "names(.readRDS(\"%s\"))\n" a-file))))
+		 (mapcar '(lambda (str) (concat str "/help/aliases.rds"))
+			 (ess-get-words-from-vector
+			  "searchpaths()\n")))))
 
 (defun ess-nuke-help-bs ()
   "Remove ASCII underlining and overstriking performed by ^H codes."
@@ -595,7 +607,7 @@ Stata or XLispStat for additional information."
   (require 'reporter)
   (let ((reporter-prompt-for-summary-p 't))
     (reporter-submit-bug-report
-     "ess-bugs@stat.math.ethz.ch"
+     "ess-bugs@r-project.org"
      (concat "ess-mode " ess-version)
      (list 'ess-language
 	   'ess-dialect

@@ -2,7 +2,7 @@
 ;;
 ;; Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
-;; Version: 7.3
+;; Version: 7.7
 ;; Author: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Maintainer: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Keywords: org, wp, tex
@@ -139,6 +139,7 @@ open    The opening template for the environment, with the following escapes
         %h   the headline text
         %H   if there is headline text, that text in {} braces
         %U   if there is headline text, that text in [] brackets
+        %x   the content of the BEAMER_extra property
 close   The closing string of the environment."
 
   :group 'org-beamer
@@ -246,14 +247,14 @@ in org-export-latex-classes."
       (if (and (string-match "\\`[0-9.]+\\'" tmp)
 	       (or (= (string-to-number tmp) 1.0)
 		   (= (string-to-number tmp) 0.0)))
-	  ;; column width 1 means cloase columns, go back to full width
+	  ;; column width 1 means close columns, go back to full width
 	  (org-beamer-close-columns-maybe)
 	(when (setq ass (assoc "BEAMER_envargs" props))
 	  (let (case-fold-search)
-	    (when (string-match "C\\(\\[[^][]*\\]\\)" (cdr ass))
+	    (while (string-match "C\\(\\[[^][]*\\]\\|<[^<>]*>\\)" (cdr ass))
 	      (setq columns-option (match-string 1 (cdr ass)))
 	      (setcdr ass (replace-match "" t t (cdr ass))))
-	    (when (string-match "c\\(\\[[^][]*\\]\\)" (cdr ass))
+	    (while (string-match "c\\(\\[[^][]*\\]\\|<[^<>]*>\\)" (cdr ass))
 	      (setq column-option (match-string 1 (cdr ass)))
 	      (setcdr ass (replace-match "" t t (cdr ass))))))
 	(org-beamer-open-columns-maybe columns-option)
@@ -399,7 +400,7 @@ the value will be inserted right after the documentclass statement."
       (insert org-beamer-header-extra)
       (or (bolp) (insert "\n"))))))
 
-(defcustom org-beamer-fragile-re "^[ \t]*\\\\begin{\\(verbatim\\|lstlisting\\)}"
+(defcustom org-beamer-fragile-re "^[ \t]*\\\\begin{\\(verbatim\\|lstlisting\\|minted\\)}"
   "If this regexp matches in a frame, the frame is marked as fragile."
   :group 'org-beamer
   :type 'regexp)

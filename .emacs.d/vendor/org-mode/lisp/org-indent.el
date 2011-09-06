@@ -4,7 +4,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 7.3
+;; Version: 7.7
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -37,6 +37,10 @@
 
 (eval-when-compile
   (require 'cl))
+
+(defvar org-inlinetask-min-level)
+(declare-function org-inlinetask-get-task-level "org-inlinetask" ())
+(declare-function org-inlinetask-in-task-p "org-inlinetask" ())
 
 (defgroup org-indent nil
   "Options concerning dynamic virtual outline indentation."
@@ -208,46 +212,60 @@ useful to make it ever so slightly different."
       (remove-text-properties beg end '(line-prefix nil wrap-prefix nil)))))
 
 (defun org-indent-remove-properties-from-string (string)
-  "Remove indentations between BEG and END."
+  "Remove indentation properties from STRING."
   (remove-text-properties 0 (length string)
 			  '(line-prefix nil wrap-prefix nil) string)
   string)
 
-(defvar org-indent-outline-re (concat "^" org-outline-regexp)
+(defvar org-indent-outline-re org-outline-regexp-bol
   "Outline heading regexp.")
 
 (defun org-indent-add-properties (beg end)
   "Add indentation properties between BEG and END.
 Assumes that BEG is at the beginning of a line."
-  (when (or t org-indent-mode)
-    (let ((inhibit-modification-hooks t)
-	  ov b e n level exit nstars)
-      (with-silent-modifications
-       (save-excursion
-	 (goto-char beg)
-	 (while (not exit)
-	   (setq e end)
-	   (if (not (re-search-forward org-indent-outline-re nil t))
-	       (setq e (point-max) exit t)
-	     (setq e (match-beginning 0))
-	     (if (>= e end) (setq exit t))
-	     (setq level (- (match-end 0) (match-beginning 0) 1))
-	     (setq nstars (- (* (1- level) org-indent-indentation-per-level)
-			     (1- level)))
-	     (add-text-properties
-	      (point-at-bol) (point-at-eol)
-	      (list 'line-prefix
-		    (aref org-indent-stars nstars)
-		    'wrap-prefix
-		    (aref org-indent-strings
-			  (* level org-indent-indentation-per-level)))))
-	   (when (and b (> e b))
-	     (add-text-properties
-	      b  e (list 'line-prefix (aref org-indent-strings n)
-			 'wrap-prefix (aref org-indent-strings n))))
-	   (setq b (1+ (point-at-eol))
-		 n (* (or level 0) org-indent-indentation-per-level))))))))
+  (let* ((inhibit-modification-hooks t)
+	 (inlinetaskp (featurep 'org-inlinetask))
+	 (get-real-level (lambda (pos lvl)
+			   (save-excursion
+			     (goto-char pos)
+			     (if (and inlinetaskp (org-inlinetask-in-task-p))
+				 (org-inlinetask-get-task-level)
+			       lvl))))
+	 (b beg)
+	 (e end)
+	 (level 0)
+	 (n 0)
+	 exit nstars)
+    (with-silent-modifications
+      (save-excursion
+	(goto-char beg)
+	(while (not exit)
+	  (setq e end)
+	  (if (not (re-search-forward org-indent-outline-re nil t))
+	      (setq e (point-max) exit t)
+	    (setq e (match-beginning 0))
+	    (if (>= e end) (setq exit t))
+	    (unless (and inlinetaskp (org-inlinetask-in-task-p))
+	      (setq level (- (match-end 0) (match-beginning 0) 1)))
+	    (setq nstars (* (1- (funcall get-real-level e level))
+			    (1- org-indent-indentation-per-level)))
+	    (add-text-properties
+	     (point-at-bol) (point-at-eol)
+	     (list 'line-prefix
+		   (aref org-indent-stars nstars)
+		   'wrap-prefix
+		   (aref org-indent-strings
+			 (* (funcall get-real-level e level)
+			    org-indent-indentation-per-level)))))
+	  (when (> e b)
+	    (add-text-properties
+	     b  e (list 'line-prefix (aref org-indent-strings n)
+			'wrap-prefix (aref org-indent-strings n))))
+	  (setq b (1+ (point-at-eol))
+		n (* (funcall get-real-level b level)
+		     org-indent-indentation-per-level)))))))
 
+(defvar org-inlinetask-min-level)
 (defun org-indent-refresh-section ()
   "Refresh indentation properties in the current outline section.
 Point is assumed to be at the beginning of a headline."
@@ -255,7 +273,11 @@ Point is assumed to be at the beginning of a headline."
   (when org-indent-mode
     (let (beg end)
       (save-excursion
-	(when (ignore-errors (org-back-to-heading))
+	(when (ignore-errors (let ((org-outline-regexp (format "\\*\\{1,%s\\}[ \t]+"
+				(if (featurep 'org-inlinetask)
+				    (1- org-inlinetask-min-level)
+				  ""))))
+			       (org-back-to-heading)))
 	  (setq beg (point))
 	  (setq end (or (save-excursion (or (outline-next-heading) (point)))))
 	  (org-indent-remove-properties beg end)
@@ -268,7 +290,11 @@ Point is assumed to be at the beginning of a headline."
   (when org-indent-mode
     (let ((beg (point)) (end limit))
       (save-excursion
-	(and (ignore-errors (org-back-to-heading t))
+	(and (ignore-errors (let ((org-outline-regexp (format "\\*\\{1,%s\\}[ \t]+"
+				(if (featurep 'org-inlinetask)
+				    (1- org-inlinetask-min-level)
+				  ""))))
+			      (org-back-to-heading)))
 	     (setq beg (point))))
       (org-indent-remove-properties beg end)
       (org-indent-add-properties beg end)))

@@ -16,10 +16,10 @@ and ESS, the installation process is simple.
 Extract all the files from @file{ess-VERSION.zip} (by
 double clicking on it and selecting ``Extract all files''
 which launches the Folders Extraction Wizard)
-into the @file{site-lisp} directory that exists for packages like @ESS{}.
+into an @file{ESS} sub-directory of the @file{site-lisp} directory that exists for packages like @ESS{}.
 If GNU Emacs was installed in the default location, then this
 directory can be found somewhere like
-@file{C:\Program Files\GNU Emacs\emacs-22.x\site-lisp}.
+@file{C:\Program Files\GNU Emacs\emacs-22.x\site-lisp}
 
 @item
 Add the line
@@ -51,7 +51,7 @@ in @file{~/.emacs} and restart Emacs.
 @item
 If you see a buffer named @file{*ESS*}, then the manual instructions
 were most likely successful.  If not, then send a query to
-@email{ess-help@@stat.math.ethz.ch}
+@email{ess-help@@r-project.org}
 explicitly describing your problem and your environment
 including operating system, Emacs version, @ESS{} version, etc.
 @end enumerate
@@ -116,7 +116,7 @@ in @file{~/.xemacs/init.el} and restart XEmacs.
 @item
 If you see a buffer named @file{*ESS*}, then the manual instructions
 were most likely successful.  If not, then send a query to
-@email{ess-help@@stat.math.ethz.ch}
+@email{ess-help@@r-project.org}
 explicitly describing your problem and your environment
 including operating system, XEmacs version, @ESS{} version, etc.
 @end enumerate

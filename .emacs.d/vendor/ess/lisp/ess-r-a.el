@@ -5,7 +5,7 @@
 
 ;; Original Author: A.J. Rossini <blindglobe@gmail.com>
 ;; Created: 17 November 1999
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; Keywords: editing and process modes.
 
@@ -33,7 +33,7 @@
 
 ;;; The purpose of this file is to demonstrate some of the extras that
 ;;; have been constructed for the ESS R mode; if they prove
-;;; interesting, then they might be migrated to essd-r, the primary
+;;; interesting, then they might be migrated to ess-r-d, the primary
 ;;; ESS R mode tools.
 
 

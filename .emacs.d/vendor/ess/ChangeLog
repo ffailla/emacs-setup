@@ -1,3 +1,65 @@
+2011-07-30  ESS Maintainers <ESS-core@r-project.org>
+
+  * Version 5.14 released.
+
+2011-06-20  Henning Redestig  <henning@psc.riken.jp>
+
+	* etc/ess-roxy-tests.R (trickyInArgsComments): small examples I
+	used to try out ess-roxy
+
+2011-05-03  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* doc/unixlike.texi (Unix installation):
+	* Makeconf (LISPDIR):
+	Installing everything into site-lisp is sloppy; better to create
+	an ess sub-directory and install there.
+
+2011-04-26  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* doc/help-sas.texi (ESS(SAS)--TAB key): removing all references
+	to uncommenting ess-site.el code since we moved away from that
+	several years ago, however, the vestiges still linger (OK, but
+	isn't that what vestiges do?)
+
+2011-03-07  Stephen Eglen  <stephen@gnu.org>
+
+	* doc/help-s.texi (ESS(S)--Editing files): Document calling R-mode
+	directly.
+
+2011-03-01  Stephen Eglen  <stephen@gnu.org>
+
+	* doc/ess.texi (Debugging R): New node.
+
+2011-02-28  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* doc/requires.texi: update BUGS info and
+	include texi2dvi WARNING
+
+2011-02-03  ESS Maintainers <ESS-core@r-project.org>
+
+  * Version 5.13 released.
+
+2010-12-15  Dirk Eddelbuettel  <edd@debian.org>
+
+	* etc/pkg-Maintainers (Debian): updated
+
+2010-11-09  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* doc/announc.texi (Announce): \
+	* doc/currfeat.texi (Current Features): \
+	* doc/requires.texi (Requirements): \
+	* doc/stabilty.texi (Stability): \
+	Minor tweaks to bring it slightly more up-to-date.
+
+2010-11-08  ESS Maintainers <ESS-core@r-project.org>
+
+  * Version 5.12 released.
+
+2010-08-13  Stephen Eglen  <stephen@gnu.org>
+
+	* doc/ess.texi (Org): New section describing interaction with Org
+	mode, contributed by Dan Davison and Eric Schulte.
+
 2010-07-13  ESS Maintainers <ESS-core@stat.math.ethz.ch>
 
   * Version 5.11 released.
@@ -1341,7 +1403,7 @@
 
 	* lisp/ess-iw32.el:
 	The repair of the C-c C-l problem reported by S.McClatchie
-	<s.mcclatchie@niwa.cri.nz> and BjÅ¯rn-Helge Mevik <bhm@math.uio.no>
+	<s.mcclatchie@niwa.cri.nz> and Bjî©Ãrn-Helge Mevik <bhm@math.uio.no>
 	required a change to ess-command in ess-iw32.el.  I believe the problem
 	was limited to Windows machines and first appeared in 5.1.19 when I added
 	ess-command to ess-iw32.el.

@@ -6,9 +6,12 @@ for f in lib/*.jar; do
     CLASSPATH=$CLASSPATH:$f
 done
 
-export CLASSPATH=~/.m2/repository/jline/jline/0.9.94/jline-0.9.94.jar:~/.m2/repository/swank-clojure/swank-clojure/1.3.0/swank-clojure-1.3.0.jar:~/dev/clojure/target/clojure-1.3.0-master-SNAPSHOT.jar
+#export CLASSPATH=~/.m2/repository/jline/jline/0.9.94/jline-0.9.94.jar:~/.m2/repository/swank-clojure/swank-clojure/1.3.0/swank-clojure-1.3.0.jar:~/dev/clojure/target/clojure-1.3.0-master-SNAPSHOT.jar
 #:~/dev/clojure-contrib/clojure-contrib.jar
+#java -server -Xmx1G -agentlib:jdwp=transport=dt_socket,address=8029,server=y,suspend=n -cp $CLASSPATH jline.ConsoleRunner clojure.main -r
 
-java -server -Xmx1G -agentlib:jdwp=transport=dt_socket,address=8029,server=y,suspend=n -cp $CLASSPATH jline.ConsoleRunner clojure.main -r
+export CLASSPATH=~/.m2/repository/swank-clojure/swank-clojure/1.3.0/swank-clojure-1.3.0.jar:~/dev/clojure/target/clojure-1.3.0-master-SNAPSHOT.jar
+java -server -Xmx1G -agentlib:jdwp=transport=dt_socket,address=8029,server=y,suspend=n -cp $CLASSPATH clojure.main -r
+
 
 #java -server -cp $CLASSPATH clojure.main -e "(do (require 'swank.swank) (swank.swank/start-repl))" -r

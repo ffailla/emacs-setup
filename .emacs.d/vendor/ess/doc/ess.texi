@@ -1991,7 +1991,7 @@ private values of the indentation variable, see below.
 @end menu
 
 @comment  node-name,  next,  previous,  up
-@node Styles,  , ,Indenting 
+@node Styles,  , Indenting, Indenting
 @subsection Changing indentation styles
 
 The combined value of nine variables that control indentation are
@@ -2383,7 +2383,7 @@ add the following lines to one of your Emacs startup files:
            (font-lock-mode 1)))
 @end example
 
-@node Roxygen, , R documentation files, Editing R documentation
+@node Roxygen,  , R documentation files, Editing R documentation
 @section Editing Roxygen documentation
 @cindex Roxygen
 @cindex roxy
@@ -2423,78 +2423,95 @@ to toggle visibility of Roxygen entries and the Roxygen template.
 All ESS Roxygen support is defined in @file{ess-roxy.el} which is loaded
 by default in ESS. The following special Emacs commands are provided.
 
-@table @kbd
-@item C-c C-o 
+@itemize @bullet
+
+@item
+@kbd{C-c C-o} (@code{ess-roxy-update-entry}) @*
 @pindex ess-roxy-update-entry
-@code{ess-roxy-update-entry}: Generate a Roxygen template or update the
-parameter list in Roxygen entry at point (or above the function at the
-point). Documented parameters that are not in the function are placed
-last in the list, parameters that are not documented and not in the
-definition are dropped.
+Generate a Roxygen template or update the parameter list in Roxygen
+entry at point (or above the function at the point). Documented
+parameters that are not in the function are placed last in the list,
+parameters that are not documented and not in the definition are
+dropped. Parameter descriptions are filled if
+@code{ess-roxy-fill-param-p} is non-nil.
 
-@item C-c C-e C-c 
+@item
+@kbd{C-c C-e C-c} (@code{ess-roxy-toggle-roxy-region}) @*
 @pindex ess-roxy-toggle-roxy-region
-@code{ess-roxy-toggle-roxy-region}: Toggle the presence of the leading
-Roxygen string on all lines in the marked region. Convenient for
-transferring text to Roxygen entries and to evaluate example fields.
+Toggle the presence of the leading Roxygen string on all lines in the
+marked region. Convenient for transferring text to Roxygen entries and
+to evaluate example fields.
 
-@item C-c C-e C-r 
+@item
+@kbd{C-c C-e C-r} (@code{ess-roxy-preview-Rd}) @*
 @pindex ess-roxy-preview-Rd
-@code{ess-roxy-preview-Rd}: Use the attached R process to parse the
-entry at point obtain the input for an Rd file. Convenient for checking
-syntax. When used with the prefix argument, i.e. @kbd{C-u C-c C-e C-r},
-place the content in a buffer associated with a Rd file with the same
-name as the documentation. Requires the Roxygen package to be installed.
+Use the attached R process to parse the entry at point to obtain the Rd
+code. Convenient for previewing and checking syntax. When used with the
+prefix argument, i.e. @kbd{C-u C-c C-e C-r}, place the content in a
+buffer associated with a Rd file with the same name as the
+documentation. Requires the Roxygen package to be installed.
 
-@item C-c C-e p @code{ess-roxy-previous-entry}
+@item
+@kbd{C-c C-e C-t} (@code{ess-roxy-preview-HTML}) @*
+@pindex ess-roxy-preview-Rd
+Use the attached R process to parse the entry at to generate HTML for
+the entry and open it in a browser. When used with the prefix argument,
+i.e. @kbd{C-u C-c C-e C-t}, visit the generated HTML file instead.
+Requires the Roxygen and tools packages to be installed.
+
+@item
+@kbd{C-c C-e p} (@code{ess-roxy-previous-entry}) @*
 @pindex ess-roxy-previous-entry
 Go to start of the Roxygen entry above point.
 
-@item C-c C-e n 
+@item 
+@kbd{C-c C-e n}  (@code{ess-roxy-next-entry}) @*
 @pindex ess-roxy-next-entry
-@code{ess-roxy-next-entry}: Go to end of the Roxygen entry above point.
+Go to end of the Roxygen entry above point.
 
-@item C-c C-e C-h 
+@item
+@kbd{C-c C-e C-h} (@code{ess-roxy-hide-all}) @*
 @pindex ess-roxy-hide-all
-@code{ess-roxy-hide-all}: Use the hideshow mode to fold away the
-visibility of all Roxygen entries. Hide-show support must be enabled for
-this binding to get defined.
-@end table
+Use the hideshow mode to fold away the visibility of all Roxygen
+entries. Hide-show support must be enabled for this binding to get
+defined.
 
-ESS also advices several standard editing functions in order to make
-Roxygen editing more intuitive. The advised functions are as follows.
+ESS also advices the following standard editing functions in order to make
+Roxygen editing more intuitive: 
 
-@table @kbd
-@item C-c TAB 
+@item
+@kbd{C-c TAB} (@code{ess-R-complete-object-name}) @*
 @pindex ess-R-complete-object-name
-@code{ess-R-complete-object-name}: Complete Roxygen tag at
-point. E.g. doing @kbd{C-c TAB} when the point is at the end of
-@code{@@par} completes to @code{@@param}.
+Complete Roxygen tag at point. E.g. doing @kbd{C-c TAB} when the point
+is at the end of @code{@@par} completes to @code{@@param}.
 
-@item M-h 
+@item
+@kbd{M-h} (@code{mark-paragraph}) @*
 @pindex mark-paragraph
-@code{mark-paragraph}: If the transient mark mode is active, place mark
-and point at start end end of the field at point and activate the mark.
+If the transient mark mode is active, place mark and point at start end
+end of the field at point and activate the mark.
 
-@item TAB 
+@item
+@kbd{TAB} (@code{ess-indent-command}) @*
 @pindex ess-indent-command
-@code{ess-indent-command}: If hide-show support is enabled, fold away
-the visibility of the Roxygen entry at point.
+If hide-show support is enabled, fold away the visibility of the Roxygen
+entry at point.
 
-@item M-q 
+@item
+@kbd{M-q} (@code{fill-paragraph}) @*
 @pindex fill-paragraph
-@code{fill-paragraph}: Fill the Roxygen field at point.
+Fill the Roxygen field at point.
 
-@item C-a 
+@item
+@kbd{C-a} (@code{move-beginning-of-line}) @*
 @pindex move-beginning-of-line
-@code{move-beginning-of-line}: Move to the point directly to the right
-of the Roxygen start string.
+Move to the point directly to the right of the Roxygen start string.
 
-@item ENTER 
+@item
+@kbd{ENTER} (@code{newline-and-indent}) @*
 @pindex newline-and-indent
-@code{newline-and-indent}: Insert a new line and the Roxygen prefix
-string.
-@end table
+Insert a new line and the Roxygen prefix string.
+@end itemize
 
 @comment  node-name,  next,  previous,  up
 @node Help, ESS for SAS, Editing R documentation, Top
@@ -2740,6 +2757,9 @@ ESS has a few miscellaneous features, which didn't fit anywhere else.
 * TAGS::                        Using TAGS for S files
 * Rdired::                      Directory editor for R objects
 * Rutils::                      R object/package management and help utilities
+* Org::                         Interaction with Org mode
+* Sweave and AUCTeX::           Support for Sweave in ESS and AUCTeX
+* Debugging R::                 Debugging R code in ESS
 @end menu
 
 @comment  node-name,  next,  previous,  up
@@ -2990,7 +3010,7 @@ deletion (`x' will actually perform the deletion).
 
 
 @comment  node-name,  next,  previous,  up
-@node Rutils, , Rdired, Miscellaneous
+@node Rutils, Org, Rdired, Miscellaneous
 @section Rutils
 
 Ess-rutils builds up on ess-rdired, providing key bindings for
@@ -3011,18 +3031,18 @@ bindings become available in iESS process buffers:
 
 @itemize @bullet
 @item
-@kbd{C-c C-. l} (@command{ess-rutils-localpkgs}) @*
+@kbd{C-c C-. l} (@command{ess-rutils-local-pkgs}) @*
 @pindex ess-rutils-localpkgs
 List all packages in all available libraries.
 
 @item
-@kbd{C-c C-. r} (@command{ess-rutils-repospkgs}) @*
+@kbd{C-c C-. r} (@command{ess-rutils-repos-pkgs}) @*
 @pindex ess-rutils-repospkgs
 List available packages from repositories listed by
 @command{getOptions(``repos'')} in the current R session.
 
 @item
-@kbd{C-c C-. u} (@command{ess-rutils-updatepkgs}) @*
+@kbd{C-c C-. u} (@command{ess-rutils-update-pkgs}) @*
 @pindex ess-rutils-updatepkgs
 Update packages in a particular library and repository.
 
@@ -3032,7 +3052,7 @@ Update packages in a particular library and repository.
 Search for a string using apropos.
 
 @item
-@kbd{C-c C-. m} (@command{ess-rutils-rmall}) @*
+@kbd{C-c C-. m} (@command{ess-rutils-rm-all}) @*
 @pindex ess-rutils-rmall
 Remove all R objects.
 
@@ -3042,12 +3062,12 @@ Remove all R objects.
 Manipulate R objects; wrapper for @command{ess-rdired}.
 
 @item
-@kbd{C-c C-. w} (@command{ess-rutils-loadwkspc}) @*
+@kbd{C-c C-. w} (@command{ess-rutils-load-wkspc}) @*
 @pindex ess-rutils-loadwkspc
 Load a workspace file into R.
 
 @item
-@kbd{C-c C-. s} (@command{ess-rutils-savewkspc}) @*
+@kbd{C-c C-. s} (@command{ess-rutils-save-wkspc}) @*
 @pindex ess-rutils-savewkspc
 Save a workspace file.
 
@@ -3057,7 +3077,7 @@ Save a workspace file.
 Change the working directory for the current R session.
 
 @item
-@kbd{C-c C-. H} (@command{ess-rutils-htmldocs}) @*
+@kbd{C-c C-. H} (@command{ess-rutils-html-docs}) @*
 @pindex ess-rutils-htmldocs
 Use @command{browse-url} to navigate R html documentation.
 
@@ -3075,10 +3095,103 @@ any Emacs buffer, so can be bound to a user-defined key:
 @pindex ess-rutils-rsitesearch
 
 Functions for listing objects and packages
-(@command{ess-rutils-localpkgs}, @command{ess-rutils-repospkgs}, and
+(@command{ess-rutils-local-pkgs}, @command{ess-rutils-repos-pkgs}, and
 @command{ess-rutils-objs}) show results in a separate buffer and window,
 in @code{ess-rutils-mode}, providing useful key bindings in this mode
 (type @kbd{?} in this buffer for a description).
+
+
+
+@comment  node-name,  next,  previous,  up
+@node Org, Sweave and AUCTeX, Rutils, Miscellaneous
+@section Interaction with Org mode
+
+Org-mode (@uref{http://orgmode.org}) now supports reproducible research
+and literate programming in many languages (including R) -- see chapter
+14 of the Org manual
+(@uref{http://orgmode.org/org.html#Working-With-Source-Code}).  For ESS
+users, this offers a document-based work environment within which to
+embed ESS usage.  R code lives in code blocks of an Org document, from
+which it can be edited in ess-mode, evaluated, extracted ("tangled") to
+pure code files.  The code can also be exported ("woven") with the
+surrounding text to several formats including HTML and LaTeX.  Results of
+evaluation including figures can be captured in the Org document, and
+data can be passed from the Org document (e.g. from a table) to the ESS
+R process.  (This section contributed by Dan Davison and Eric Schulte.)
+
+
+@comment  node-name,  next,  previous,  up
+@node Sweave and AUCTeX, Debugging R, Org, Miscellaneous
+@section Support for Sweave in ESS and AUCTeX
+
+ESS provides support for writing and processing Sweave
+(@uref{http://www.statistik.lmu.de/~leisch/Sweave}), building up on
+Emacs' noweb-mode for literate programming.  When working on an Sweave
+document, the following key bindings are available:
+
+@itemize @bullet
+@item
+@kbd{M-n s} (@command{ess-swv-weave}) @*
+@pindex ess-swv-weave
+Run Sweave on the current .Rnw file.
+
+@item
+@kbd{M-n l} (@command{ess-swv-latex}) @*
+@pindex ess-swv-latex
+Run LaTeX after Sweave'ing.
+
+@item
+@kbd{M-n p} (@command{ess-swv-PS}) @*
+@pindex ess-swv-PS
+Generate and display a postscript file after LaTeX'ing.
+
+@item
+@kbd{M-n P} (@command{ess-swv-PDF}) @*
+@pindex ess-swv-PDF
+Generate and display a PDF file after LaTeX'ing.  The command used to
+generate the PDF file is the first element of
+@code{ess-swv-pdflatex-commands}.
+
+@end itemize
+
+Sweave'ing with @code{ess-swv-weave} starts an inferior-ESS process, if
+one is not available.  Other commands are available from the
+@samp{Sweaving, Tangling, ...} submenu of the Noweb menu.
+
+AUCTeX (@uref{http://www.gnu.org/software/auctex}) users may prefer to
+set the variable @code{ess-swv-plug-into-AUCTeX-p} (available from the
+``ESS Sweave'' customization group) to t.  Alternatively, the same can
+be achieved by activating the entry ``AUCTeX Interface'' from the
+@samp{Sweaving, Tangling, ...} submenu, which toggles this variable on
+or off.  When the interface is activated, new entries for Sweave'ing and
+LaTeX'ing thereafter are available from AUCTeX's ``Command'' menu.
+Sweave'ing can, thus, be done by @kbd{C-c C-c Sweave RET} without an
+inferior-ESS process.  Similarly, LaTeX'ing can be done by @kbd{C-c C-c
+LaTeXSweave RET}.  In both cases, the process can be monitored with
+@kbd{C-c C-l} (@code{TeX-recenter-output-buffer}).  Open the viewer with
+@kbd{C-c C-v} (@code{TeX-view}), as usual in AUCTeX.
+
+@comment  node-name,  next,  previous,  up
+@node  Debugging R,  , Sweave and AUCTeX, Miscellaneous
+@section Debugging R code in ESS
+
+There are currently two extra facilities that have been developed for
+debugging R code within ESS.
+
+@itemize @bullet
+@item ``Ess-tracebug is a package for interactive visual debugging of R code from
+ESS. It provides visual debugging, browser, recover and conditional
+breakpoints; watch window and loggers; interactive debug/undebug of R
+functions and methods at point; highlighting and easy error navigation and
+interactive traceback.''  @uref{http://code.google.com/p/ess-tracebug/}
+
+
+@item The R package edtdbg ``integrates R's debugging facilities with your
+text editor, featuring code tracking, variable display, quick breakpoint
+setting, and easy toggling of function debug status.''  It provides
+support for both Emacs and VIM.  Package available from CRAN mirrors.
+
+@end itemize
 
 
 

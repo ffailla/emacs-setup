@@ -1,5 +1,62 @@
 @itemize @w{}
 
+Changes/New Features in 5.14:
+@itemize @bullet
+@item @ESS{[BUGS/JAGS]}:  Batch BUGS is back!  For recent OpenBUGS
+versions, 3.0.8+, a batch BUGS script is once again available,
+but for Linux only.  Therefore, since it seems that BUGS and JAGS must
+co-exist (rather than a transition from BUGS to JAGS), .bug files are
+now in @ESS{[BUGS]} mode and .jag files are in @ESS{[JAGS]} mode.  @ESS{[BUGS]} now
+works like @ESS{[JAGS]} rather than the original mode @ESS{[BUGS]} mode which
+was difficult to maintain.  Although, @ESS{[BUGS]} appears to work,
+there still may be some features missing as well as bugs.
+
+@item @ESS{[R]}: New customizable variable @code{ess-swv-plug-into-AUCTeX-p}
+Commands to Sweave current file and LaTeX the result are now available
+to AUCTeX users, if this variable is set to @code{t}.
+
+@item @ESS{[S]}: @kbd{C-c C-c}
+(@code{ess-eval-function-or-paragraph-and-step}) is now skipping over
+comments as the other paragraph functions do.
+It (and similar functions) should no longer wrongly find
+@samp{function()} beginnings inside comments or strings.
+
+@item @ESS{[SAS]}: improved by better support for GNU Emacs 
+@end itemize
+
+Changes/New Features in 5.13:
+@itemize @bullet
+@item @ESS{[R]}: On Windows, for R 2.12.0 and later, the Rterm executables
+ (in subdirectories i386 / x64) now are found as well as for earlier R versions.
+@item @ESS{[S+]}: on Windows, both 32- and 64-bit versions of S+ (``S-PLUS'')
+ are found now and made available on the menu.
+@item @ESS{[R]}: When prompting for a starting directory, the R version is
+ (always?) correct now.
+@item @ESS{[R]}: on non-Windows platforms, the @code{use-dialog-box}
+ variable is no longer temporarily changed (to @code{nil} for R-x.y.z version
+ functions and to @code{t} for @command{R} itself), but rather the user
+ customization is obeyed.
+@item @ESS{[R]}: more Roxygen improvements.
+@item `Rd-preview-help' now generates preview buffers with navigation
+facilities the same as regular help buffers.
+@item @ESS{}: New functions and keys C-c [up] / [down]
+ for evaluating the buffer ``from beginning till here''.
+@end itemize
+
+Changes/New Features in 5.12:
+@itemize @bullet
+@item @ESS{[SAS]} Font-locking:
+ update of PROCs keywords (up to SAS 9.22); error/warnings.
+@item @ESS{[R]}: Roxygen improvements: S4 classes;
+ also optionally keep spaces when filling arguments
+@item @ESS{[Rd]}: support new keywords:
+ section-name \subsection plus a dozen ``new'' keywords; should match R
+ 2.12.x now.
+@item @command{ess-display-help-on-object} (@kbd{C-c C-v})
+ now @emph{caches} the list of topics, thus speeding up the improvement
+ feature introduced in 5.9.
+@end itemize
+
 Changes/New Features in 5.11:
 @itemize @bullet
 @item Filename completion within buffers now adds only trailing

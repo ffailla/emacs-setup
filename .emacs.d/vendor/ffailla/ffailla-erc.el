@@ -1,12 +1,12 @@
 ;;
 ;; erc settings
 ;;
-(load "~/.ercpass" t)
+;; (load "~/.ercpass" t)
 (require 'erc-services)
 (erc-services-mode 1)
-(setq erc-prompt-for-nickserv-password nil)
-(setq erc-nickserv-passwords
-      `((freenode (("ffailla" . ,freenode-ffailla-pass)))))
+;; (setq erc-prompt-for-nickserv-password nil)
+;; (setq erc-nickserv-passwords
+;;       `((freenode (("ffailla" . ,freenode-ffailla-pass)))))
 
 ;;(add-hook 'erc-text-matched-hook 'erc-beep-on-match)
 (setq erc-beep-match-types '(current-nick keyword pal))

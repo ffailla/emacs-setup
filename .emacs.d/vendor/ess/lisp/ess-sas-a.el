@@ -4,7 +4,7 @@
 ;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
 
 ;; Original Author: Rodney A. Sparapani
-;; Maintainer: ESS-core@stat.math.ethz.ch
+;; Maintainer: ESS-core@r-project.org
 ;; Created: 17 November 1999
 ;; Keywords: SAS
 
@@ -124,7 +124,7 @@ or `ess-sas-data-view-insight'."
   :group 'ess-sas
   :type  'integer)
 
-(defcustom ess-sas-rtf-font-name "Lucida Sans Typewriter"
+(defcustom ess-sas-rtf-font-name "Bitstream Vera Sans Mono"
   "*Name of font to create MS RTF with"
   :group 'ess-sas
   :type  'string)
@@ -268,12 +268,6 @@ should set this variable to 'sh regardless of their local shell
   :group 'ess-sas
   :type  'string)
 
-(defcustom ess-sleep-for (if ess-microsoft-p 5 0)
-  "*`ess-sas-submit-sh' may need to pause before sending output
-to the shell on Windows when `ess-sas-submit-method' is 'sh."
-  :group 'ess-sas
-  :type  'number)
-
 (defcustom ess-sas-tab-stop-list
   '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120)
   "List of tab stop positions used by `tab-to-tab-stop' in ESS[SAS]."
@@ -320,13 +314,14 @@ before ess-site is loaded) for it to take effect.")
 	    (call-process-region (match-beginning 0) (match-end 0)
 		    ess-tmp-util t (list t nil) t ess-tmp-util-args)))))
 
+
 (defun ess-exit-notify-sh (string)
 "Detect completion or failure of submitted job and notify the user."
-  (let* ((exit-done "\\[[0-9]+\\]\\ *\\+*\\ *\\(Exit\\|Done\\).*$")
+  ;(let* ((exit-done "\\[[0-9]+\\]\\ *\\+*\\ *\\(Exit\\|Done\\).*$")
+  (let* ((exit-done "\\[[0-9]+\\]\\ *\\+*\\ *\\(Exit\\|Done\\)[^\r\n]*") ; GNU Emacs needs this
 	 (beg (string-match exit-done string)))
     (if beg
 	(message (substring string beg (match-end 0))))))
-
 
 
 (defun ess-sas-append-log ()
@@ -428,6 +423,7 @@ on the way."
     ;(interactive)
     (ess-sas-file-path)
     (ess-sas-goto-shell t)
+    (comint-send-input)
     (if (equal ess-sas-submit-method 'sh)
       (insert "cd " (car (last (split-string (file-name-directory ess-sas-file-path)
 	"\\([a-zA-Z][a-zA-Z]:\\|]\\)"))))
@@ -567,7 +563,7 @@ current buffer if nil."
 	  (if ess-tmp-glyph (progn
 		(switch-to-buffer (file-name-nondirectory ess-tmp-graph))
 		(ess-xemacs-insert-glyph
-		    (make-glyph (vector ess-tmp-glyph :file ess-tmp-graph))))    
+		    (make-glyph (vector ess-tmp-glyph :file ess-tmp-graph))))
 
           ;;else use the appropriate graphics file image viewer
 	    (while (< ess-tmp-counter ess-tmp-length)
@@ -668,7 +664,7 @@ current buffer if nil."
 
 	      (if revert
 		  (if (and (> ess-sas-log-max 0) (string-equal suffix "log")
-			   (> (ess-num-or-zero (nth 7 (file-attributes ess-sas-temp-file))) 
+			   (> (ess-num-or-zero (nth 7 (file-attributes ess-sas-temp-file)))
 			      ess-sas-log-max))
 		      (progn
 			(insert-file-contents ess-sas-temp-file nil 0
@@ -780,6 +776,7 @@ optional argument is non-nil, then set-buffer rather than switch."
 		   (switch-to-buffer temp-shell-buffer))
     (shell)
     (rename-buffer temp-shell-buffer)
+    (ess-sleep) ; GNU Emacs needs this
 
     (if temp-shell-buffer-remote-host (progn
 	(insert (concat
@@ -868,11 +865,20 @@ optional argument is non-nil, then set-buffer rather than switch."
   (kill-buffer nil)
 )
 
-;(eval-when-compile
-  (condition-case nil
-      (progn
-        (require 'rtf-support)
-        (when (featurep 'rtf-support)
+;  (condition-case nil
+;      (progn
+;        (require 'rtf-support)
+;        (when (featurep 'rtf-support)
+
+(defun ess-rtf-replace-chars ()
+"Convert a text file to an MS RTF file."
+  (interactive)
+  (goto-char (point-min))
+  (while (re-search-forward "\n" nil t) (replace-match "\\par\n" nil t))
+  (goto-char (point-min))
+  (while (re-search-forward "\f" nil t) (replace-match "\\page\n" nil t))
+  (goto-char (point-min))
+  (while (re-search-forward "\t" nil t) (replace-match "\\tab" nil t)))
 
 (defun ess-sas-rtf-portrait (&optional ess-tmp-font-size)
 "Creates an MS RTF portrait file from the current buffer."
@@ -880,23 +886,35 @@ optional argument is non-nil, then set-buffer rather than switch."
     (ess-sas-file-path t)
     (ess-revert-wisely)
 
-    (if (equal ess-tmp-font-size nil)
-	(setq ess-tmp-font-size "21"))
+;    (if (equal ess-tmp-font-size nil)
+;	(setq ess-tmp-font-size "21"))
 
     (let
-	((ess-temp-rtf-file (replace-in-string ess-sas-file-path "[.][^.]*$" ".rtf")))
-	    ;(expand-file-name (buffer-name)) "[.][^.]*$" ".rtf")))
-	(rtf-export ess-temp-rtf-file)
+	((ess-temp-rtf-file 
+	  (replace-regexp-in-string "[.][^.]*$" ".rtf" ess-sas-file-path)))
+	;(rtf-export ess-temp-rtf-file)
+        (copy-file ess-sas-file-path ess-temp-rtf-file t)
 	(ess-sas-goto "rtf" t)
-	(goto-char (point-min))
-	(replace-regexp "\\\\fmodern .*;" (concat "\\\\fmodern " ess-sas-rtf-font-name ";"))
-	(goto-line 2)
-	(if (string-match ess-sas-suffix-regexp ess-sas-file-path)
-	    (insert "\\margl720\\margr720\\margt720\\margb720\n"))
-        (goto-char (point-min))
+	(ess-rtf-replace-chars)
+	;(goto-char (point-min))
+	;;(replace-regexp "\\\\fmodern .*;" (concat "\\\\fmodern " ess-sas-rtf-font-name ";"))
+	;(if (re-search-forward "\\\\fmodern .*;" nil t)
+	;    (replace-match (concat "\\\\fmodern " ess-sas-rtf-font-name ";") nil nil))
+	;(goto-line 2)
+	(goto-char (point-min)) 
+	(insert (concat
+		 "{\\rtf1\\ansi{\\fonttbl\\f1\\fmodern " ess-sas-rtf-font-name ";}\n"
+		 "\\margl720\\margr720\\margt720\\margb720\n"
+		 "{\\colortbl;\\red0\\green0\\blue0;\\red0\\green0\\blue255;\\red0\\green255\\blue255;\\red0\\green255\\blue0;\\red255\\green0\\blue255;\\red255\\green0\\blue0;\\red255\\green255\\blue0;\\red255\\green255\\blue255;\\red0\\green0\\blue128;\\red0\\green128\\blue128;\\red0\\green128\\blue0;\\red128\\green0\\blue128;\\red128\\green0\\blue0;\\red128\\green128\\blue0;\\red128\\green128\\blue128;\\red192\\green192\\blue192;}\n"
+		 "{\\stylesheet{\\s15\\plain\\f1\\fs16\\cf1\\cb8\\lang1024 Emacs Text;}{\\*\\cs16 \\additive\\f1\\fs16\\cf1\\cb8\\lang1024 Emacs Base Style;}}\n"
+		 "{\\plain\\s15{\\cs16\\cs16\\f1\\fs16\\cf1\\cb8\\lang1024{\\cs16\\f1\\fs16\\cf1\\cb8\\lang1024\n"))        
 
-        (while (replace-regexp "\\\\fs[0-9]+" (concat "\\\\fs" ess-tmp-font-size)) nil)
-
+	(goto-char (point-max))
+	(insert "}}}}\n")
+	;(goto-char (point-min))
+        ;;(while (replace-regexp "\\\\fs[0-9]+" (concat "\\\\fs" ess-tmp-font-size)) nil)
+	;(while (re-search-forward "\\\\fs[0-9]+" nil t)
+	;  (replace-match (concat "\\\\fs" ess-tmp-font-size) nil nil))
         (save-buffer)
 	(kill-buffer (current-buffer))))
 
@@ -925,8 +943,8 @@ optional argument is non-nil, then set-buffer rather than switch."
 "\\landscape\\paperh11905\\paperw16837\\margl1800\\margr1800\\margt1440\\margb1440\\sectd\\sbknone\\lndscpsxn\\pgwsxn16837\\pghsxn11905\\marglsxn1800\\margrsxn1800\\margtsxn1440\\margbsxn1440\\ftnbj\\ftnstart1\\ftnrstcont\\ftnnar\\aenddoc\\aftnrstcont\\aftnstart1\\aftnnrlc\n"))
     (save-buffer)
     (kill-buffer (current-buffer)))
-))
-    (error nil)) ;)
+;))
+;    (error nil)) 
 
 (defun ess-sas-submit ()
   "Save the .sas file and submit to shell using a function that
@@ -1038,20 +1056,18 @@ i.e. let arg1 be your local equivalent of
        (insert ess-sas-submit-pre-command " " arg1 " "
 	 (substring (file-name-sans-extension
 	    (file-name-nondirectory ess-sas-file-path)) 1)
-	 " " arg2 " " ess-sas-submit-post-command))
+	 " " arg2 " " ess-sas-submit-post-command)
+	(comint-send-input))
     ;;else
       (ess-sas-goto-shell t)
-;      (if ess-microsoft-p
-;	  (insert "cd "  (file-name-directory ess-sas-file-path))
-;	(insert "cd " (car (last (split-string
-;	    (file-name-directory ess-sas-file-path) "\\(:\\|]\\)")))))
-      (insert "cd " (car (last (split-string (file-name-directory ess-sas-file-path)
-"\\([a-zA-Z][a-zA-Z]:\\|]\\)"))))
-      (comint-send-input)
+      (ess-sas-cd)
+;      (insert "cd " (car (last (split-string (file-name-directory ess-sas-file-path)
+;"\\([a-zA-Z][a-zA-Z]:\\|]\\)"))))
+;      (comint-send-input)
       (insert ess-sas-submit-pre-command " " arg1 " "
 	(file-name-sans-extension (file-name-nondirectory ess-sas-file-path))
 	" " arg2 " " ess-sas-submit-post-command))
-    (ess-sleep)
+;    (ess-sleep)
     (comint-send-input))
 
 (defun ess-sas-submit-windows (arg1 arg2)
@@ -1133,9 +1149,9 @@ Keep in mind that the maximum command line length in MS-DOS is
 (defun ess-sas-toggle-sas-log-mode ()
   "Toggle SAS-log-mode for .log files."
   (interactive)
-  
+
   (ess-sas-goto-log)
-  (kill-buffer nil)  
+  (kill-buffer nil)
 
 ;  (if (equal (cdr (assoc "\\.[lL][oO][gG]\\'" auto-mode-alist)) 'SAS-log-mode) (progn
 ;      (setq auto-mode-alist (delete '("\\.[lL][oO][gG]\\'" . SAS-log-mode) auto-mode-alist))
@@ -1148,7 +1164,7 @@ Keep in mind that the maximum command line length in MS-DOS is
 ;      (font-lock-mode 1)
 ;      (font-lock-fontify-buffer))
 
-  (if (equal (cdr (assoc "\\.[lL][oO][gG]\\'" auto-mode-alist)) 'SAS-log-mode) 
+  (if (equal (cdr (assoc "\\.[lL][oO][gG]\\'" auto-mode-alist)) 'SAS-log-mode)
       (setq auto-mode-alist (delete '("\\.[lL][oO][gG]\\'" . SAS-log-mode) auto-mode-alist))
       (setq auto-mode-alist (append '(("\\.[lL][oO][gG]\\'" . SAS-log-mode)) auto-mode-alist)))
   (ess-sas-goto-log))

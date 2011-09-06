@@ -6,7 +6,7 @@
 
 ;; Original Author: David Smith <dsmith@stats.adelaide.edu.au>
 ;; Created: 7 Jan 1994
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; This file is part of ESS
 
@@ -136,6 +136,8 @@
   (define-key ess-mode-map "\C-c\M-r"	'ess-eval-region-and-go)
   (define-key ess-mode-map "\C-c\C-b"	'ess-eval-buffer)
   (define-key ess-mode-map "\C-c\M-b"	'ess-eval-buffer-and-go)
+  (define-key ess-mode-map (kbd "C-c C-<up>")   'ess-eval-buffer-from-beg-to-here)
+  (define-key ess-mode-map (kbd "C-c C-<down>") 'ess-eval-buffer-from-here-to-end)
   (define-key ess-mode-map "\C-c\C-f"	'ess-eval-function)
   (define-key ess-mode-map "\C-c\M-f"	'ess-eval-function-and-go)
   (define-key ess-mode-map "\C-c\C-c"	'ess-eval-function-or-paragraph-and-step)
@@ -197,6 +199,8 @@
     )
    ("ESS Eval"
     ["Eval buffer"	ess-eval-buffer			  t]
+    ["Eval buffer till here" ess-eval-buffer-from-beg-to-here t]
+    ["Eval buffer from here" ess-eval-buffer-from-here-to-end t]
     ["Eval region"	ess-eval-region			  t]
     ["Eval function"	ess-eval-function		  t]
     ["Eval func/para & step" ess-eval-function-or-paragraph-and-step t]
@@ -238,6 +242,7 @@
    ("Roxygen"
     ["Update/Generate Template" ess-roxy-update-entry	        t]
     ["Preview Rd"	 ess-roxy-preview-Rd     		t]
+    ["Preview HTML"	 ess-roxy-preview-HTML     		t]
     ["Toggle Roxygen Prefix"	 ess-roxy-toggle-roxy-region    t]
     )
    ("Start Process"
@@ -558,7 +563,9 @@ it cannot find a function beginning."
 
       ;; In the case of non-success, it is inefficiently
       ;; going back in the buffer through all function definitions...
-      (unless (re-search-backward ess-function-pattern (point-min) t)
+      (unless
+	  (and (re-search-backward ess-function-pattern (point-min) t)
+	       (not (ess-inside-string-or-comment-p (point))))
 	(goto-char init-point)
 	(if no-error
 	    (setq  done t  beg nil)
@@ -712,6 +719,9 @@ With prefix argument, only shows the errors ESS reported."
       (goto-char (point-max))
       (if
 	  (re-search-backward
+	   ;; FIXME: R does not give "useful" error messages -
+	   ;; -----  by default: We (ESS) could try to use a more useful one, via
+	   ;;   options(error = essErrorHandler)
 	   "^\\(Syntax error: .*\\) at line \\([0-9]*\\), file \\(.*\\)$"
 	   nil
 	   t)
@@ -729,7 +739,8 @@ With prefix argument, only shows the errors ESS reported."
 		  (set-buffer fbuffer)
 		  (ess-mode)))
 	      (pop-to-buffer fbuffer)
-	      (goto-line linenum))
+	      ;;(goto-line linenum) gives warning: is said to be replaced by
+	      (goto-char (point-min)) (forward-line (1- linenum)))
 	    (princ errmess t))
 	(message "Not a syntax error.")
 	(ess-display-temp-buffer errbuff)))))
@@ -741,34 +752,34 @@ With prefix argument, only shows the errors ESS reported."
 (defun ess-electric-brace (arg)
   "Insert character and correct line's indentation."
   (interactive "P")
-;; skeleton-pair takes precedence
-(if (and (boundp 'skeleton-pair) skeleton-pair (fboundp 'skeleton-pair-insert-maybe))
-  (skeleton-pair-insert-maybe "{")
-;; else
-  (let (insertpos)
-    (if (and (not arg)
-	     (eolp)
-	     (or (save-excursion
-		   (skip-chars-backward " \t")
-		   (bolp))
-		 (if ess-auto-newline (progn (ess-indent-line) (newline) t) nil)))
-	(progn
-	  (insert last-command-event)
-	  (ess-indent-line)
-	  (if ess-auto-newline
-	      (progn
-		(newline)
-		;; (newline) may have done auto-fill
-		(setq insertpos (- (point) 2))
-		(ess-indent-line)))
+  ;; skeleton-pair takes precedence
+  (if (and (boundp 'skeleton-pair) skeleton-pair (featurep 'skeleton))
+      (skeleton-pair-insert-maybe "{")
+    ;; else
+    (let (insertpos)
+      (if (and (not arg)
+	       (eolp)
+	       (or (save-excursion
+		     (skip-chars-backward " \t")
+		     (bolp))
+		   (if ess-auto-newline (progn (ess-indent-line) (newline) t) nil)))
+	  (progn
+	    (insert (if (featurep 'xemacs) (event-to-character last-command-event) last-command-event))
+	    (ess-indent-line)
+	    (if ess-auto-newline
+		(progn
+		  (newline)
+		  ;; (newline) may have done auto-fill
+		  (setq insertpos (- (point) 2))
+		  (ess-indent-line)))
+	    (save-excursion
+	      (if insertpos (goto-char (1+ insertpos)))
+	      (delete-char -1))))
+      (if insertpos
 	  (save-excursion
-	    (if insertpos (goto-char (1+ insertpos)))
-	    (delete-char -1))))
-    (if insertpos
-	(save-excursion
-	  (goto-char insertpos)
-	  (self-insert-command (prefix-numeric-value arg)))
-      (self-insert-command (prefix-numeric-value arg))))))
+	    (goto-char insertpos)
+	    (self-insert-command (prefix-numeric-value arg)))
+	(self-insert-command (prefix-numeric-value arg))))))
 
 (defun ess-indent-command (&optional whole-exp)
   "Indent current line as ESS code, or in some cases insert a tab character.
@@ -1200,11 +1211,11 @@ style variables buffer local."
     (if (not quiet)
 	(message "ESS-style: %s" ess-style))
     ; finally, set the indentation style variables making each one local
-    (mapcar (function (lambda (ess-style-pair)
-			(make-local-variable (car ess-style-pair))
-			(set (car ess-style-pair)
-			     (cdr ess-style-pair))))
-	    (cdr (assq ess-style ess-style-alist)))
+    (mapc (function (lambda (ess-style-pair)
+		      (make-local-variable (car ess-style-pair))
+		      (set (car ess-style-pair)
+			   (cdr ess-style-pair))))
+	  (cdr (assq ess-style ess-style-alist)))
     ess-style))
 
 ;;*;; Creating and manipulating dump buffers

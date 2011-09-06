@@ -5,7 +5,7 @@
 
 ;; Original Author: A.J. Rossini <blindglobe@gmail.com>
 ;; Created: 05 June 2000
-;; Maintainers: ESS-core <ESS-core@stat.math.ethz.ch>
+;; Maintainers: ESS-core <ESS-core@r-project.org>
 
 ;; Keywords: editing and process modes.
 
@@ -124,7 +124,7 @@
 
 ;; Variables (not user-changeable)
 
-(defvar ess-version "5.11"
+(defvar ess-version "5.14"
   "Version of ESS currently loaded.")
 
 (defvar no-doc
@@ -636,7 +636,7 @@ If nil, ESS will try finding one from a list."
 
 ;; ---- ./ess-roxy.el : ------------
 
-(defcustom ess-roxy-tags-noparam '("export")
+(defcustom ess-roxy-tags-noparam '("export" "nord")
   "The tags used in roxygen fields that can be used alone.  Used
 to decide highlighting and tag completion."
   :group 'ess-roxy
@@ -648,15 +648,19 @@ to decide highlighting and tag completion."
 				 "name" "note" "param"
 				 "include" "references" "return"
 				 "seealso" "source" "docType"
-				 "title" "TODO" "usage")
+				 "title" "TODO" "usage" "import"
+                                 "exportClass" "exportPattern" "S3method"
+                                 "importFrom" "importClassesFrom"
+                                 "importMethodsFrom" "useDynLib"
+                                 "rdname" "slot")
   "The tags used in roxygen fields that require a parameter.
 Used to decide highlighting and tag completion."
   :group 'ess-roxy
   :type '(repeat string))
 
 (defcustom ess-roxy-template-alist
-  (list (cons "description"  "<description>")
-	(cons "details" "<details>")
+  (list (cons "description"  ".. content for \\description{} (no empty lines) ..")
+	(cons "details" ".. content for \\details{} ..")
 	(cons "title" "")
 	(cons "param"  "")
 	(cons "return" "")
@@ -669,6 +673,12 @@ therefore also be at the beginning of this template to give
 syntactically correct roxygen entries)"
   :group 'ess-roxy
   :type '(alist :value-type (group string)))
+
+(defcustom ess-roxy-fill-param-p nil
+  "Non-nil causes parameter descriptions to be filled (word-wrapped) upon `ess-roxy-update-entry'."
+  :group 'ess-roxy
+  :type '(choice (const :tag "Off" nil)
+                 (const :tag "On" t)))
 
 (defcustom ess-roxy-hide-show-p nil
   "Non-nil means ess-roxy uses hs-minor-mode for block hiding with TAB."
@@ -692,6 +702,13 @@ syntactically correct roxygen entries)"
 the first entry is the default command."
   :group 'ess-sweave
   :type 'list)
+
+(defcustom ess-swv-plug-into-AUCTeX-p nil
+  "Non-nil means add commands to AUCTeX's \\[TeX-command-list]
+to sweave the current noweb file and latex the result."
+  :group 'ess-sweave
+  :type '(choice (const :tag "Off" nil)
+                 (const :tag "On" t)))
 
 
  ; System variables
@@ -791,14 +808,23 @@ Used in e.g., \\[ess-execute-objects] or \\[ess-display-help-on-object]."
   :type 'string)
 
 
-(defcustom ess-program-files
+(defcustom ess-program-files ;; 32 bit version
   (if ess-microsoft-p
-      (w32-short-file-name (getenv "ProgramFiles"))
+      (if (getenv "ProgramW6432")
+	  (w32-short-file-name (getenv "ProgramFiles(x86)"));; always 32 on 64 bit OS
+	(w32-short-file-name (getenv "ProgramFiles")))      ;; always 32 on 32 bit OS
     nil)
-  "Safe (no embedded blanks) 8.3 name that works across internationalization."
+  "Safe (no embedded blanks) 8.3 name for 32-bit programs that works across internationalization."
   :group 'ess
   :type 'string)
 
+(defcustom ess-program-files-64 ;; 64 bit version
+  (if (and ess-microsoft-p (getenv "ProgramW6432"))
+      (w32-short-file-name (getenv "ProgramW6432"))
+    nil)
+  "Safe (no embedded blanks) 8.3 name for 64-bit programs that works across internationalization."
+  :group 'ess
+  :type 'string)
 
 (defcustom ess-rterm-version-paths nil
   "Stores the full path file names of Rterm versions, computed via
@@ -832,6 +858,7 @@ file."
        "/Insightful/splus8.0.4"
        "/Insightful/splus80"
        "/TIBCO/splus81"
+       "/TIBCO/splus82"
 ))
   "List of possible values of the environment variable SHOME for recent
 releases of S-Plus.  These are the default locations for several
@@ -840,6 +867,27 @@ correspond to a directory on your machine, running the function
 `ess-sqpe-versions-create' will create a function, for example, `M-x
 splus70', that will start the corresponding version Sqpe inside an
 emacs buffer in iESS[S] mode.  If you have versions of S-Plus in
+locations other than these default values, redefine this variable with
+a `custom-set-variables' statement in your site-start.el or .emacs
+file.  The list of functions actually created appears in the *ESS*
+buffer and should appear in the \"ESS / Start Process / Other\"
+menu."
+  :group 'ess-SPLUS
+  :type '(repeat string))
+
+(defcustom ess-SHOME-versions-64
+    ;;   ess-program-files-64  ~= "c:/progra~1"  for typical locales/languages
+    (mapcar
+     '(lambda (ch) (concat ess-program-files-64 ch))
+     '("/TIBCO/splus82"
+))
+  "List of possible values of the environment variable SHOME for recent
+releases of 64-bit S-Plus.  These are the default locations for several
+current and recent releases of S-Plus.  If any of these pathnames
+correspond to a directory on your machine, running the function
+`ess-sqpe-versions-create' will create a function, for example, `M-x
+splus70', that will start the corresponding version Sqpe inside an
+emacs buffer in iESS[S] mode.  If you have versions of 64-bit S-Plus in
 locations other than these default values, redefine this variable with
 a `custom-set-variables' statement in your site-start.el or .emacs
 file.  The list of functions actually created appears in the *ESS*
@@ -936,7 +984,7 @@ different computer."
 
 (if ess-microsoft-p
     (defcustom inferior-S+6-program-name
-      (concat ess-program-files "/TIBCO/splus81/cmd/Splus.exe")
+      (concat ess-program-files "/TIBCO/splus82/cmd/Splus.exe")
       "Program name to invoke an external GUI S+6 for Windows.
 The default value is correct for a default installation of
 S-Plus 8.1 and with bash as the shell.
@@ -975,13 +1023,13 @@ in S+6 for Windows Commands window and in Sqpe+6 for Windows buffer."
   :type 'string)
 
 (defcustom inferior-Sqpe+6-program-name
-  (concat ess-program-files "/TIBCO/splus81/cmd/Sqpe.exe")
+  (concat ess-program-files "/TIBCO/splus82/cmd/Sqpe.exe")
   "Program name for invoking an inferior ESS with Sqpe+6() for Windows."
   :group 'ess-S
   :type 'string)
 
 (defcustom inferior-Sqpe+6-SHOME-name
-  (if ess-microsoft-p (concat ess-program-files "/TIBCO/splus81" ""))
+  (if ess-microsoft-p (concat ess-program-files "/TIBCO/splus82" ""))
   "SHOME name for invoking an inferior ESS with Sqpe+6() for Windows.
 The default value is correct for a default installation of
 S-Plus 8.1.  For any other version or location,
@@ -1061,7 +1109,7 @@ order for it to work right.  And Emacs is too smart for it."
 ;;; ess-editor and ess-pager,
 ;;; and inferior-ess-language-start
 ;;; apply in principle to the 15 files essd[s-]*.el
-;;; Several of the files (essd-sp4.el and essd-sp6w.el) have more
+;;; Several of the files (ess-sp4-d.el and ess-sp6w-d.el) have more
 ;;; than one *-customize-alist.
 ;;; These variables are currently used only with the S language files for
 ;;; S S-Plus R.
@@ -1172,6 +1220,10 @@ corresponding program.")
 (setq-default inferior-ess-program inferior-S-program-name)
 
 
+(defvar inferior-R-version "R (newest)"
+  "A (short) name of the current R version.  A global variable for
+ESS internal communication.")
+
 (defvar inferior-ess-start-args ""
   "String of arguments passed to the ESS process.
 If you wish to pass arguments to a process, see e.g. `inferior-R-args'.")
@@ -1259,6 +1311,10 @@ of Emacs until the code has been successfully evaluated."
   :group 'ess-proc
   :type '(choice (const nil) number))
 
+(defcustom ess-sleep-for-shell (if ess-microsoft-p 5 1)
+  "*Pause before sending output to the shell."
+  :group 'ess-proc
+  :type  'number)
 
  ; System variables
 
@@ -1430,6 +1486,12 @@ session.")
 
 (make-variable-buffer-local 'ess-object-list)
 
+(defvar ess-help-topics-list nil
+  ;; List of currently known help topics.
+  "Cache of help topics")
+
+(make-variable-buffer-local 'ess-help-topics-list)
+
 ;;*;; Miscellaneous system variables
 
 (defvar ess-temp-point nil
@@ -1481,7 +1543,7 @@ dialects' alists.  Increase this, if you have a fast(er) machine."
   :type 'integer)
 
 ;; NOTA BENE: Other languages/dialect currently set `ess-loop-timeout'
-;;            **directly** in their essd-*.el alist !!
+;;            **directly** in their ess-*-d.el alist !!
 
 ;;;*;;; Font-lock support
 
@@ -1754,7 +1816,7 @@ Defaults to `ess-S-non-functions'."
  ; ess-mode: editing S source
 
 ;;; This syntax table is required by ess-mode.el, ess-inf.el and
-;;; ess-trans.el, so we provide it here.
+;;; ess-trns.el, so we provide it here.
 (defvar ess-mode-syntax-table nil "Syntax table for `ess-mode'.")
 (make-variable-buffer-local 'ess-mode-syntax-table)
 

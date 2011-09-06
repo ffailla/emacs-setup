@@ -1,3 +1,364 @@
+2011-07-28  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-switch-to-suffix): complete
+	support for thinning:  ESS[BUGS] appears to be ready
+	for release
+
+2011-07-27  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-s-l.el (ess-insert-S-assign): factored out from
+	ess-smart-underscore; now also assigned to A-- for *-MM-keys.
+
+
+2011-07-22  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-na-bmd): workaround the
+	OpenBUGS nohup bug with "at"; this time without
+	creating additional files, i.e. piping to "at"
+
+2011-07-20  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-sas-cd): attempt to workaround Emacs bug; shell
+	buffer snarfing the cd command.
+
+	* ess-bugs-d.el (ess-bugs-na-bmd): ditto
+
+2011-07-08  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-font-lock-keywords): adding
+	keywords that are members of both the OpenBUGS script
+	language and BRUGS (why the 2 sets are not the
+	same; I don't know)
+
+2011-07-05  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-na-bmd): workaround the
+	OpenBUGS nohup bug with "at"
+
+2011-06-24  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-jags-d.el (ess-jags-na-jmd): we now support bash
+
+2011-06-23  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-l.el (ess-bugs-next-action): separation of
+	ESS[BUGS] and ESS[JAGS] is now functional.  ESS[JAGS]
+	is pretty complete, but ESS[BUGS] is still in development,
+	however, it does appear to work.
+
+2011-06-22  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-font-lock-keywords): updating to
+	new OpenBUGS scripting language (incomplete so far, but
+	serviceable)
+
+2011-06-21  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-rtf-replace-chars): fixing form feed bug
+
+	* ess-bugs-d.el/ess-custom.el/ess-compat.el:
+	fix a bunch of bugs and get ESS[BUGS] working for GNU Emacs
+	utilize (ess-sleep) after (shell) which, apparently, is
+	necessary for GNU Emacs; rename ess-sleep-for to
+	ess-sleep-for-shell and move to ess-custom
+
+2011-06-20  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-get-function-args): Enhancement to handle
+	in-definition comments per Tengfei Yin's request
+
+2011-06-14  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-utils.el (ess-revert-wisely): stores
+	and restores the point after revert
+
+2011-06-07  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-log-mode): change
+	mode-name to ESS[LOG] so that tabbar-mode
+	knows to list the .log's separately from
+	the .sas buffers
+
+2011-05-31  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (sas-fix-life-tables): re-implemented
+	with re-search-forward/replace-match
+	(fix-page-breaks): re-implemented
+	with re-search-forward/replace-match; unfortunately,
+	not really sure what this function is meant to do;
+	probably not very useful to anyone at this point, but
+	it does compile without any warnings!
+
+2011-05-27  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el: re-implemented rudimentary RTF support since
+	GNU Emacs does not work with rtf-support.el (sadly, XEmacs
+	has had this for over a decade); does NOT support font re-sizing;
+	you are stuck with a point size of 8.  Enjoy!
+
+2011-05-26  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-inf.el (ess-eval-paragraph-and-step): Apply Erik Iverson's
+	patch from Feb 2011, so that after evaluating the paragraph, it
+	skips any blank lines and comments, just like
+	ess-eval-line-and-step.
+	(ess-eval-function-or-paragraph-and-step): As above.
+
+2011-05-08  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-inf.el (ess-show-buffer): Fixed minor typo in doc string.
+
+2011-05-05  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el: several changes necessary to
+	support GNU Emacs for ESS[SAS] batch
+
+2011-04-06  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): most
+	common SAS/Graph statements now added
+
+2011-04-01  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): adding
+	a few common SAS/Graph statements, but much more is
+	left to be done
+
+2011-03-25  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (sas-fix-life-tables): I assume that sed
+	command worked for someone at some point, but it was not
+	working for me; and it was overly complicated, so I
+	simplified; hopefully it works now; please test.
+
+2011-03-02  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-rutils.el: Standardized function names for consistency.
+	Thanks to Cesar Rabak (ESS-help).
+
+2011-02-28  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-site.el, ess-bugs-l.el, ess-bugs-d.el, ess-jags-d.el:
+	Batch BUGS is back!  With OpenBUGS, a batch BUGS script is
+	available for Linux.  Therefore, since it seems that BUGS
+	and JAGS must co-exist (rather than a transition from BUGS
+	to JAGS), .bug files are in ESS[BUGS] mode and .jug files
+	are in ESS[JAGS] mode.  ESS[BUGS] now works like ESS[JAGS]
+	rather than the orignal mode ESS[BUGS] mode which was
+	difficult to maintain.  However, ESS[BUGS] needs a lot of
+	work such as support for thinning, multiple data files,
+	etc.
+
+2011-02-14  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-swv.el (ess-swv-add-TeX-commands): Use "%t" instead of "%s"
+	when Sweave'ing via AUCTeX.
+
+2011-02-13  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-custom.el (ess-swv-plug-into-AUCTeX-p): New customizable
+	variable, which defaults to nil, to determine whether AUCTeX
+	interface is enabled or not.
+
+	* ess-swv.el: New functions to allow working with Sweave via
+	AUCTeX.
+
+2011-02-02  Richard M. Heiberger  <rmh@temple.edu>
+
+	* ess-custom.el (ess-program-files, ess-program-files-64)
+	(ess-SHOME-versions, ess-SHOME-versions-64)
+	(inferior-S+6-program-name, inferior-Sqpe+6-program-name)
+	(inferior-Sqpe+6-SHOME-name): Pathnames for all 32-bit and 64-bit
+	versions of Sqpe.  Add the most recent "/TIBCO/splus82" and make
+	it the default.
+	* ess-sp6w-d.el (ess-sqpe-versions-create): Give the function an
+	argument of pathnames and an indicator whether they are 32-bit or
+	64bit pathnames.
+	* ess-site.el (ess-s-versions-created): Use the revised functions
+	and variables to find all 32-bit and 64-bit versions of Sqpe.
+
+2011-02-01  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-r-d.el (R): change use-dialog-box (to nil) only on windows.
+
+	* ess-inf.el (ess-get-directory): now use new inferior-R-version
+	which is set in the created R-X.Y version functions.
+
+2011-01-31  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-site.el (ess-rterm-version-paths): now use *long* filenames
+	* ess-r-d.el (ess-r-versions-create): ditto; now produce "proper"
+	version names.
+	* ess-r-d.el (ess-rterm-arch-version): extend to return cons; and
+	use "-32bit" / "-64bit" in the bi-arch cases.
+
+
+2011-01-19  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-rd.el (Rd-preview-help): Quote filename to prevent spaces in
+	filenames causing problems running the shell-command.
+	Fix up so that navigation shortcuts present in normal R Help buffers
+	work in the output buffer.
+	Add a short docstring and tidy code.
+
+2011-01-12  Richard M. Heiberger  <rmh@temple.edu>
+
+	* ess-site.el (ess-rterm-version-paths): extend to find all 32-bit
+	and 64-bit versions of R using both the newer R-2.12.x naming
+	convention using the architecture-specific i386 and x64
+	subdirectories and the older R-2.11.x naming convention.
+	* ess-r-d.el (ess-rterm-arch-version): Isolate this function from within
+	ess-r-versions-create to construct an architecture-specific name
+	for VERSION, an absolute path to R on Windows.
+	* ess-r-d.el (ess-r-versions-create): Remove
+	ess-rterm-arch-version into its own function.
+
+
+2010-12-13  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-inf.el (ess-request-a-process): Set default to ess-dialect
+	rather than ess-language.  Patch from Vitalie S.
+
+2010-11-27  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-inf.el (ess-eval-buffer-from-beg-to-here, *-from-here-to-end):
+	new functions thanks to Roland Rau, with
+	* ess-mode.el (ess-mode-map, ess-mode-menu): key bindings C-c [up]
+	/ [down] and corresponding menu entries.
+
+2010-11-25  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-preview): Fixed introduced bug that broke
+	preview for functions with empty lines.
+
+2010-11-24  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-get-function-args): fix bug that stopped
+	ess-roxy from updating setMethod definitions.
+
+2010-11-23  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-preview): enable preview for all types of
+	entries (not only for functions)
+	(ess-roxy-toggle-roxy-region): make toggle region operate on the
+	visible region instead of the actual start and the
+	beginning of the region (behave more like comment-region)
+
+	* ess-mode.el (ess-mode-menu): link to new ess-roxy-preview-HTML
+	function in the roxygen menu
+
+	* ess-roxy.el (ess-roxy-preview-HTML): New function that
+	generates (and opens) a HTML version of a roxygen entry. Request
+	from Kevin Wright.
+
+2010-11-02  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-help.el: Do not use (mapcar 'list ...) construct in
+	`ess-get-help-files-list', and `ess-get-help-aliases-list', since
+	we only need to create lists of lists in `ess-find-help-file',
+	where it's needed for useful completion.
+	Always return the existing `ess-help-topics-list' list if one
+	exists for the current process.
+
+2010-11-01  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-help.el (ess-find-help-file): Implemented caching of help
+	topics (thanks to Vitalie Spinu).
+
+	* ess-custom.el (ess-help-topics-list): New buffer-local variable
+	needed for caching help topics.
+
+2010-10-30  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-rd.el (Rd-section-names, Rd-keywords): "subsection" etc
+
+2010-10-28  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-custom.el (ess-roxy-tags-param): Vinh Nguyens patch for
+	updating the available roxygen tags
+
+2010-10-21  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-site.el (interpreter-mode-alist): Condition upon XEmacs to
+	prevent "r" regexp from matching interpreters like "perl".  Bug
+	reported by Alex Lancaster.
+
+2010-10-14  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): bringing the
+	PROCs up to v. 9.22
+
+2010-09-30  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): many ERROR
+	and WARNING messages end in period, period single space or
+	period double space (the double space coming from ancient
+	typewriter trained typists like myself)
+
+2010-09-21  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-mode.el (ess-electric-brace): fix curly braces
+	bug for XEmacs as reported by Joshua Wiley
+
+2010-09-20  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-update-entry): optionally do not fill
+	parameter descriptions upon ess-roxy-update-entry.
+
+2010-08-21  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-inf.el (ess-load-file): Check that tramp-tramp-file-p is
+	defined before using.
+
+2010-08-20  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-rdired.el (ess-rdired-objects): R variable names can include
+	spaces; handle this case.  Bug report by Sigve Berge Hofland
+	<sigve@hofland.no> 2010-08-14.
+
+	* ess-inf.el (ess-load-file): If filename is a tramp-filename,
+	preserve just the localname of the file.  Bug report and patch
+	provided by Erik Iverson <eriki@ccbr.umn.edu> 2010-08-13.
+
+2010-08-11  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-trns.el (ess-transcript-clean-region): give error (instead of
+	"hang") when inferior-ess-prompt is empty.
+
+2010-08-11  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-custom.el: advice user that no empty lines are allowed in
+	description
+
+	* ess-roxy.el (ess-roxy-update-entry): improved documentation
+
+2010-08-10  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-custom.el (ess-roxy-template-alist): less cryptic default
+	for description and details fields
+
+2010-08-06  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-get-function-args): fixed bug: function
+	args could not be fetched if 'function' was part of the function
+	name
+
+2010-07-29  Sebastian P. Luque  <spluque@gmail.com>
+
+	* Makefile (clean): 4394 Reverted this rule to the previous
+	version since it was intended to also clean files with older
+	names.  Removed 'ess-rdired.elc' from this rule, since it is
+	already in the ELC variable, and "clean" removes those files.
+	However, kept the fixed 'ess-xls-d.elc' and 'ess-vst-d.elc' rules.
+
+2010-07-28  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-inf.el: 4369 Corrected autoloading of
+	`ess-R-complete-object-name' (due to old renaming below).
+
+	* Makefile: 4350 Corrected the "clean" target to account for
+	old renaming of essd-* files.
+
 2010-07-12  Martin Maechler  <maechler@stat.math.ethz.ch>
 
 	* ess-s-l.el (ess-use-this-dir): renamed and moved here: For S and R.

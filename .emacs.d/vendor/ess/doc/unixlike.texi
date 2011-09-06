@@ -13,14 +13,17 @@ and ESS, the installation process is simple.
 
 @enumerate
 @item
-Extract all the files from @file{ess-VERSION.tgz} when you are in
-the current working directory of @file{/usr/local/share/emacs/site-lisp}
-which exists for packages like @ESS{}
-(and for Mac OS X create a link to it from the directory
-@file{/Applications/Emacs.app/Contents/Resources/site-lisp}):
+Extract all the files from @file{ess-VERSION.tgz} into
+the directory @file{PREFIX/site-lisp}
+where @file{PREFIX} is appropriate for GNU Emacs on your system;
+@file{PREFIX} will most likely be either 
+@file{/usr/share/emacs} or @file{/usr/local/share/emacs}
+@comment which exists for packages like @ESS{}
+(on Mac OS X, @file{PREFIX} will most likely be something like
+@file{/Applications/Emacs.app/Contents/Resources}):
 @example
-%prompt gtar zxf ess-VERSION.tgz            # for GNU tar
-%prompt gunzip < ess-VERSION.tgz | tar xf - # for Unix tar
+GNU tar  % gtar zxf ess-VERSION.tgz -C PREFIX/site-lisp             
+Unix tar % gunzip < ess-VERSION.tgz | tar xf - -C PREFIX/site-lisp 
 @end example
 
 @item
@@ -52,7 +55,7 @@ in @file{~/.emacs} and restart Emacs.
 @item 
 If you see a buffer named @file{*ESS*}, then the manual instructions
 were most likely successful.  If not, then send a query to 
-@email{ess-help@@stat.math.ethz.ch}
+@email{ess-help@@r-project.org}
 explicitly describing your problem and your environment
 including operating system, Emacs version, @ESS{} version, etc.
 @end enumerate
@@ -102,7 +105,7 @@ in @file{~/.xemacs/init.el} and restart XEmacs.
 @item 
 If you see a buffer named @file{*ESS*}, then the manual instructions
 were most likely successful.  If not, then send a query to 
-@email{ess-help@@stat.math.ethz.ch}
+@email{ess-help@@r-project.org}
 explicitly describing your problem and your environment
 including operating system, XEmacs version, @ESS{} version, etc.
 @end enumerate

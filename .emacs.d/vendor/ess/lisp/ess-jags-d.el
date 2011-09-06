@@ -1,10 +1,10 @@
 ;;; ess-jags-d.el -- ESS[JAGS] dialect
 
-;; Copyright (C) 2008-2009 Rodney Sparapani
+;; Copyright (C) 2008-2011 Rodney Sparapani
 
 ;; Original Author: Rodney Sparapani
 ;; Created: 13 March 2008
-;; Maintainers: ESS-help <ess-help@stat.math.ethz.ch>
+;; Maintainers: ESS-help <ess-help@r-project.org>
 
 ;; This file is part of ESS
 
@@ -33,10 +33,7 @@
 (require 'ess-inf)
 
 (setq auto-mode-alist
-    (delete '("\\.[bB][uU][gG]\\'" . ess-bugs-mode) auto-mode-alist))
-
-(setq auto-mode-alist
-    (append '(("\\.[bB][uU][gG]\\'" . ess-jags-mode)) auto-mode-alist))
+    (append '(("\\.[jJ][aA][gG]\\'" . ess-jags-mode)) auto-mode-alist))
 
 (defvar ess-jags-command "jags" "Default JAGS program in PATH.")
 (make-local-variable 'ess-jags-command)
@@ -60,7 +57,7 @@
 
 (defvar ess-jags-font-lock-keywords
     (list
-	;; .bug files
+	;; .jag files
 	(cons "#.*\n"			font-lock-comment-face)
 
 	(cons "^[ \t]*\\(model\\|var\\)\\>"
@@ -101,7 +98,7 @@
    (find-file (concat ess-bugs-file-dir ess-bugs-file-root suffix))
 
    (if (equal 0 (buffer-size)) (progn
-	(if (equal ".bug" suffix) (progn
+	(if (equal ".jag" suffix) (progn
 	    (insert "var ;\n")
 	    (insert "model {\n")
             (insert "    for (i in 1:N) {\n    \n")
@@ -145,8 +142,8 @@
 				(car ess-jags-monitor) ", thin(" (format "%d" ess-jags-thin) ")\n")))
 		    (setq ess-jags-monitor (cdr ess-jags-monitor)))
 
-	    (insert "model in \"" ess-bugs-file-root ".bug\"\n")
-	    (insert "data in \"" ess-bugs-file-root ".txt\"\n")
+	    (insert "model in \"" ess-bugs-file-root ".jag\"\n")
+	    (insert "data in \"" ess-bugs-file-root ".jdt\"\n")
 	    (insert (ess-replace-in-string ess-jags-temp-chains "##" "in"))
 	    (insert "initialize\n")
 	    (insert "update " (format "%d" (* jags-thin jags-burnin)) "\n")
@@ -183,24 +180,13 @@
     ))
 )
 
-(defun ess-bugs-next-action ()
-   "ESS[JAGS]: Perform the appropriate next action."
-   (interactive)
-   (ess-bugs-file)
-
-   (if (equal ".bug" ess-bugs-file-suffix) (ess-jags-na-bug)
-   ;;else
-   (if (equal ".jmd" ess-bugs-file-suffix) (progn
-	(ess-save-and-set-local-variables)
-	(ess-jags-na-jmd ess-jags-command ess-jags-chains))))
-)
-
 (defun ess-jags-na-jmd (jags-command jags-chains)
     "ESS[JAGS]: Perform the Next-Action for .jmd."
     ;(ess-save-and-set-local-variables)
 (if (equal 0 (buffer-size)) (ess-jags-switch-to-suffix ".jmd")
 ;else
     (shell)
+    (ess-sleep)
 
     (if (w32-shell-dos-semantics)
 	(if (string-equal ":" (substring ess-bugs-file 1 2))
@@ -226,7 +212,8 @@
 
 		(if (or (equal shell-file-name "/bin/csh")
 			(equal shell-file-name "/bin/tcsh")
-			(equal shell-file-name "/bin/zsh"))
+			(equal shell-file-name "/bin/zsh")
+			(equal shell-file-name "/bin/bash"))
 			    (concat ">& " ess-bugs-file-root ".jog ")
 		;else
 			    "> " ess-bugs-file-root ".jog 2>&1 ")
@@ -241,12 +228,12 @@
 		ess-bugs-batch-post-command)
 
 	(comint-send-input)
-));)
+))
 
 (defun ess-jags-na-bug ()
-    "ESS[JAGS]: Perform Next-Action for .bug"
+    "ESS[JAGS]: Perform Next-Action for .jag"
 
-	(if (equal 0 (buffer-size)) (ess-jags-switch-to-suffix ".bug")
+	(if (equal 0 (buffer-size)) (ess-jags-switch-to-suffix ".jag")
 	;else
 	    (ess-save-and-set-local-variables)
 	    (ess-jags-switch-to-suffix ".jmd"
