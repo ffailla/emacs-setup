@@ -1,0 +1,58 @@
+(defun color-theme-calm-forest-rainbow ()
+  (interactive)
+  (color-theme-calm-forest)
+  (let ((color-theme-is-cumulative t))
+    (color-theme-install
+     '(color-theme-calm-forest
+       nil
+       nil
+
+       ;; (org-level-1 ((t (:foreground "royal blue"))))
+       ;; (org-level-2 ((t (:foreground "dark red"))))
+       ;; (org-level-3 ((t (:foreground "slate blue"))))
+       ;; (org-level-4 ((t (:foreground "dark orange"))))
+       ;; (org-level-5 ((t (:foreground "purple"))))
+       ;; (org-level-6 ((t (:foreground "chocolate"))))
+       ;; (org-level-7 ((t (:foreground "dark green"))))
+       ;; (org-level-8 ((t (:foreground "red"))))
+
+       ;; (erc-action ((t (:inherit erc-default))))
+       ;; (erc-bold ((t (:weight bold))))
+       ;; (erc-current-nick ((t (:inherit zenburn-primary-1))))
+       ;; (erc-dangerous-host ((t (:inherit font-lock-warning))))
+       ;; (erc-default ((t (:foreground ,zenburn-fg))))
+       ;; (erc-direct-msg ((t (:inherit erc-default))))
+       ;; (erc-error ((t (:inherit font-lock-warning))))
+       ;; (erc-fool ((t (:inherit zenburn-lowlight-1))))
+       ;; (erc-highlight ((t (:inherit hover-highlight))))
+       ;; (erc-input ((t (:foreground ,zenburn-yellow))))
+       ;; (erc-keyword ((t (:inherit zenburn-primary-1))))
+       ;; (erc-nick-default ((t (:inherit bold))))
+       ;; (erc-nick-msg ((t (:inherit erc-default))))
+       ;; (erc-notice ((t (:inherit zenburn-green))))
+       ;; (erc-pal ((t (:inherit zenburn-primary-3))))
+       ;; (erc-prompt ((t (:inherit zenburn-primary-2))))
+       ;; (erc-timestamp ((t (:inherit zenburn-green+1))))
+       ;; (erc-underline ((t (:inherit underline))))
+
+       ;; (magit-section-title ((t (:inherit zenburn-primary-1))))
+       ;; (magit-branch ((t (:inherit zenburn-primary-2))))
+
+       (rainbow-delimiters-depth-1-face ((t (:bold t :foreground "burlywood"))))
+       (rainbow-delimiters-depth-2-face ((t (:bold t :foreground "LightGray"))))
+       (rainbow-delimiters-depth-3-face ((t (:bold t :foreground "tomato"))))
+       (rainbow-delimiters-depth-4-face ((t (:bold t :foreground "LightSteelBlue"))))
+       (rainbow-delimiters-depth-5-face ((t (:bold t :foreground "chocolate1"))))
+       (rainbow-delimiters-depth-6-face ((t (:bold t :foreground "Aquamarine"))))
+       (rainbow-delimiters-depth-7-face ((t (:bold t :foreground "LightSalmon"))))
+       (rainbow-delimiters-depth-8-face ((t (:bold t :foreground "LightSkyBlue"))))
+       (rainbow-delimiters-depth-9-face ((t (:bold t :foreground "Cyan"))))
+       (rainbow-delimiters-depth-10-face ((t (:bold t :foreground "LightSalmon"))))
+       (rainbow-delimiters-depth-11-face ((t (:bold t :foreground "PaleGreen"))))
+       (rainbow-delimiters-depth-12-face ((t (:bold t :foreground "LightGoldenrod"))))
+       (rainbow-delimiters-depth-13-face ((t (:bold t :foreground "Pink"))))
+       (rainbow-delimiters-depth-14-face ((t (:bold t :foreground "OliveDrab"))))
+
+       (rainbow-delimiters-unmatched-delimiter-face ((t (:bold t :foreground "gray10"))))))))
+
+(provide 'calm-forest-rainbow)
