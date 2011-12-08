@@ -111,6 +111,7 @@
   :group 'magit
   :type 'string)
 
+;;"--no-ext-diff"
 (defcustom magit-git-standard-options '("--no-pager")
   "Standard options when running Git."
   :group 'magit
@@ -865,7 +866,7 @@ Does not follow symlinks."
 
 (defun magit-git-exit-code (&rest args)
   (apply #'process-file magit-git-executable nil nil nil
-	 (append magit-git-standard-options args)))
+	 (append magit-git-standard-options  args)))
 
 (defun magit-file-lines (file)
   (when (file-exists-p file)

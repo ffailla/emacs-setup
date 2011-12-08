@@ -1,4 +1,4 @@
 #!/bin/sh
 echo $WINDOW >~/.emacsclient-caller
-screen -r -X select 1
+#screen -r -X select 1
 emacsclient -n "$@"

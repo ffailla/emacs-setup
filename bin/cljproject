@@ -5,4 +5,4 @@ mvn archetype:create \
      -DartifactId=$2 \
      -DarchetypeGroupId=com.frankfailla \
      -DarchetypeArtifactId=clojure-archetype \
-     -DarchetypeVersion=1.0-SNAPSHOT
+     -DarchetypeVersion=1.1-SNAPSHOT

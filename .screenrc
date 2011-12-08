@@ -19,13 +19,25 @@ shell -$SHELL
 # Use C-z instead of C-a as this makes more sense for Emacs
 escape ^za
 
+#
+## do not trash BackSpace, usually 
+bindkey -k kb
+bindkey -d -k kb
+
+#
+## do not trash Delete, usually ESC [ 3 ~
+bindkey -k kD
+bindkey -d -k kD
+
 # Detach on hangup
 autodetach on
+
+# color support
+term screen-256color
 
 # ------------------------------------------------------------------------------
 # STARTUP SCREENS
 # ------------------------------------------------------------------------------
-
 #screen -t Shell 0 bash
 #screen -t Emacs em
 #select 0

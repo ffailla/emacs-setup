@@ -13,6 +13,7 @@
   (switch-to-buffer "*PostScript*")
   (write-file "/tmp/tmp.ps")
   (kill-buffer "tmp.ps")
+  (message (pwd))
   (setq cmd (concat "ps2pdf14 /tmp/tmp.ps " (buffer-name) ".pdf"))
   (shell-command cmd)
   (shell-command "rm /tmp/tmp.ps")
@@ -61,15 +62,12 @@ Symbols matching the text at point are put first in the completion list."
                              (cond
                               ((and (listp symbol) (imenu--subalist-p symbol))
                                (addsymbols symbol))
-
                               ((listp symbol)
                                (setq name (car symbol))
                                (setq position (cdr symbol)))
-
                               ((stringp symbol)
                                (setq name symbol)
                                (setq position (get-text-property 1 'org-imenu-marker symbol))))
-
                              (unless (or (null position) (null name))
                                (add-to-list 'symbol-names name)
                                (add-to-list 'name-and-pos (cons name position))))))))
@@ -96,32 +94,32 @@ Symbols matching the text at point are put first in the completion list."
     (when file
       (find-file file))))
 
-
-(defvar ido-enable-replace-completing-read t
-  "If t, use ido-completing-read instead of completing-read if possible.
+;; (defvar ido-enable-replace-completing-read t
+;;   "If t, use ido-completing-read instead of completing-read if possible.
     
-    Set it to nil using let in around-advice for functions where the
-    original completing-read is required.  For example, if a function
-    foo absolutely must use the original completing-read, define some
-    advice like this:
+;;     Set it to nil using let in around-advice for functions where the
+;;     original completing-read is required.  For example, if a function
+;;     foo absolutely must use the original completing-read, define some
+;;     advice like this:
     
-    (defadvice foo (around original-completing-read-only activate)
-      (let (ido-enable-replace-completing-read) ad-do-it))")
+;;     (defadvice foo (around original-completing-read-only activate)
+;;       (let (ido-enable-replace-completing-read) ad-do-it))")
 
-;; Replace completing-read wherever possible, unless directed otherwise
-(defadvice completing-read
-  (around use-ido-when-possible activate)
-  (if (or (not ido-enable-replace-completing-read) ; Manual override disable ido
-	  (and (boundp 'ido-cur-list)
-	       ido-cur-list)) ; Avoid infinite loop from ido calling this
-      ad-do-it
-    (let ((allcomp (all-completions "" collection predicate)))
-      (if allcomp
-	  (setq ad-return-value
-		(ido-completing-read prompt
-				     allcomp
-				     nil require-match initial-input hist def))
-	ad-do-it))))                             
+;; ;; Replace completing-read wherever possible, unless directed otherwise
+;; (defadvice completing-read
+;;   (around use-ido-when-possible activate)
+;;   (if (or (not ido-enable-replace-completing-read) ; Manual override disable ido
+;; 	  (and (boundp 'ido-cur-list)
+;; 	       ido-cur-list)) ; Avoid infinite loop from ido calling this
+;;       ad-do-it
+;;     (let ((allcomp (all-completions "" collection predicate)))
+;;       (if allcomp
+;; 	  (setq ad-return-value
+;; 		(ido-completing-read prompt
+;; 				     allcomp
+;; 				     nil require-match initial-input hist def))
+;; 	ad-do-it))))
+
 
 (when (> emacs-major-version 21)
   (ido-mode t)

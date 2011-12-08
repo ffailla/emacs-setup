@@ -38,4 +38,9 @@
 ;; magit
 (defalias 'ms 'magit-status)
 
+;; zoom in/out
+(global-set-key [(control shift ?z)] 'text-scale-increase)
+(global-set-key [(control ?z)]       'text-scale-decrease)
+
+
 (provide 'ffailla-bindings)

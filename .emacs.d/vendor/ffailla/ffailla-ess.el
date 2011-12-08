@@ -2,7 +2,7 @@
 ;;; ess
 ;;;  * http://ess.r-project.org/
 ;;;
-;;(load "~/.emacs.d/vendor/ess/lisp/ess-site")
+(load "~/.emacs.d/vendor/ess/lisp/ess-site")
 (setq ess-r-versions nil)
 
 (autoload 'ess-mode "ess-site" "Emacs Speaks Statistics" t)

@@ -8,6 +8,11 @@
 ;;   (set-frame-size (selected-frame) 1000 1000))
 ;; (maximize-frame)
 
+
+;; 
+;; maxframe
+;;  * https://github.com/rmm5t/maxframe.el.git
+;;
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
 
@@ -29,12 +34,27 @@
 
 (eval-after-load 'color-theme
   '(progn
-     ;;(color-theme-initialize)
+     (color-theme-initialize)
      
      ;; https://github.com/bbatsov/zenburn-emacs
-     (require 'color-theme-zenburn)
-     (color-theme-zenburn)
+     ;;(require 'color-theme-zenburn)
+     ;;(color-theme-zenburn)
 
+     ;; (eval-after-load 'term
+     ;;   '(setq ansi-term-color-vector
+     ;; 	      (vector 'unspecified 
+     ;; 		      zenburn-bg
+     ;; 		      zenburn-red 
+     ;; 		      zenburn-green
+     ;; 		      zenburn-bg ;zenburn-yellow 
+     ;; 		      zenburn-blue+1
+     ;; 		      zenburn-magenta 
+     ;; 		      zenburn-cyan
+     ;; 		      ;; dirty fix
+     ;; 		      "white")))
+
+     (require 'calm-forest-rainbow)
+     (color-theme-calm-forest-rainbow)
      ;;(require 'zenburn-rainbow)
      ;;(color-theme-zenburn-rainbow)
      

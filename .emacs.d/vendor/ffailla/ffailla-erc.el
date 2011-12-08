@@ -1,7 +1,7 @@
 ;;
 ;; erc settings
 ;;
-;; (load "~/.ercpass" t)
+(load "~/.ercpass" t)
 (require 'erc-services)
 (erc-services-mode 1)
 ;; (setq erc-prompt-for-nickserv-password nil)

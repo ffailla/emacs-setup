@@ -18,7 +18,7 @@
 (add-subfolders-to-load-path ext-dir)
 
 (setenv "PATH" (concat "~/bin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/sbin:" (getenv "PATH")))
-(setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin" ) exec-path))
+(setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin") exec-path))
 
 ;;;
 ;;; use bash shell on windows
@@ -50,6 +50,8 @@
                          ("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize)
 
+(require 'flymake)
+
 ;;;
 ;;; ffailla requires
 ;;;
@@ -76,7 +78,7 @@
 
 ;;;
 ;;; start emacs server
-;;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor for git
+;;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor 
 ;;;
 (if (not (and (boundp 'server-process)
               (memq (process-status server-process) '(connect listen open run))))
