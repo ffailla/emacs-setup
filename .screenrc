@@ -35,6 +35,10 @@ autodetach on
 # color support
 term screen-256color
 
+# copy-paste support
+bind ( eval "writebuf" "exec sh -c 'pbcopy < /tmp/screen-exchange'" 
+bind ) eval "exec sh -c 'pbpaste > /tmp/screen-exchange'" "readbuf"
+
 # ------------------------------------------------------------------------------
 # STARTUP SCREENS
 # ------------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 ;;; clojure-test-mode.el --- Minor mode for Clojure tests
 
-;; Copyright (C) 2009-2011 Phil Hagelberg
+;; Copyright © 2009-2011 Phil Hagelberg
 
 ;; Author: Phil Hagelberg <technomancy@gmail.com>
 ;; URL: http://emacswiki.org/cgi-bin/wiki/ClojureTestMode
-;; Version: 1.5.6
+;; Version: 1.6.0
 ;; Keywords: languages, lisp, test
 ;; Package-Requires: ((slime "20091016") (clojure-mode "1.7"))
 
@@ -101,6 +101,11 @@
 ;; 1.5.6 2011-06-15
 ;;  * Remove heinous clojure.test/report monkeypatch.
 
+;; 1.6.0 2011-11-06
+;;  * Compatibility with Clojure 1.3.
+;;  * Support narrowing.
+;;  * Fix a bug in clojure-test-mode-test-one-in-ns.
+
 ;;; TODO:
 
 ;; * Prefix arg to jump-to-impl should open in other window
@@ -189,7 +194,7 @@
                                                    ((file-position 3) 1)
                                                    (:line event)))])))
      (binding [*test-out* *out*]
-       ((.getRoot #'clojure.test/report) event)))
+       ((.getRawRoot #'clojure.test/report) event)))
 
    (defn clojure-test-mode-test-one-var [test-ns test-name]
      (let [v (ns-resolve test-ns test-name)
@@ -269,29 +274,29 @@
   "Go to the next position with an overlay message.
 Retuns the problem overlay if such a position is found, otherwise nil."
   (let ((current-overlays (overlays-at here))
-	(next-overlays (next-overlay-change here)))
+        (next-overlays (next-overlay-change here)))
     (while (and (not (equal next-overlays (point-max)))
-		(or
-		 (not (overlays-at next-overlays))
-		 (equal (overlays-at next-overlays)
-			current-overlays)))
+                (or
+                 (not (overlays-at next-overlays))
+                 (equal (overlays-at next-overlays)
+                        current-overlays)))
       (setq next-overlays (next-overlay-change next-overlays)))
     (if (not (equal next-overlays (point-max)))
-	(overlay-start (car (overlays-at next-overlays))))))
+        (overlay-start (car (overlays-at next-overlays))))))
 
 (defun clojure-test-find-previous-problem (here)
   "Go to the next position with the `clojure-test-problem' text property.
 Retuns the problem overlay if such a position is found, otherwise nil."
   (let ((current-overlays (overlays-at here))
-	(previous-overlays (previous-overlay-change here)))
+        (previous-overlays (previous-overlay-change here)))
     (while (and (not (equal previous-overlays (point-min)))
-		(or
-		 (not (overlays-at previous-overlays))
-		 (equal (overlays-at previous-overlays)
-			current-overlays)))
+                (or
+                 (not (overlays-at previous-overlays))
+                 (equal (overlays-at previous-overlays)
+                        current-overlays)))
       (setq previous-overlays (previous-overlay-change previous-overlays)))
     (if (not (equal previous-overlays (point-min)))
-	(overlay-start (car (overlays-at previous-overlays))))))
+        (overlay-start (car (overlays-at previous-overlays))))))
 
 ;; File navigation
 
@@ -334,7 +339,7 @@ Retuns the problem overlay if such a position is found, otherwise nil."
   (clojure-test-clear
    (lambda (&rest args)
      (let* ((f (which-function))
-	    (test-name (if (listp f) (first f) f)))
+            (test-name (if (listp f) (first f) f)))
        (slime-eval-async
         `(swank:interactive-eval
           ,(format "(binding [clojure.test/report clojure.test.mode/report]
@@ -347,7 +352,7 @@ Retuns the problem overlay if such a position is found, otherwise nil."
         (lambda (result-str)
           (let ((result (read result-str)))
             (if (cdr result)
-		(clojure-test-extract-result result)
+                (clojure-test-extract-result result)
               (message "Not in a test.")))))))))
 
 (defun clojure-test-show-result ()
@@ -376,7 +381,7 @@ Retuns the problem overlay if such a position is found, otherwise nil."
   "Go to and describe the next test problem in the buffer."
   (interactive)
   (let* ((here (point))
-	 (problem (clojure-test-find-next-problem here)))
+         (problem (clojure-test-find-next-problem here)))
     (if problem
         (goto-char problem)
       (goto-char here)
@@ -386,7 +391,7 @@ Retuns the problem overlay if such a position is found, otherwise nil."
   "Go to and describe the previous compiler problem in the buffer."
   (interactive)
   (let* ((here (point))
-	 (problem (clojure-test-find-previous-problem here)))
+         (problem (clojure-test-find-previous-problem here)))
     (if problem
         (goto-char problem)
       (goto-char here)
@@ -425,10 +430,10 @@ Retuns the problem overlay if such a position is found, otherwise nil."
 ;;;###autoload
 (progn
   (defun clojure-test-maybe-enable ()
-    "Enable clojure-test-mode if the current buffer contains a namespace 
+    "Enable clojure-test-mode if the current buffer contains a namespace
 with a \"test.\" bit on it."
     (let ((ns (clojure-find-package))) ; defined in clojure-mode.el
-      (when (search "test." ns)
+      (when (string-match-p "test\\(\\.\\|$\\)" ns)
         (save-window-excursion
           (clojure-test-mode t)))))
   (add-hook 'clojure-mode-hook 'clojure-test-maybe-enable))

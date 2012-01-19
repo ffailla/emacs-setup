@@ -1,5 +1,5 @@
 (if (not (eq system-type 'windows-nt))
-  (set-default-font "-unknown-Inconsolata-normal-normal-normal-*-10-*-*-*-m-0-iso10646-1"))
+  (set-default-font "-unknown-Inconsolata-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
 
 ;; (set-face-attribute 'default (selected-frame) :height 100)
 ;; (defun maximize-frame ()

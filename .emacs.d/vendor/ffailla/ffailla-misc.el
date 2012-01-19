@@ -17,6 +17,8 @@
 (setq default-buffer-file-coding-system 'utf-8)
 (setq default-save-buffer-coding-system 'utf-8)
 
+(setq font-lock-verbose nil) 
+
 (tool-bar-mode -1)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
