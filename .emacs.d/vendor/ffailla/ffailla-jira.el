@@ -29,8 +29,8 @@
 ;;   (require 'jira2)
 ;;   (require 'org-jira))
 
-(setq jira2-url "http://thortech.jira.com")
-(require 'jira2)
-(require 'org-jira)
+;; (setq jira2-url "http://thortech.jira.com")
+;; (require 'jira2)
+;; (require 'org-jira)
 
 (provide 'ffailla-jira)
