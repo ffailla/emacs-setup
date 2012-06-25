@@ -1,2 +1,2 @@
-;; org-persist.el - Franks-MacBook-Pro.local at <2012-01-02 Mon 10:59>
-(setq stored-clock-history '(("/Users/ffailla/org/eas.org" . 77939) ("/Users/ffailla/org/zurveyz.org" . 46047) ("/Users/ffailla/org/eas.org" . 80112) ("/Users/ffailla/org/eas.org" . 79993) ("/Users/ffailla/org/eas.org" . 80195)))
+;; org-persist.el - Franks-MacBook-Pro.local at <2012-06-05 Tue 14:22>
+(setq stored-clock-history '(("/Users/ffailla/org/thortech.org" . 49671) ("/Users/ffailla/org/eas.org" . 121520) ("/Users/ffailla/org/eas.org" . 122281) ("/Users/ffailla/org/eas.org" . 122361)))

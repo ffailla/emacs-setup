@@ -28,8 +28,9 @@
     end tell
     "))
 
-(add-hook 'erc-text-matched-hook
-	  (lambda (match-type nickuserhost message)
-	    (do-applescript apscript)))
+;; FF - problems in iterm via ssh/screen
+;; (add-hook 'erc-text-matched-hook
+;; 	  (lambda (match-type nickuserhost message)
+;; 	    (do-applescript apscript)))
 
 (provide 'ffailla-erc)

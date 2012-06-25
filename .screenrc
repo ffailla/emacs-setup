@@ -6,7 +6,9 @@ defscrollback 10000
 
 # An alternative hardstatus to display a bar at the bottom listing the
 # windownames and highlighting the current windowname in blue.
-hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
+#hardstatus alwayslastline "%{.bW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
+hardstatus alwayslastline "%{.kW}%-w%{.rW}%n %t%{-}%+w %=%{..G} %H %{..Y} %m/%d %C%a "
+#hardstatus alwayslastline "%{rk}%H %{gk}%c %{yk}%M%d %{wk}%?%-Lw%?%{bw}%n*%f %t%?(%u)%?%{wk}%?%+Lw%?"
 #termcapinfo xterm*|Eterm|mlterm "hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007"
 #hardstatus off
 #hardstatus string " screen %n (%t)%? [%h]%?"
@@ -18,6 +20,7 @@ shell -$SHELL
 
 # Use C-z instead of C-a as this makes more sense for Emacs
 escape ^za
+#escape ^[a
 
 #
 ## do not trash BackSpace, usually 
@@ -33,11 +36,19 @@ bindkey -d -k kD
 autodetach on
 
 # color support
-term screen-256color
+#term screen-256color
+term xterm-256color
 
 # copy-paste support
 bind ( eval "writebuf" "exec sh -c 'pbcopy < /tmp/screen-exchange'" 
 bind ) eval "exec sh -c 'pbpaste > /tmp/screen-exchange'" "readbuf"
+
+#setenv varfile "exec sh -c 'pbpaste > /tmp/screen-exchange'"
+#register r "^a:eval \$varfile^M^a:readbuf"
+#bind ) process r
+
+# multiuser support
+multiuser on
 
 # ------------------------------------------------------------------------------
 # STARTUP SCREENS

@@ -120,6 +120,10 @@ Symbols matching the text at point are put first in the completion list."
 ;; 				     nil require-match initial-input hist def))
 ;; 	ad-do-it))))
 
+(defun show-file-name ()
+  "Show the full path file name in the minibuffer."
+  (interactive)
+  (message (buffer-file-name)))
 
 (when (> emacs-major-version 21)
   (ido-mode t)

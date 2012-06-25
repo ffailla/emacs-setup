@@ -2,7 +2,7 @@
 ;;; ess
 ;;;  * http://ess.r-project.org/
 ;;;
-(load "~/.emacs.d/vendor/ess/lisp/ess-site")
+(add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (setq ess-r-versions nil)
 
 (autoload 'ess-mode "ess-site" "Emacs Speaks Statistics" t)
@@ -45,4 +45,6 @@
          )
        auto-mode-alist))
 
+;;(setq inferior-R-program-name "c:/progra~1/R/R-2.2.1/bin/Rterm.exe")
+;;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
 (provide 'ffailla-ess)

@@ -22,7 +22,7 @@
 (global-set-key (kbd "C-x f") 'recentf-ido-find-file)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
-;; window layouts
+;;; window layouts
 (define-key global-map "\C-cs"
   (lambda ()
     (interactive)
@@ -35,12 +35,21 @@
     (message "restoring frame and window layout")
     (set-frame-configuration my-favorite-frame-setup)))
 
-;; magit
+;;; magit
 (defalias 'ms 'magit-status)
 
 ;; zoom in/out
-(global-set-key [(control shift ?z)] 'text-scale-increase)
-(global-set-key [(control ?z)]       'text-scale-decrease)
+;;(global-set-key [(control shift ?z)] 'text-scale-increase)
+;;(global-set-key [(control ?z)]       'text-scale-decrease)
 
+;; alternate M-x
+(global-set-key "\C-x\C-m" 'execute-extended-command)
+(global-set-key "\C-c\C-m" 'execute-extended-command)
+
+;; tmux ?!?!?!?
+(global-set-key (kbd " [C") 'paredit-forward-slurp-sexp)
+;;(global-set-key (kbd "S-<left>") 'windmove-left)
+;;(global-set-key (kbd "S-<up>") 'windmove-up)
+;;(global-set-key (kbd "S-<down>") 'windmove-down)
 
 (provide 'ffailla-bindings)

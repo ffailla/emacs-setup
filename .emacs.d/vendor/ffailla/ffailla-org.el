@@ -44,6 +44,7 @@
 ;; (global-set-key "\C-cep" 'evernote-post-region)
 ;; (global-set-key "\C-ceb" 'evernote-browser)
 
+;; FF - problems with screen
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
 (setq org-clock-idle-time 15)

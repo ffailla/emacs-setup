@@ -31,11 +31,4 @@ by using nxml's indentation rules."
   (push-mark)
   (xml-pprint-region (point-min) (point-max)))
 
-;;;
-;;; xml-rpc
-;;;  * http://www.emacswiki.org/emacs/XmlRpc
-;;;  * http://www.emacswiki.org/emacs/xml-rpc.el
-;;;
-(require 'xml-rpc)
-
 (provide 'ffailla-xml)

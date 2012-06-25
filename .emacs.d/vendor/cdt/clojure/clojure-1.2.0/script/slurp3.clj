@@ -1,1 +1,0 @@
-(time (slurp "words"))

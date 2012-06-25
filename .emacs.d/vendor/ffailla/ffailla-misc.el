@@ -1,7 +1,6 @@
 (require 'cl)
 (require 'imenu)
 (require 'recentf)
-(require 'linum)
 
 ;;set the title bar to display the full path of the buffer
 (setq-default frame-title-format
@@ -19,16 +18,29 @@
 
 (setq font-lock-verbose nil) 
 
-(tool-bar-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+
 (setq inhibit-splash-screen t)
 (recentf-mode 1)
 (setq column-number-mode t)
+
+;;;
+;;; linum settings
+;;;
+;;(require 'linum)
+(require 'hlinum)
+(when (fboundp 'fringe-mode) (fringe-mode 0))
 (global-linum-mode 1)
 (require 'linum-off)
-(require 'linum+)
-(setq linum-disabled-modes-list '(eshell-mode wl-summary-mode compilation-mode erc-mode org-mode))
+;;(require 'linum+)
+(setq linum-disabled-modes-list '(eshell-mode 
+				  wl-summary-mode 
+				  compilation-mode 
+				  erc-mode 
+				  org-mode
+				  grep-mode))
 
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."
@@ -89,5 +101,15 @@
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
 (ac-config-default)
+
+;;;
+;;; shell
+;;;
+(setq shell-file-name "C:/cygwin/bin/bash")
+(defun cygwin-shell ()
+  "Run cygwin bash in shell mode."
+  (interactive)
+  (let ((explicit-shell-file-name "C:/cygwin/bin/bash"))
+    (call-interactively 'shell)))
 
 (provide 'ffailla-misc)

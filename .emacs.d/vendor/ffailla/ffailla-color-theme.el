@@ -2,19 +2,18 @@
   (set-default-font "-unknown-Inconsolata-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
 
 ;; (set-face-attribute 'default (selected-frame) :height 100)
-;; (defun maximize-frame ()
-;;   (interactive)
-;;   (set-frame-position (selected-frame) 0 0)
-;;   (set-frame-size (selected-frame) 1000 1000))
-;; (maximize-frame)
-
+(defun maximize-frame ()
+  (interactive)
+  (set-frame-position (selected-frame) 0 0)
+  (set-frame-size (selected-frame) 1000 1000))
+(maximize-frame)
 
 ;; 
 ;; maxframe
 ;;  * https://github.com/rmm5t/maxframe.el.git
 ;;
-(require 'maxframe)
-(add-hook 'window-setup-hook 'maximize-frame t)
+;; (require 'maxframe)
+;; (add-hook 'window-setup-hook 'maximize-frame t)
 
 ;;;
 ;;; rainbow-delimeters
@@ -28,17 +27,15 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/ffailla/color-theme/")
 (require 'color-theme)
 
-;; FF hack to add this after color-theme require, so that zenburns's version
-;;    of color-theme is not loaded
-(add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")
-
 (eval-after-load 'color-theme
   '(progn
-     (color-theme-initialize)
+     
+     ;;(color-theme-initialize)
      
      ;; https://github.com/bbatsov/zenburn-emacs
-     ;;(require 'color-theme-zenburn)
-     ;;(color-theme-zenburn)
+     (add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")  ; ensure zenburns's version of color-theme loaded
+     (require 'color-theme-zenburn)
+     (color-theme-zenburn)
 
      ;; (eval-after-load 'term
      ;;   '(setq ansi-term-color-vector
@@ -53,8 +50,8 @@
      ;; 		      ;; dirty fix
      ;; 		      "white")))
 
-     (require 'calm-forest-rainbow)
-     (color-theme-calm-forest-rainbow)
+     ;;(require 'calm-forest-rainbow)
+     ;;(color-theme-calm-forest-rainbow)
      ;;(require 'zenburn-rainbow)
      ;;(color-theme-zenburn-rainbow)
      
@@ -79,6 +76,9 @@
      ;;(color-theme-classic)
      ;;(color-theme-comidia)
      ;;(color-theme-subtle-hacker)
+     ;;(color-theme-matrix)
+     ;;(color-theme-emacs-nw)
+     ;;(color-theme-jsc-dark)
      ))
 
 ;;;

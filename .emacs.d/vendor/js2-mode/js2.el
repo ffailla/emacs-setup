@@ -7024,7 +7024,7 @@ it is considered declared."
                     (member name js2-additional-externs)
                     (js2-get-defining-scope scope name))
           (js2-set-face pos end 'js2-external-variable-face 'record)
-          (js2-record-text-property pos end 'help-echo "Undeclared variable")
+          ;;FF (js2-record-text-property pos end 'help-echo "Undeclared variable")
           (js2-record-text-property pos end 'point-entered #'js2-echo-help))))
     (setq js2-recorded-assignments nil)))
 

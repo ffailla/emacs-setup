@@ -23,6 +23,15 @@
 ;;;
 ;;; use bash shell on windows
 ;;;
+;; (setenv "PATH" (concat "c:/cygwin/bin") (getenv "PATH"))
+;; (setq exec-path (append '("c:/cygwin/bin") exec-path))
+
+;; (defun cygwin-shell ()
+;;   "Run cygwin bash in shell mode."
+;;   (interactive)
+;;   (let ((explicit-shell-file-name "C:/cygwin/bin/bash.exe"))
+;;     (call-interactively 'shell)))
+
 ;; (defun ffailla-shell-setup ()
 ;;   "For Cygwin bash under Emacs 20"
 ;;   (setq comint-scroll-show-maximum-output 'this)
@@ -64,7 +73,6 @@
 (require 'ffailla-tramp)
 (require 'ffailla-lisp)
 (require 'ffailla-objc)
-(require 'ffailla-java)
 (require 'ffailla-org)
 (require 'ffailla-csharp)
 (require 'ffailla-ess)
@@ -72,9 +80,7 @@
 (require 'ffailla-vc)
 (require 'ffailla-xml)
 (require 'ffailla-js)
-(require 'ffailla-jira)
 (require 'ffailla-log4j)
-(require 'ffailla-ecb)
 
 ;;;
 ;;; start emacs server
