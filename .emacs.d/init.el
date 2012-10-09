@@ -86,10 +86,14 @@
 ;;; start emacs server
 ;;;  * use /Applications/Emacs.app/Contents/MacOS/bin/emacsclient as editor 
 ;;;
-(if (not (and (boundp 'server-process)
-              (memq (process-status server-process) '(connect listen open run))))
-    (server-start))
+(add-hook 'after-init-hook 'server-start)
+;; (if (not (and (boundp 'server-process)
+;;               (memq (process-status server-process) '(connect listen open run))))
+;;     (server-start))
+
+(setq ns-pop-up-frames nil)
+(put 'downcase-region 'disabled nil)
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
                                      (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
-(put 'downcase-region 'disabled nil)
+

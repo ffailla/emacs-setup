@@ -35,7 +35,7 @@
 ;;  * find . -name '*.clj' | xargs etags --regex=@/Users/ffailla/bin/clojure.tags
 ;;
 (defun clojure-mode-setup ()
-  ;;(slime-mode t)
+  (slime-mode t)
   (show-paren-mode t)
   (column-number-mode t)
   (paredit-mode t)
