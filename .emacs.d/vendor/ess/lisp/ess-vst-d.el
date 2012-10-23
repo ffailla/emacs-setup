@@ -1,14 +1,14 @@
 ;;; ess-vst-d.el --- ViSta customization
 
 ;; Copyright (C) 1997 A. J. Rossini
-;; Copyright (C) 1997--2004 A.J. Rossini, Rich M. Heiberger, Martin
-;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+;; Copyright (C) 1997--2004 A.J. Rossini, Richard M. Heiberger, Martin
+;;      Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
 
-;; Original Author: A.J. Rossini <rossini@u.washington.edu>
+;; Author: A.J. Rossini <rossini@u.washington.edu>
 ;; Created: 26 Aug 1997
-;; Maintainers: ESS-core <ESS-core@r-project.org>
+;; Maintainer: ESS-core <ESS-core@r-project.org>
 
-;; Keywords: start up, configuration.
+;; Keywords: languages
 
 ;; This file is part of ESS
 
@@ -27,16 +27,16 @@
 ;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;; Commentary:
-;;; This file extends the XLispStat configuration for ViSta.
 
+;; This file extends the XLispStat configuration for ViSta.
+
+;;; Code:
 
 ;;; Requires and Autoloads:
 
 (require 'ess-lsp-l)
 
 (autoload 'inferior-ess "ess-inf" "Run an ESS process.")
-
-;;; Code:
 
 (defvar VST-customize-alist
   '((ess-customize-alist           .  VST-customize-alist )
@@ -47,7 +47,7 @@
     (ess-help-sec-regex            .  " ")
     (ess-help-sec-keys-alist       .  " ")
     (inferior-ess-primary-prompt   .  "> ?"               )
-    (comint-use-prompt-regexp-instead-of-fields . t) ;; emacs 21 and up
+    (comint-use-prompt-regexp      . t)
     (inferior-ess-program          .  inferior-VST-program-name)
     (inferior-ess-help-command     .  "(help '%s)\n"      )
     (inferior-ess-objects-command  .  "(variables)\n"     )
@@ -72,7 +72,7 @@
   (setq ess-customize-alist VST-customize-alist)
   (ess-write-to-dribble-buffer
    (format "(ViSta): ess-dialect=%s , buf=%s\n"
-  	   ess-dialect (current-buffer)))
+           ess-dialect (current-buffer)))
   (inferior-ess))
 
  ; Provide package
@@ -96,4 +96,4 @@
 ;;; outline-regexp: "\^L\\|\\`;\\|;;\\*\\|;;;\\*\\|(def[cvu]\\|(setq\\|;;;;\\*"
 ;;; End:
 
-;;; ess-site.el ends here
+;;; ess-vst-d.el ends here

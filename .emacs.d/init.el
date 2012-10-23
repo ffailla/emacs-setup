@@ -21,35 +21,6 @@
 (setq exec-path (append '("~/bin" "/opt/local/bin" "/opt/local/sbin" "/usr/local/bin" "/sbin") exec-path))
 
 ;;;
-;;; use bash shell on windows
-;;;
-;; (setenv "PATH" (concat "c:/cygwin/bin") (getenv "PATH"))
-;; (setq exec-path (append '("c:/cygwin/bin") exec-path))
-
-;; (defun cygwin-shell ()
-;;   "Run cygwin bash in shell mode."
-;;   (interactive)
-;;   (let ((explicit-shell-file-name "C:/cygwin/bin/bash.exe"))
-;;     (call-interactively 'shell)))
-
-;; (defun ffailla-shell-setup ()
-;;   "For Cygwin bash under Emacs 20"
-;;   (setq comint-scroll-show-maximum-output 'this)
-;;   (make-variable-buffer-local 'comint-completion-addsuffix))
-;; (setq comint-completion-addsuffix t)
-;; (setq comint-eol-on-send t)
-;; (setq binary-process-input t) 
-;; (setq w32-quote-process-args ?\") 
-;; (setq shell-file-name "bash") ;; or sh if you rename your bash executable to sh. 
-;; (setenv "SHELL" shell-file-name) 
-;; (setq explicit-shell-file-name shell-file-name) 
-;; (setq explicit-sh-args '("-login" "-i"))
-;; (setq comint-completion-addsuffix t)
-;; (setq comint-eol-on-send t)
-
-;; (setq shell-mode-hook 'ffailla-shell-setup)
-
-;;;
 ;;; package manager
 ;;;
 (add-to-list 'load-path "~/.emacs.d/elpa/")
@@ -64,10 +35,7 @@
 ;;;
 ;;; ffailla requires
 ;;;
-(require 'ffailla-misc)
-(require 'ffailla-color-theme)
-(require 'ffailla-bindings)
-(require 'ffailla-defuns)
+(require 'ffailla-emacs)
 (require 'ffailla-erc)
 (require 'ffailla-prolog)
 (require 'ffailla-tramp)
@@ -90,9 +58,7 @@
 ;; (if (not (and (boundp 'server-process)
 ;;               (memq (process-status server-process) '(connect listen open run))))
 ;;     (server-start))
-
 (setq ns-pop-up-frames nil)
-(put 'downcase-region 'disabled nil)
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
                                      (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))

@@ -21,11 +21,11 @@ PREFIX=$(DESTDIR)
 ##__ GNU Emacs __
 EMACS=emacs
 LISPDIR=$(PREFIX)/share/emacs/site-lisp/ess
-INFODIR=$(PREFIX)/info
+INFODIR=$(PREFIX)/share/info
 ETCDIR =$(PREFIX)/share/emacs/etc/ess
 
 ##__ XEmacs __
-#EMACS=xemacs
+#EMACS=$(PREFIX)/bin/xemacs
 #LISPDIR=$(PREFIX)/share/xemacs/site-packages/lisp/ess
 #INFODIR=$(PREFIX)/share/xemacs/site-packages/info
 #ETCDIR =$(PREFIX)/share/xemacs/site-packages/etc/ess
@@ -53,6 +53,7 @@ EMACSBATCH = $(EMACS) -batch -no-site-file -no-init-file
 ## INSTALLDIR      to create directories, if necessary
 ## INSTALL         to copy files, file copying commands expect 2 args:
 ##                 1st) source-file & 2nd) target-directory
+## UNINSTALL       deletes all arguments
 ## DOCDIR          Destination of other doc files
 #
 SHELL = /bin/sh
@@ -69,6 +70,8 @@ INSTALLDIR = install -d
 INSTALL = cp -p
 #INSTALL = install
 #
+UNINSTALL = rm -f
+#
 DOCDIR=$(PREFIX)/share/doc/ess
 
 ## Section 3
@@ -84,10 +87,19 @@ DOCDIR=$(PREFIX)/share/doc/ess
 ## UPLOAD_DIR      Martin's upload directory
 ## ESS_HOMEPAGE    Martin's svn co https://svn.r-project.org/ESS-web/trunk
 ##
+# Would be ok, iff all releases were "YY-MM" -- but we have patch releases:
+#ESSVERSION=$(shell echo "`date +%y.%m`")
 ESSVERSION=$(shell cat ./VERSION 2> /dev/null || cat ../VERSION)
+#ESSVERSIONTAG=ESS-$(shell sed 's/\./-/g' VERSION)
+ESSfromSVN=$(shell test -d .svn && echo 'yes')
+ifeq ($(ESSfromSVN),yes)
+  ESSVERSIONsvn=$(shell svn up && echo "`date +%y-%m`-r`svnversion`")
+else
+  ESSVERSIONsvn=$(shell echo "`date +%y-%m`_not_svn")
+endif
+ESSVERSIONTAG=$(ESSVERSIONsvn)
 ESSDIR=ess-$(ESSVERSION)
-ESSVERSIONTAG=ESS-$(shell sed 's/\./-/g' VERSION)
-GNUTAR=gtar
+GNUTAR=tar
 SVN_URL = https://svn.r-project.org/ESS
 UPLOAD_DIR = /u/maechler/emacs/ess-WWW/downloads/ess
 ESS_HOMEPAGE = /u/maechler/emacs/ESS-web

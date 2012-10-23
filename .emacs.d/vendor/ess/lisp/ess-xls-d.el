@@ -1,14 +1,14 @@
 ;;; ess-xls-d.el --- XLispStat customization for ESS.
 
 ;; Copyright (C) 1997 A. J. Rossini
-;; Copyright (C) 1998--2004 A.J. Rossini, Rich M. Heiberger, Martin
-;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+;; Copyright (C) 1998--2004 A.J. Rossini, Richard M. Heiberger, Martin
+;;      Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
 
-;; Original Author: A.J. Rossini <rossini@stat.sc.edu>
+;; Author: A.J. Rossini <rossini@stat.sc.edu>
 ;; Created: 12 Jun 1997
-;; Maintainers: ESS-core <ESS-core@r-project.org>
+;; Maintainer: ESS-core <ESS-core@r-project.org>
 
-;; Keywords: Statistics
+;; Keywords: statistics, languages
 
 ;; This file is part of ESS
 
@@ -27,16 +27,17 @@
 ;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;; Commentary:
-;;; This file defines all the XLispStat customizations for ESS.  See
-;;; ess-lsp-l.el for general Lisp modifications.
+
+;; This file defines all the XLispStat customizations for ESS.  See
+;; ess-lsp-l.el for general Lisp modifications.
+
+;;; Code:
+
+(autoload 'inferior-ess "ess-inf" "Run an ESS process.")
 
 ;;; Requires and Autoloads:
 
 (require 'ess-lsp-l)
-
-(autoload 'inferior-ess "ess-inf" "Run an ESS process.")
-
-;;; Code:
 
 (defvar ess-help-XLS-sec-keys-alist
   '((?a . "Args:"))
@@ -55,7 +56,7 @@
     (ess-help-sec-keys-alist       . ess-help-XLS-sec-keys-alist)
     (inferior-ess-primary-prompt   . "> ?"               )
     (inferior-ess-secondary-prompt . "^"                 )
-    (comint-use-prompt-regexp-instead-of-fields . t) ;; emacs 21 and up
+    (comint-use-prompt-regexp      . t)
     (inferior-ess-program          . inferior-XLS-program-name)
     (inferior-ess-help-command     . "(help '%s)\n"      )
     (inferior-ess-objects-command  . "(variables)\n"     )
@@ -82,7 +83,7 @@
   (setq ess-customize-alist XLS-customize-alist)
   (ess-write-to-dribble-buffer
    (format "(XLS): ess-dialect=%s , buf=%s\n"
-  	   ess-dialect (current-buffer)))
+           ess-dialect (current-buffer)))
   (inferior-ess))
 
 (defun xls-transcript-mode ()

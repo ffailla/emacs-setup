@@ -1,14 +1,14 @@
 ;;; ess-arc-d.el --- ARC customization
 
 ;; Copyright (C) 2000 A. J. Rossini
-;; Copyright (C) 2001--2004 A.J. Rossini, Rich M. Heiberger, Martin
-;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+;; Copyright (C) 2001--2004 A.J. Rossini, Richard M. Heiberger, Martin
+;;      Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
 
-;; Original Author: A.J. Rossini <rossini@stat.sc.edu>
+;; Author: A.J. Rossini <rossini@stat.sc.edu>
 ;; Created: 30 Jun 2000
-;; Maintainers: ESS-core <ESS-core@r-project.org>
+;; Maintainer: ESS-core <ESS-core@r-project.org>
 
-;; Keywords: start up, configuration.
+;; Keywords: languages
 
 ;; This file is part of ESS
 
@@ -27,17 +27,15 @@
 ;; the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;; Commentary:
-;;; This file extends the XLispStat configuration for ARC, the
-;;; extension of the R-Code.
-;;;
 
-;;; Requires and Autoloads:
+;; This file extends the XLispStat configuration for ARC, the extension of the
+;; R-Code.
+
+;;; Code:
 
 (require 'ess-lsp-l)
 
 (autoload 'inferior-ess "ess-inf" "Run an ESS process.")
-
-;;; Code:
 
 (defvar ARC-customize-alist
   '((ess-customize-alist           .  ARC-customize-alist )
@@ -48,7 +46,7 @@
     (ess-help-sec-regex            .  " ")
     (ess-help-sec-keys-alist       .  " ")
     (inferior-ess-primary-prompt   .  "> ?"               )
-    (comint-use-prompt-regexp-instead-of-fields . t) ;; emacs 21 and up
+    (comint-use-prompt-regexp      . t)
     (inferior-ess-program          .  inferior-ARC-program-name)
     (inferior-ess-help-command     .  "(help '%s)\n"      )
     (inferior-ess-objects-command  .  "(variables)\n"     )
@@ -73,7 +71,7 @@
   (setq ess-customize-alist ARC-customize-alist)
   (ess-write-to-dribble-buffer
    (format "(ARC): ess-dialect=%s , buf=%s\n"
-  	   ess-dialect (current-buffer)))
+           ess-dialect (current-buffer)))
   (inferior-ess))
 
 (fset 'arc 'ARC)
@@ -99,4 +97,4 @@
 ;;; outline-regexp: "\^L\\|\\`;\\|;;\\*\\|;;;\\*\\|(def[cvu]\\|(setq\\|;;;;\\*"
 ;;; End:
 
-;;; ess-site.el ends here
+;;; ess-arc-d.el ends here

@@ -1,13 +1,15 @@
-;; Copyright (C) 2005 David Whiting, A.J. Rossini, Rich M. Heiberger, Martin
-;;	Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
-;; Copyright (C) 2006-2008 A.J. Rossini, Rich M. Heiberger, Martin Maechler,
-;;	Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+;;; ess-swv.el --- Some simple functions for ESS and Sweave
 
-;; Original Author: David Whiting <david.whiting@ncl.ac.uk>
+;; Copyright (C) 2005 David Whiting, A.J. Rossini, Richard M. Heiberger, Martin
+;;     Maechler, Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+;; Copyright (C) 2006-2008 A.J. Rossini, Richard M. Heiberger, Martin Maechler,
+;;     Kurt Hornik, Rodney Sparapani, and Stephen Eglen.
+
+;; Author: David Whiting <david.whiting@ncl.ac.uk>
 ;; Created: 15 April 2005
-;; Maintainers: ESS-core <ESS-core@r-project.org>
+;; Maintainer: ESS-core <ESS-core@r-project.org>
 
-;; Keywords: Noweb, Literate Statistical Practice, Sweave
+;; Keywords: statistics, tools
 
 ;; This file is part of ESS.
 
@@ -75,73 +77,81 @@
 ;;; 4. ADD to the ../doc/ess.texi !!
 
 
+;;; Code:
+
 ;;; Autoloads and Requires
 
 (eval-when-compile
   (require 'ess-custom)
   (require 'ess)
-)
-(require 'noweb-mode)
+  )
+(require 'ess-noweb-mode)
 (require 'ess-r-d); for Rnw-mode
 (require 'easymenu)
 
+;; currently use exactly for "Sweave" and "Stangle"
 (defun ess-swv-run-in-R (cmd &optional choose-process)
   "Run \\[cmd] on the current .Rnw file.  Utility function not called by user."
   (let* ((rnw-buf (current-buffer)))
     (if choose-process ;; previous behavior
-	(ess-force-buffer-current "R process to load into: ")
+        (ess-force-buffer-current "R process to load into: ")
       ;; else
       (update-ess-process-name-list)
       (cond ((= 0 (length ess-process-name-list))
-	     (message "no ESS processes running; starting R")
-	     (sit-for 1); so the user notices before the next msgs/prompt
-	     (R)
-	     (set-buffer rnw-buf)
-	     )
-	    ((not (string= "R" (ess-make-buffer-current))); e.g. Splus, need R
-	     (ess-force-buffer-current "R process to load into: "))
-       ))
+             (message "no ESS processes running; starting R")
+             (sit-for 1); so the user notices before the next msgs/prompt
+             (R)
+             (set-buffer rnw-buf)
+             )
+            ((not (string= "R" (ess-make-buffer-current))); e.g. Splus, need R
+             (ess-force-buffer-current "R process to load into: "))
+            ))
 
     (save-excursion
       (ess-execute (format "require(tools)")) ;; Make sure tools is loaded.
       (basic-save-buffer); do not Sweave/Stangle old version of file !
       (let* ((sprocess (get-ess-process ess-current-process-name))
-	     (sbuffer (process-buffer sprocess))
-	     (rnw-file (buffer-file-name))
-	     (Rnw-dir (file-name-directory rnw-file))
-	     (Sw-cmd
-	      (format
-	       "local({..od <- getwd(); setwd(%S); %s(%S); setwd(..od) })"
-	       Rnw-dir cmd rnw-file))
-	     )
-	(message "%s()ing %S" cmd rnw-file)
-	(ess-execute Sw-cmd 'buffer nil nil)
-	(switch-to-buffer rnw-buf)
-	(ess-show-buffer (buffer-name sbuffer) nil)))))
+             (sbuffer (process-buffer sprocess))
+             (rnw-file (buffer-file-name))
+             (Rnw-dir (file-name-directory rnw-file))
+             (buf-coding (symbol-name buffer-file-coding-system))
+             ;; could consider other encodings, but utf-8 is "R standard" for non-ASCII:
+             (cmd-args (concat "\"" rnw-file "\""
+                               (if (string-match "^utf-8" buf-coding)
+                                   ", encoding = \"utf-8\"")))
+             (Sw-cmd
+              (format
+               "local({..od <- getwd(); setwd(%S); %s(%s); setwd(..od) })"
+               Rnw-dir cmd cmd-args))
+             )
+        (message "%s()ing %S" cmd rnw-file)
+        (ess-execute Sw-cmd 'buffer nil nil)
+        (switch-to-buffer rnw-buf)
+        (ess-show-buffer (buffer-name sbuffer) nil)))))
 
 (defun ess-swv-tangle ()
-   "Run Stangle on the current .Rnw file."
-   (interactive)
-   (ess-swv-run-in-R "Stangle"))
+  "Run Stangle on the current .Rnw file."
+  (interactive)
+  (ess-swv-run-in-R "Stangle"))
 
 (defun ess-swv-weave ()
-   "Run Sweave on the current .Rnw file."
-   (interactive)
-   (ess-swv-run-in-R "Sweave"))
+  "Run Sweave on the current .Rnw file."
+  (interactive)
+  (ess-swv-run-in-R "Sweave"))
 
 (defun ess-swv-latex ()
-   "Run LaTeX on the product of Sweave()ing the current file."
-   (interactive)
-   (save-excursion
-     (let* ((namestem (file-name-sans-extension (buffer-file-name)))
-	    (latex-filename (concat namestem ".tex"))
-	    (tex-buf (get-buffer-create " *ESS-tex-output*")))
-       (message "Running LaTeX on '%s' ..." latex-filename)
-       (switch-to-buffer tex-buf)
-       (call-process "latex" nil tex-buf 1 latex-filename)
-       (switch-to-buffer (buffer-name))
-       (display-buffer tex-buf)
-       (message "Finished running LaTeX" ))))
+  "Run LaTeX on the product of Sweave()ing the current file."
+  (interactive)
+  (save-excursion
+    (let* ((namestem (file-name-sans-extension (buffer-file-name)))
+           (latex-filename (concat namestem ".tex"))
+           (tex-buf (get-buffer-create " *ESS-tex-output*")))
+      (message "Running LaTeX on '%s' ..." latex-filename)
+      (switch-to-buffer tex-buf)
+      (call-process "latex" nil tex-buf 1 latex-filename)
+      (switch-to-buffer (buffer-name))
+      (display-buffer tex-buf)
+      (message "Finished running LaTeX" ))))
 
 
 (defun ess-swv-PS ()
@@ -149,9 +159,9 @@
 Sweave file buffer name) and display it."
   (interactive)
   (let* ((buf (buffer-name))
-	 (namestem (file-name-sans-extension (buffer-file-name)))
-	 (dvi-filename (concat namestem ".dvi"))
-	 (psviewer (ess-get-ps-viewer)))
+         (namestem (file-name-sans-extension (buffer-file-name)))
+         (dvi-filename (concat namestem ".dvi"))
+         (psviewer (ess-get-ps-viewer)))
     (shell-command (concat "dvips -o temp.ps " dvi-filename))
     (shell-command (concat psviewer " temp.ps & "))
     (switch-to-buffer buf)
@@ -163,104 +173,97 @@ default using the first entry of `ess-swv-pdflatex-commands' and display it."
   (interactive
    (list
     (let ((def (elt ess-swv-pdflatex-commands 0)))
-      (completing-read (format "pdf latex command (%s): " def)
-		       ess-swv-pdflatex-commands ; <- collection to choose from
-		       nil 'confirm ; or 'confirm-after-completion
-		       nil nil def))))
+      (ess-completing-read  "pdf latex command"
+                            ess-swv-pdflatex-commands ; <- collection to choose from
+                            nil 'confirm ; or 'confirm-after-completion
+                            nil nil def))))
   (let* ((buf (buffer-name))
-	 (namestem (file-name-sans-extension (buffer-file-name)))
-	 (latex-filename (concat namestem ".tex"))
-	 (tex-buf (get-buffer-create " *ESS-tex-output*"))
-	 (pdfviewer (ess-get-pdf-viewer))
-	 (pdf-status)
-	 (cmdstr-win (format "start \"%s\" \"%s.pdf\""
-			     pdfviewer namestem))
-	 (cmdstr (format "\"%s\" \"%s.pdf\" &" pdfviewer namestem)))
+         (namestem (file-name-sans-extension (buffer-file-name)))
+         (latex-filename (concat namestem ".tex"))
+         (tex-buf (get-buffer-create " *ESS-tex-output*"))
+         (pdfviewer (ess-get-pdf-viewer))
+         (pdf-status)
+         (cmdstr-win (format "start \"%s\" \"%s.pdf\""
+                             pdfviewer namestem))
+         (cmdstr (format "\"%s\" \"%s.pdf\" &" pdfviewer namestem)))
     ;;(shell-command (concat "pdflatex " latex-filename))
     (message "Running '%s' on '%s' ..." pdflatex-cmd latex-filename)
     (switch-to-buffer tex-buf)
     (setq pdf-status
-	  (call-process pdflatex-cmd nil tex-buf 1
-			(if (string= "texi2" (substring pdflatex-cmd 0 5))
-			    ;; workaround (bug?): texi2pdf or texi2dvi *fail* to work with full path:
-			    (file-name-nondirectory latex-filename)
-			  latex-filename)))
+          (call-process pdflatex-cmd nil tex-buf 1
+                        (if (string= "texi2" (substring pdflatex-cmd 0 5))
+                            ;; workaround (bug?): texi2pdf or texi2dvi *fail* to work with full path:
+                            (file-name-nondirectory latex-filename)
+                          latex-filename)))
     (if (not (= 0 pdf-status))
-	(message "** OOPS: error in '%s' (%d)!" pdflatex-cmd pdf-status)
+        (message "** OOPS: error in '%s' (%d)!" pdflatex-cmd pdf-status)
       ;; else: pdflatex probably ok
       (shell-command
        (concat (if (and ess-microsoft-p (w32-shell-dos-semantics))
-		   cmdstr-win
-		 cmdstr))))
+                   cmdstr-win
+                 cmdstr))))
     (switch-to-buffer buf)
     (display-buffer tex-buf)))
 
 
 (defun ess-insert-Sexpr ()
- "Insert Sexpr{} into the buffer at point."
- (interactive)
- (insert "\\Sexpr{}")
- (backward-char))
+  "Insert Sexpr{} into the buffer at point."
+  (interactive)
+  (insert "\\Sexpr{}")
+  (backward-char))
 
 
 ;;; back-compatible wrappers:
 (defun ess-makeSweave () "old *DEPRECATED* version of \\[ess-swv-weave]."
- (interactive) (ding)
- (message
-  "** warning: ess-makeSweave is deprecated. Do use (ess-swv-weave) instead!")
- (ess-swv-weave))
+  (interactive) (ding)
+  (message
+   "** warning: ess-makeSweave is deprecated. Do use (ess-swv-weave) instead!")
+  (ess-swv-weave))
 
 (defun ess-makeLatex () "old *DEPRECATED* version of \\[ess-swv-latex]."
- (interactive) (ding)
- (message
-  "** warning: ess-makeLatex is deprecated. Do use (ess-swv-latex) instead!")
- (ess-swv-latex))
+  (interactive) (ding)
+  (message
+   "** warning: ess-makeLatex is deprecated. Do use (ess-swv-latex) instead!")
+  (ess-swv-latex))
 
 (defun ess-makePS () "old *DEPRECATED* version of \\[ess-swv-PS]."
- (interactive) (ding)
- (message
-  "** warning: ess-makePS is deprecated. Do use (ess-swv-PS) instead!")
- (ess-swv-PS))
+  (interactive) (ding)
+  (message
+   "** warning: ess-makePS is deprecated. Do use (ess-swv-PS) instead!")
+  (ess-swv-PS))
 
 (defun ess-makePDF () "old *DEPRECATED* version of \\[ess-swv-PDF]."
- (interactive) (ding)
- (message
-  "** warning: ess-makePDF is deprecated. Do use (ess-swv-PDF) instead!")
- (ess-swv-PDF))
+  (interactive) (ding)
+  (message
+   "** warning: ess-makePDF is deprecated. Do use (ess-swv-PDF) instead!")
+  (ess-swv-PDF))
 
 
 ;; AUCTeX integration.  This is independent of this library, but it fits
 ;; here nonetheless since it's an alternative way of Sweave'ing without
 ;; starting iESS.
+
 (defun ess-swv-add-TeX-commands ()
   "Add commands to AUCTeX's \\[TeX-command-list]."
   (unless (and (featurep 'tex-site) (featurep 'tex))
     (error "AUCTeX does not seem to be loaded"))
   (add-to-list 'TeX-command-list
-	       '("Sweave" "R CMD Sweave %t"
-		 TeX-run-command nil (latex-mode) :help
-		 "Run Sweave") t)
+               '("Sweave" "R CMD Sweave %t"
+                 TeX-run-command nil (latex-mode) :help
+                 "Run Sweave") t)
   (add-to-list 'TeX-command-list
-	       '("LaTeXSweave" "%l %(mode) %s"
-		 TeX-run-TeX nil (latex-mode) :help
-		 "Run LaTeX after Sweave") t)
+               '("LaTeXSweave" "%l %(mode) %s"
+                 TeX-run-TeX nil (latex-mode) :help
+                 "Run LaTeX after Sweave") t)
   (setq TeX-command-default "Sweave")
   (mapc (lambda (suffix)
-	  (add-to-list 'TeX-file-extensions suffix))
-	'("nw" "Snw" "Rnw")))
+          (add-to-list 'TeX-file-extensions suffix))
+        '("nw" "Snw" "Rnw")))
 
-(defun ess-swv-remove-TeX-commands ()
-  "Remove commands from AUCTeX's \\[TeX-command-list]."
-  (let ((swv-cmds '("Sweave" "LaTeXSweave"))
-	tex-cmds cmdpos)
-    (mapc (lambda (x)
-	    (setq tex-cmds (mapcar 'car TeX-command-list))
-	    (setq cmdpos (position x tex-cmds :test #'string-equal))
-	    (when cmdpos
-	      (setq TeX-command-list
-	    	    (remove (nth cmdpos TeX-command-list)
-	    		    TeX-command-list))))
-	  swv-cmds)))
+(defun ess-swv-remove-TeX-commands (x)
+  "Helper function: check if car of X is one of the Sweave strings"
+  (let ((swv-cmds '("Sweave" "LaTeXSweave")))
+    (unless (member (car x) swv-cmds) x)))
 
 (defun ess-swv-plug-into-AUCTeX ()
   "Add commands to AUCTeX's \\[TeX-command-list] to sweave the current noweb
@@ -268,21 +271,25 @@ file and latex the result."
   (if ess-swv-plug-into-AUCTeX-p
       (add-hook 'Rnw-mode-hook 'ess-swv-add-TeX-commands)
     (remove-hook 'Rnw-mode-hook 'ess-swv-add-TeX-commands)
-    (ess-swv-remove-TeX-commands)))
-(when ess-swv-plug-into-AUCTeX-p (ess-swv-plug-into-AUCTeX))
+    (setq TeX-command-list (mapcar 'ess-swv-remove-TeX-commands TeX-command-list)
+          ;; this will remove the items, leaving nils, so remove them.
+          TeX-command-list (delq nil TeX-command-list))))
+;; as ess-swv-plug-into-AUCTeX-p is customizable ... :
+(if ess-swv-plug-into-AUCTeX-p
+    (eval-after-load "tex" '(ess-swv-plug-into-AUCTeX)))
 
 (defun ess-swv-toggle-plug-into-AUCTeX ()
   "Toggle inclusion of commands to sweave noweb files and latex the results in
 \\[TeX-command-list] on and off.  Commands are added via \\[Rnw-mode-hook]."
   (interactive)
   (unless (and (featurep 'tex-site) (featurep 'tex))
-    (error "AUCTeX does not seem to be loaded"))
+    (error "AUCTeX are not available"))
   (setq ess-swv-plug-into-AUCTeX-p (not ess-swv-plug-into-AUCTeX-p))
   (ess-swv-plug-into-AUCTeX)
   (TeX-normal-mode t)
   (if ess-swv-plug-into-AUCTeX-p
-      (message "Sweave and LaTeXSweave are known in AUCTeX.")
-    (message "Sweave and LaTeXSweave are no longer known in AUCTeX.")))
+      (message "Sweave and LaTeXSweave are activated in AUCTeX.")
+    (message "Sweave and LaTeXSweave are de-activated in AUCTeX.")))
 
 
 ;;; Now bind some keys.
@@ -300,29 +307,29 @@ file and latex the result."
   "Submenu for use in `Rnw-mode'."
 
   '("Sweaving, Tangling, ..."
-     ["Sweave" ess-swv-weave   t]
-     ["Tangle" ess-swv-tangle  t]
-     ["LaTeX"  ess-swv-latex   t]
-     ["PDF(LaTeX)" ess-swv-PDF t]
-     ["PS (dvips)" ess-swv-PS  t]
-     ["Insert Sexpr" ess-insert-Sexpr t]
-     ["AUCTeX Interface" ess-swv-toggle-plug-into-AUCTeX
+    ["Sweave" ess-swv-weave   t]
+    ["Tangle" ess-swv-tangle  t]
+    ["LaTeX"  ess-swv-latex   t]
+    ["PDF(LaTeX)" ess-swv-PDF t]
+    ["PS (dvips)" ess-swv-PS  t]
+    ["Insert Sexpr" ess-insert-Sexpr t]
+    ["AUCTeX Interface" ess-swv-toggle-plug-into-AUCTeX
      :style toggle :selected ess-swv-plug-into-AUCTeX-p]
-     ))
+    ))
 
 (if (featurep 'xemacs)
     (add-hook 'Rnw-mode-hook
-	      '(lambda ()
-		 ;; This adds to top menu:
-		 ;; (easy-menu-add ess-swv-menu noweb-minor-mode-map)
-		 ;; But that's using an unnecessary extra level -- FIXME
-		 (easy-menu-add-item noweb-minor-mode-menu
-				     '("Sweave");; 'nil' adds to top
-				     ess-swv-menu)))
+              (lambda ()
+                ;; This adds to top menu:
+                ;; (easy-menu-add ess-swv-menu noweb-minor-mode-map)
+                ;; But that's using an unnecessary extra level -- FIXME
+                (easy-menu-add-item noweb-minor-mode-menu
+                                    '("Sweave");; 'nil' adds to top
+                                    ess-swv-menu)))
   ;; normal GNU Emacs:
   (easy-menu-add-item noweb-minor-mode-menu
-		      nil ;; <= path
-		      ess-swv-menu))
+                      nil ;; <= path
+                      ess-swv-menu))
 
  ; provides
 

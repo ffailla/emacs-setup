@@ -3,7 +3,7 @@
 ;; Copyright (C) 1997 by Free Software Foundation, Inc.
 
 ;; Author: Howard Melman <howard@silverstream.com>
-;; Keywords: mouse menu
+;; Keywords: mouse, menu
 
 ;; This file is part of GNU Emacs.
 
@@ -119,7 +119,7 @@ the string selected, as returned by `mouse-me-get-string-function'."
     ("Command Info" . mouse-me-emacs-command-info)
     ("Man Page" . (if (fboundp 'woman) 'woman 'man))
     ("Profile Function" . mouse-me-elp-instrument-function))
-    "*Command menu used by `mouse-me-build-menu'.
+  "*Command menu used by `mouse-me-build-menu'.
 A list of elements where each element is either a cons cell or a string.
 If a cons cell the car is a string to be displayed in the menu and the
 cdr is either a function to call passing a string to, or a list which evals
@@ -147,9 +147,9 @@ the symbol `string' it will be called with one string argument."
 (defun mouse-me (event)
   "Popup a menu of functions to run on selected string or region."
   (interactive "e")
-  (mouse-me-helper event #'(lambda ()
-    (or (x-popup-menu event (funcall mouse-me-build-menu-function name))
-        (error "No command to run")))))
+  (mouse-me-helper event (lambda ()
+                           (or (x-popup-menu event (funcall mouse-me-build-menu-function name))
+                               (error "No command to run")))))
 
 ;;;; Exposed Functions
 
@@ -249,7 +249,7 @@ ending positions of the string in the buffer in that order."
   (interactive "sFile: ")
   (if (fboundp 'w32-shell-execute)
       (w32-shell-execute "open" (convert-standard-filename string))
-  (message "This function currently working only in W32.")))
+    (message "This function currently working only in W32.")))
 
 
 (defun mouse-me-bbdb (string)

@@ -1,6 +1,6 @@
 ;;; test-ob-lob.el
 
-;; Copyright (c) 2010 Eric Schulte
+;; Copyright (c) 2010-2012 Eric Schulte
 ;; Authors: Eric Schulte
 
 ;; Released under the GNU General Public License version 3
@@ -8,19 +8,22 @@
 
 ;;;; Comments:
 
-;; Template test file for Org-mode tests
-
-
-;;; Code:
-(let ((load-path (cons (expand-file-name
-			".." (file-name-directory
-			      (or load-file-name buffer-file-name)))
-		       load-path)))
-  (require 'org-test)
-  (require 'org-test-ob-consts))
-
 
 ;;; Tests
+(org-babel-lob-ingest
+ (expand-file-name
+  "library-of-babel.org"
+  (expand-file-name
+   "babel"
+   (expand-file-name
+    "contrib"
+    (expand-file-name
+     ".."
+     (expand-file-name
+      ".."
+      (file-name-directory
+       (or load-file-name buffer-file-name))))))))
+
 (ert-deftest test-ob-lob/ingest ()
   "Test the ingestion of an org-mode file."
   (should (< 0 (org-babel-lob-ingest
@@ -90,6 +93,14 @@
 	(should (not (= ?= (char-before (- (point) 1)))))
 	;; 10 should export
 	(should (re-search-forward "10" nil t))))))
+
+(ert-deftest test-ob-lob/do-not-eval-lob-lines-in-example-blocks-on-export ()
+  (org-test-with-temp-text-in-file "
+for export
+#+begin_example
+#+call: rubbish()
+#+end_example"
+    (org-export-as-html nil)))
 
 (provide 'test-ob-lob)
 

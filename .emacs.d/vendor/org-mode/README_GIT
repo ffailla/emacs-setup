@@ -1,91 +1,55 @@
-  -*- mode: org; fill-column:65 -*-
+This is the Emacs Org project, an Emacs library for organizing your life.
 
-This is the GIT repository for the development of Org-mode, an
-Emacs mode for organizing your life.
+The homepage of Org is at http://orgmode.org
 
-The text below explains the rules for participating in Org-mode
-development.
+This distribution contains:
 
+README_git
+    This file.
 
-* Main rules
+README
+    The README file for the main distribution (zip and tar files).
 
-1. The master git repository is hosted publicly at orgmode.org.
-   Anyone can get a clone of the current repository state using
-   the command
+README_ELPA
+    The README file for the ELPA packages.
 
-     git clone git://orgmode.org/org-mode.git
+README_contribute
+    Information about the git repository and how to contribute
+    to Org-mode development.
 
-   Having a clone is sufficient to start hacking and to produce
-   patches that can easily and consistently be applied to the
-   main repository.
+README_maintainer
+    Information for the maintainer.
 
-2. There is a mirror hosted publicly at repo.or.cz.  Anyone can
-   get a clone of the current repository state using the command
+COPYING
+    The GNU General Public License.
 
-     git clone git://repo.or.cz/org-mode.git
+Makefile
+    The makefile to compile and install Org.  For installation
+    instructions, see the manual or the more detailed procedure
+    on Worg: http://orgmode.org/worg/dev/org-build-system.html
 
-3. People who are interested to participate in the Org-mode
-   development can to so by sending patches to this address:
+mk/
+    Files needed for building Org.
 
-     emacs-orgmode@gnu.org
+lisp/
+    Directory with all the Emacs Lisp files that make up Org.
 
-4. An interested developer can also request push access to the
-   central repository by sending her/his user-info to the
-   maintainer of Org-mode or the webmaster of orgmode.org.
+doc/
+    The documentation files.  org.texi is the source of the
+    documentation, org.html and org.pdf are formatted versions of it.
 
-   After you have been added as a user with push privileges,
-   clone the repository through ssh using
+etc/
+    Files needed for the ODT exporter.
 
-        git clone orgmode@orgmode.org:org-mode.git
+contrib/
+    A directory with third-party additions for Org.  Some really cool
+    stuff is in there.
 
-   By requesting push access, you acknowledge that you have read
-   and agreed with the following rules:
+testing/
+    Testing suite for Org.
 
-   - Org-mode is part of Emacs.  Therefore, we need to be very
-     conscious about changes moving into the Org-mode core.
-     These can originate only from people who have signed the
-     appropriate papers with the Free Software Foundation.  The
-     files to which this applies are:
-
-     - all *.el files in the lisp directory of the repository
-     - org.texi, orgcard.tex in the doc directory
-     - the corresponding ChangeLog files
-
-   - Before making any significant changes, please explain and
-     discuss them on the mailing list emacs-orgmode@gnu.org.
-
-     This does obviously not apply to people who are maintaining
-     their own contributions to Org-mode.  Please, just use the
-     new mechanism to make sure all changes end up in the right
-     place.
-
-   - Creating and pushing a change to the Org-mode core requires
-     you also to provide ChangeLog entries.  Just press `C-x 4 a'
-     in each function or variable you have modified and describe
-     the change you made in the ChangeLog buffer/file.
-
-   - Among other things, Org-mode is widely appreciated because
-     of its simplicity, cleanness and consistency.  We should try
-     hard to preserve this and I would like to ask everyone to
-     keep this in mind when developing changes.
-
-
-* The contrib directory
-
-The git repository contains a contrib directory.  This directory
-is the playing field for any developer, also people who have not
-(yet) signed the papers with the FSF.  You are free to add files
-to this directory, implementing extensions, new link types etc.
-Also non-Lisp extensions like scripts to process Org-mode files
-in different ways are welcome in this directory.  You should
-provide documentation with your extensions, at least in the form
-of commentary in the file, better on worg.  Please discuss your
-extensions on emacs-orgmode@gnu.org.
-
-After files have been tested in contrib and found to be generally
-useful, we may decide to clarify copyright questions and then
-move the file into the Org-mode core.  This means they will be
-moved up to the root directory and will also eventually be added
-to Emacs bzr repository.  The final decision about this rests
-with the maintainer.
-
+request-assign-future.txt
+    The form that contributors have to sign and get processed with the
+    FSF before contributed changes can be integrated into the Org
+    core.  All files in this distribution except the contrib/ directory
+    have copyright assigned to the FSF.

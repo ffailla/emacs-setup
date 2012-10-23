@@ -1,3 +1,1057 @@
+2012-09-13  Richard M. Heiberger <rmh@temple.edu>
+	* ess-site.el add new customizable variable
+	(ess-directory-containing-R) to allow ess-r-versions-created to
+	find R exectuables on Windows in directories other than the
+	default install location.
+
+2012-09-13  Richard M. Heiberger <rmh@temple.edu>
+	* *.el files: uniformly changed my name to "Richard M. Heiberger"
+	and uniformly changed my email address to "rmh@temple.edu"
+
+2012-09-06  Sam Steingold  <sds@gnu.org>
+
+	* ess-custom.el (ess-source-directory): Init as per
+	http://stat.ethz.ch/R-manual/R-patched/library/base/html/tempfile.html
+	from $TMPDIR, $TMP, $TEMP on all platforms.
+
+2012-09-06  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): added PROC SETINIT
+
+2012-08-22  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-sas-rtf-portrait/landscape): bug-fix: 
+	make new file buffer by adding .rtf; this fixes nagging issue;
+	also ess-sas-rtf-*-landscape replaced by ess-sas-rtf-landscape
+	on Emacs; but Emacs and XEmacs implementations have diverged;
+	XEmacs currently untested, continue using ess-sas-rtf-*-landscape
+
+2012-07-23  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-help.el, ess-r-gui.el, ess-sas.el, ess-sp4-d.el,
+	ess-sp6w-d.el, ess-trns.el, essd-els.el: Set `buffer-read-only'
+	rather than using toggle-read-only (recommended by byte compiler).
+
+2012-07-02  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-developer.el (ess-developer-add-package): new first
+	argument (prefix!) 'from-attached'.  Essential for large list of
+	packages on slow (e.g., NFS mounted) file systems.
+
+2012-06-05  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-r-d.el (ess-dirs): Do not set ess-directory.
+
+2012-05-21  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): add an annoying 9.3
+	note/news to the comment category
+
+2012-05-15  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-sas-goto): bug-fix; if the root of file name
+	contains a suffix, then still goto correctly, e.g. logit.sas
+	has log in it
+
+2012-05-12  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-sas-d.el: Set C-c C-w only in SAS (e.g. *not* in R).
+
+2012-05-11  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-sas-rtf-*): XEmacs support returns!
+	5.13 era functions are used if (featurep 'xemacs)
+	otherwise, 5.14+ Emacs variants
+
+2012-05-10  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess.el (ess-version-string): make robust against wrong/empty SVN-REVISION
+
+2012-05-07  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-rd.el (Rd-mode): set ess-language "S" and ess-dialect "R", so
+	R may be autostarted, when desired.
+
+2012-05-06  Sam Steingold  <sds@gnu.org>
+
+	* ess-site.el: Do not quote lambda expressions.
+	* noweb-font-lock-mode.el (noweb-font-lock-fontify-chunk-by-number):
+	Use `syntax-begin-function' when available instead of
+	`font-lock-beginning-of-syntax-function' (obsolete in Emacs 23.3).
+	Avoid `progn' in `cond' and some other minor code cleanup.
+
+2012-05-05  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-custom.el (inferior-STA-program-name): is now "stata" as it
+	should be and not "env" + all the support modifications.
+
+	* ess-sta-l.el (ess-help-STA-sec-keys-alist): corrections and
+	additions to sections keys and regular expressions for STATA.
+
+	* ess-s-l.el (S-common-cust-alist)
+	* ess-sta-d.el (ess--STA-retrive-topics-from-search)
+	(ess-get-STA-help-topics): customizable topic retrieval. Stata has
+	same interactive facilities as R.
+
+	* ess-custom.el (inferior-STA-args): customizable stata arguments.
+	(inferior-STA-program-name): program name is "stat" as it should
+	be (and not "env").
+
+2012-05-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-r-args.el (tooltip-show-at-point): Do not use the assoc
+	package (which is obsoleted by Emacs 24.2 anyway), use let
+	instead, it is cleaner and more reliable.
+
+
+2012-04-23  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* merged Daniel Hackney's changes
+	Squashed commit of the following:
+
+	commit 708101bef3e5c1f20f53736a9e93799eddaf4f0c
+	Author: Daniel Hackney <dan@haxney.org>
+	Date:   Mon Apr 23 00:28:53 2012 -0400
+
+        Remove incorrect description of the GPL
+
+        A couple files had the following in their header:
+
+        In short: you may use this code any way you like, as long as you
+        don't charge money for it, remove this notice, or hold anyone liable
+        for its results.
+
+        This is not an accurate description of the GPL, and should therefore not appear
+        in the headers.
+
+	commit c93848d930783f0c38fec1ff07af40fb623799d1
+	Author: Daniel Hackney <dan@haxney.org>
+	Date:   Sun Apr 22 23:03:42 2012 -0400
+
+        Clean up all whitespace according to settings from ".dir-locals.el"
+
+        Uses `whitespace-cleanup' to set a consistent style for whitespace throughout
+        the project. This can be applied with:
+
+
+        (defun recursive-files (dir func)
+          (loop with before-save-hook
+                for (file is-dir)
+                in (directory-files-and-attributes dir t ".*\.el$")
+                if is-dir
+                do (recursive-files file form)
+                else
+                do (with-current-buffer (find-file-noselect file)
+        	     (apply func)
+        	     (basic-save-buffer)
+        	     (kill-buffer))))
+
+        (recursive-files 'whitespace-cleanup)
+
+        Again, this can be run from "emacs -Q" after "(require 'cl)"
+
+	commit 3c9c0857d67bda1e9161e37ed426e97a8c61223c
+	Author: Daniel Hackney <dan@haxney.org>
+	Date:   Sun Apr 22 22:51:54 2012 -0400
+
+        Directory-local variables for whitespace cleanup.
+
+        Use the `whitespace' library for the cleaning.
+
+	commit 8dc3d6db1d40956ab96c33b18a80a95a047b46b3
+	Author: Daniel Hackney <dan@haxney.org>
+	Date:   Sun Apr 22 22:40:28 2012 -0400
+
+        Convert files to `utf-8-unix' coding system.
+
+        The default coding system to use going forward, `utf-8-unix', is set as a
+        directory-local variable in ".dir-locals.el".
+
+        To force all elisp files to use the `utf-8-unix' coding system, the following
+        code will recursively walk through all elisp files in the specified directory
+        set the encoding system, and save the file.
+
+        (require 'cl)
+
+        (defun recursive-files (dir func)
+        (loop with before-save-hook
+        for (file is-dir)
+        in (directory-files-and-attributes dir t ".*\.el$")
+        if is-dir
+        do (recursive-files file form)
+        else
+        do (with-current-buffer (find-file-noselect file)
+        (apply func)
+        (basic-save-buffer)
+        (kill-buffer))))
+
+        This can be invoked as follows:
+
+        (recursive-files "/path/to/ess" '(lambda () (set-buffer-file-coding-system 'utf-8-unix)))
+
+        To ensure no other variables from the user environment impact the process, this
+        code can be run in "emacs -Q", which doesn't load any startup files (outside of
+        the emacs core).
+
+        This function could perhaps be split out, named better, and put in its own file.
+
+	commit 6352290fe13ce9048abaa0e401679a67bbcafe43
+	Author: Daniel Hackney <dan@haxney.org>
+	Date:   Tue Apr 17 21:01:36 2012 -0400
+
+        Reformat all headers to be consistent.
+
+        Summary of changes made:
+
+        * Correct first- and last-line format. Preferred is three semicolons, file name,
+        either three dashes and the description (first line) or the string "ends
+        here" (last line).
+
+        * Changed header comment lines to match conventions. "Author" and "Maintainer"
+        headers are singular, even when there are multiple authors or maintainers.
+
+        * Use the correct number of semicolons for each header section. Regular comments
+        should have two semicolons; section headers, such as "Commentary" or "Code"
+        should have three.
+
+        * Fixed "Keywords" header comments. There is a standard-ish set of keywords used
+        in Emacs, available through `finder-by-keyword'; this commit uses those
+        conventions. Also, keywords are now separated by comma then space and do not
+        have a trailing period.
+
+        * Trailing newline at end of file. A few files lacked this, which makes
+        subsequent diffs which modify the last line unnecessarily noisy.
+
+        * Moved "Code" section marker before any and all code in a file.
+
+
+2012-04-21  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess.el (ess-version-string): new, and (ess-version) uses it.
+
+2012-04-12  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-s-l.el (ess-use-this-dir): add 'no-force-current, and switch
+	default to *try* finding a current *R* buffer.
+
+2012-04-11  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-mode):
+	* ess-jags-d.el (ess-jags-mode):
+	   (setq ess-language "S") ; mimic S for ess-smart-underscore
+
+2012-04-05  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-custom.el (ess-revision): extraordinary attempts
+	to get revision number
+
+2012-04-03  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-inf.el (ess-force-buffer-current): use no-autostart, instead
+	of autostart (each with the emacs default of nil).  This
+	re-instantiates ESS 5.x behavior.
+
+2012-04-03  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-custom.el (ess-first-tab-never-completes-p): defalias for
+	ess-first-tab-never-complete
+	(ess-first-tab-never-complete): plenty of options for every taste.
+	(ess-tab-complete-in-script): new option.
+
+2012-04-02  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-mode): try hard to find an alist if not suplied
+
+	* ess-utils.el (ess-inside-string-or-comment-p)
+	(ess-inside-string-p): rewrote this facilities to take advantage
+	of font-lock
+
+	* ess-julia.el (julia-customize-alist)
+	(julia-get-help-topics-list-function)
+	(julia-send-string-function, julia)
+	(julia-imenu-generic-expression): ess-julia.el
+
+2012-04-01  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-error-regexp): custom error messages for dialects
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-help.el (ess-help-mode-map): Older XEmacs misses
+	`special-mode-map', check for that.
+	* ess-tracebug.el (ess-watch-mode-map): Likewise.
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-tracebug.el (ess-bp-kill): Bug fix: `called-interactively-p'
+	requires an argument; fix it as recommended in the doc for
+	`called-interactively-p' by avoiding it altogether; this also
+	takes care of compatibility.
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-help.el (ess-help-mode-map): All supported emacsen have
+	`set-keymap-parent'.
+	* ess-inf.el (inferior-ess-mode-map, ess-mode-minibuffer-map): Likewise.
+	* ess-tracebug.el (ess-watch-mode-map): Likewise.
+	* ess-trns.el (ess-transcript-mode-map): Likewise.
+	* ess-mode.el (ess-mode-map): Likewise.
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-inf.el (update-ess-process-name-list, ess-cleanup):
+	Use `dolist' instead of `mapc'+`lambda' for clarity and speed.
+	* ess-help.el (ess-help-mode, ess-describe-sec-map)
+	(ess-get-help-files-list, ess-get-help-aliases-list): Likewise.
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-custom.el, ess-custom.el, ess-mous.el, ess-mouse.el:
+	* ess-r-args.el, ess-r-d.el, ess-rd.el, ess-s-l.el, ess-s4-d.el:
+	* ess-site.el, ess-sp5-d.el, ess-sp6-d.el, ess-swv.el:
+	* ess-tracebug.el, ess-utils.el, ess.el, make-regexp.el, mouseme.el:
+	* noweb-mode.el: Do not quote lambda forms, this is never needed.
+
+2012-04-02  Sam Steingold  <sds@gnu.org>
+
+	* ess-site.el: Rise up to the challenge: use `locate-file'
+	instead of horrible adhockery to check if info can find ess.info.
+
+
+2012-03-30  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-custom.el (ess-arg-function-offset-new-line): If a list of
+	the form '(N), indent at the indentation + N
+
+	* ess-r-d.el (ess-R-get-rcompletions, ess--funargs-command):
+	workaround for enableJIT warnings for R > 2.14.2
+
+2012-03-26  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-help.el (ess-skip-to-help-section): this issue is documented in 2 places
+http://www.xemacs.org/About/XEmacsVsGNUemacs.html
+http://www.xemacs.org/Documentation/21.5/html/cl_4.html
+So, the schism goes back many years: circa 1997-1998.  However, the fix is not
+If the keypress is meant to be a character, then
+you wrap last-command-event as follows...
+
+(if (featurep 'xemacs) last-command-char last-command-event)
+
+2012-03-25  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-get-object-list): new arg exclude-first to allow
+	exclusion of objects from .GlobalEnv in help completion.
+
+2012-03-21  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess--funargs-command): "error" option is reset to
+	NULL in critical completion and eldoc actions.
+
+	* ess-inf.el (inferior-ess-set-status): new argument no-timestamp
+	to allow ess-command not to set the timestamp.
+
+2012-03-20  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* noweb-mode.el (noweb-minor-mode-map): adjusted [tab] and
+	[return] keys not to interfere with ac-mode
+
+2012-03-19  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-eldoc-docstring-format): smart for-mating of a
+	doc string in minibuffer.
+
+	* ess-custom.el (ess-eldoc-abbreviation-style): level to filter/truncate
+	the doc string.
+
+2012-03-16  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess--funname.start): is limiting the search from the
+	process marker only (bug reported by Sam Steingold on Mon Mar 12
+	19:40:22 CET 2012)
+
+	* ess-inf.el (ess-object-completion, ess-complete-object-name):
+	give suggestive info if proc is not associated.
+	(ess-filename-completion): :exclusive 'no
+	(inferior-ess-mode): completely removed dependence on
+	comint-dynamic-complete.
+
+	* ess-r-d.el (ess-R-complete-object-name): added info message on
+	missing proc.
+
+	* ess-roxy.el: (ess-roxy-tag-completion): new completion function
+	for emacs 24
+	(ess-roxy-mode): adjusted roxy tag completion to new ESS and emacs
+	24 system.
+
+2012-03-14  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-complete-tag): removed function advice for
+	(ess-internal-complete-object-name) to reflect the new tab
+	behavior and also made tab not hide roxy entry unless point is at
+	the beginning of the line (so similar to org-mode's visibility
+	cycling)
+	(comint-dynamic-complete-functions): and dropped the advice
+	to (ess-R-complete-object-name) as well.
+
+
+2012-03-13  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-preview): put all R-code on one line to
+	get rid f the +s
+
+
+2012-03-13  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (inferior-ess-mode-map): don't bind M-TAB in emacs 24.
+
+	* ess-mode.el (ess-mode-map): Don't bind M-TAB  in emacs 24, it's
+	the emacs standard to call completion-at-point or comlete-symbol
+	which do the same thing.
+
+	* ess-r-d.el (ess-R-get-rcompletions): return a token as a first
+	element of a list.
+	(R-mode): init emacs 24 completions.
+
+2012-03-12  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-filename-completion): filename completion to
+	comply with emacs 24 standard.
+	(ess-complete-filename): modified quote detection.
+
+2012-03-11  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-preview): semi-working version for
+	roxygen2 without creating directories. Unfortunately appends lots
+	'+'s at the created Rd file.
+
+2012-03-09  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-help.el (ess-help-kill, ess-help-quit): smarter quit and
+	kill behavior.
+	(ess-display-help-on-object): fixed the help display bug.
+
+2012-03-08  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-custom.el (ess-arg-function-offset-new-line): new
+	indentation offset, better handling of long funargs. See the doc.
+
+2012-03-05  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-custom.el (ess-first-tab-never-completes-p): if t never
+	complete on first TAB in ess-mode.
+
+	* ess-mode.el (ess-indent-or-complete): improved handling of the
+	nil process
+
+	* ess-s-l.el: removed S-calculate-indent and S-indent-line (these
+	are ess-indent-line and ess-calculate-indent from 2004 already,
+	and created confusion)
+
+2012-03-04  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-swv.el (ess-swv-PDF): ess-completing-read
+
+	* noweb-mode.el (noweb-goto-chunk): ess-completing-read
+
+	* ess-inf.el (ess-request-a-process, ess-request-a-process)
+	(ess-read-object-name): ess-completing-read
+
+	* ess-tracebug.el (ess-dbg-command-digit): ess-completing-read
+
+	* ess-rd.el (Rd-mode-insert-section): ess-completing-read
+
+	* ess-mode.el (ess-set-style): ess-completing-read
+
+2012-03-02  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-custom.el (ess-roxy-package): new variable, (FIXME potentially)
+	with new default "roxygen2". %% FIXME, 'roxygen2' fails
+	* ess-roxy.el (ess-roxy-preview): now using ess-roxy-package
+	instead of "roxygen".
+
+2012-03-02  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-l.el (ess-bugs-hot-arrow): add a space before arrow
+
+2012-03-01  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess.el (ess-yank-cleaned-commands, ess-yank): C-u C-u C-y yanks
+	only the commands from the kill ring (as proposed by Richard
+	M. Heiberger). It uses ess-transcript-clean-region.
+
+2012-02-29  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-mode): use comint-dynamic-completion.
+
+	* ess-r-d.el (R-mode): use comint-dynamic-completion.
+
+	* ess-mode.el (ess-mode-map): TAB is bound to ess-indent-or-complete.
+
+2012-02-27  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-function-arguments): works with current instead
+	of local process. That means eldoc and completion are available
+	even if buffer is not associated with a process.
+
+	* ess-help.el (ess-help-bogus-buffer-p): regexp includes the name
+	of the doc object.
+	(ess-display-help-on-object): killed buffer display bug fix,
+	reported and fixed by Sam Steingold.
+
+	(ess-help-mode-map): inherits form special-mode-map, "k" is
+	kill-this-buffer instead of kill-buffer. "q" is quit-window
+	instead of bury-buffer. (pointed by Sam Steingold)
+
+	* ess-r-d.el (ess-funname.start, ess-function-arguments):
+	execution bugs corrected and robustified  caching.
+
+	* ess-r-args.el (ess-r-args-get): relies on ess-function-arguments now.
+
+	* ess.el (ess-load-extras): new function to load extra features.
+
+	* ess-tracebug.el (ess-tracebug-map): a couple of renames.
+
+	* ess-mode.el (ess-mode): (ess-load-extras)
+
+	* ess-eldoc.el (ess-eldoc): moved the code into ess-r-d.el.
+
+	* ess-developer.el: moved documentation into the user manual
+
+	* ess-custom.el (ess-use-eldoc, ess-eldoc-show-on-symbol)
+	(ess-use-auto-complete): Implemented ess-use-xxx system.
+
+2012-02-26  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-tracebug.el (ess-tracebug-prefix): set to nil, as to require
+	the user to choose the binging.
+
+2012-02-25  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-tracebug.el (ess-long+replacement): it's shorter "+ . +" now.
+
+	* ess-custom.el (inferior-ess-S-prompt): small adjustment of the
+	prompt for tracebug cuts.
+
+	* ess-r-d.el (ess-function-arguments): modified the form of the
+	returned value.
+
+2012-02-23  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el:
+	(ess-switch-to-ESS): force-buffer-current instead of
+	make-buffer-current. Much more useful in interactive use, which
+	this function is almost always used.
+	(ess-force-buffer-current): New argument to auto-start process if
+	the process died. This case was not treated before.
+
+2012-02-21  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-eldoc.el (ess-eldoc-everywhere-p): controls whether to show
+	args everywhere or only inside function call.
+	(ess-eldoc): complete rewrite of ess-eldoc, to use argument
+	completion api. Automatic caching + generic args + handling of
+	complex expressions + calling process only when really needed.
+
+	* ess-r-d.el (ess-function-arguments): optimized funarg retrieval.
+	(ess-get-object-at-point): a very permissive version of
+	symbol-at-point. Allows almost any R object.
+
+2012-02-20  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (inferior-ess-set-status): set 'last-eval property
+	giving the time of the last interaction with the process.
+
+	* ess-r-d.el (ess--funargs-cache, ess-function-arguments): New
+	uniform caching support for argument completion. Arg are reliably
+	cached on first completion invocation. All completion mechanisms
+	should use ess-function-arguments.
+	(ess-funname.point): Retrieve the name of a function call and
+	starting point of a call. All interfaces should use it for
+	argument completion.
+
+	* ess-r-args.el (ess-r-args-get): completes arguments for S3
+	generic if found.
+
+	* ess-r-d.el (ac-source-R, ac-source-R-objects)
+	(ac-source-R-args): Completely rewrote the ac support. ESS now
+	provides the above 3 sources to accomplish any completion taste.
+
+2012-02-19  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-switch-to-ESS): Associates the buffer with
+	current process. Make sense when the buffer is not yet associated
+	with any process.
+	(with-current-process-buffer): new macro to execute the &body
+	inside current ess process buffer.
+	(ess-command): removed PROMPT argument.
+	(ess-command): removed sleeping, not relevant anymore argument
+	still stays, apparently needed for dde.
+
+2012-02-04  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-tracebug.el (ess-watch-mode): corrected watch-mode
+	documentation and added the ? and d keys.
+
+2012-02-03  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (inferior-ess--get-old-input:regexp): silent
+	byte-compile on free var.
+
+	* ess-tracebug.el (ess-tracebug-inject-source-p): better control
+	source injection.
+	(ess-eval-region2): removed eva-region, eva-linewise,
+	eval-function fixes from tracebug (everything incorporated into
+	the core).
+
+	* ess-inf.el (ess-eval-function): complete rewrite to accommodate
+	developer and tracebug and potentially other addons in the future.
+	(ess-load-file) calls ess-tracebug-source-current-file if tb is
+	active.
+
+	* ess-developer.el: Many unifying changes, bug fixes. Follows
+	ess-eval-visibly-p whenever possible. Implemented region and
+	function devEvals.
+
+	* ess-inf.el (ess-eval-region): moved ddeclient to lower level
+	`ess-send-region'
+	(ess-send-string, ess-send-region): consolidated these low-level
+	work-horse functions.
+
+2012-02-02  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-eval-region): removed the archaic
+	ess-synchronize-evals, a workaround for emacs 18.57.
+	(ess-eval-region): is now aware of ess-tracebug and ess-developer.
+
+2012-02-01  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-sos, ess-setRepositories, ess-setCRANMiror): added two more handy
+	commands.
+
+	* ess-roxy.el (ess-roxy-mode-map): new key C-c C-e t for preview-text
+	(ess-roxyb-preview-text): new function for preview in text format
+
+	* ess-rd.el (Rd-preview-help): solved nil file-name bug with roxy
+	preview.
+
+2012-01-28  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-developer.el (ess-developer-assign-function): integrated
+	with ess-eval-function; also takes care of tracebug.
+
+	* ess-tracebug.el (ess-tracebug-assign-function): tracebug doesn't
+	reassign ess-eval-function anymore (it's integrated now in ESS)
+	(ess-process-send-string): moved into ess-inf.el
+
+	* ess-inf.el (ess-process-send-string): low level wrapper for
+	process-send to enable pre-processing of input string. Currently
+	removes empty lines when debugging is active.
+
+	* ess-inf.el (ess-load-file): if in developer mode call
+	ess-developer-source-current-file.
+	(ess-process-get): new function,  wrapper for process-get
+	(ess-eval-function): is now aware of ess-developer and ess-tracebug
+	(ess-command): added two new arguments wait and prompt
+
+2012-01-27  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-tracebug.el (ess-dbg-mode-line-indicator): dynamic mode line
+	support.
+
+	* ess-custom.el (ess-mode-line-indicator): doc string
+
+	* ess-tracebug.el (ess-dbg-flag-for-debugging): added support for
+	org mode and file free buffers.
+
+2012-01-23  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-library): set ess-sp-change to t.
+
+	* ess-inf.el (ess-smart-comma): made smart operators
+	customizable. New ess-smart-variables local var to hold smart ops
+	which are active in the mode.
+
+	* ess-r-d.el: further work on AC.
+
+	* ess-custom.el (inferior-ess-S-prompt): small adjustment of S prompt regexp.
+
+2012-01-21  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-tracebug.el : several corrections to silent the compiler.
+
+	* Makefile (ELC): added developer and tracebug.
+
+	* ess-r-d.el (ac-source-R-objects, ac-source-R-args): two sources for ac.
+	(ess-init-ac): default initialization of ac.
+
+	* ess.el (ess-completing-read): added automatic handling of ': '.
+
+	* ess-tracebug.el (ess-dbg-flag-for-debugging)
+	(ess-dbg-unflag-for-debugging): modiefied to use ess-completing-read.
+	(require): removed ido dependency.
+
+
+2012-01-20  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-font-lock-keywords): add
+	censoring notation: C( , )
+
+2012-01-20  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (inferior-ess--goto-input-start:regexp): new function
+	for regexp based input search.
+	(inferior-ess-get-old-input): ESS now fully supports both field
+	and regexp input handling. Fields are not used though; may be in
+	the future.
+	(inferior-ess-mode): removed ac inits
+	(ess-mode): removed ac inits  (was too intrusive)
+
+	* ess-custom.el (inferior-ess-S-prompt): new custom var. User can
+	customize this regexp to enhance navigation in comint and
+	transcript buffers.
+
+2012-01-19  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-R-get-rcompletions): require 'ess-tracebug
+
+	* ess-tracebug.el Added and integrated with ESS.
+
+	* ess-inf.el (inferior-ess-set-status): returns the process busy
+	status for convenience
+
+2012-01-18  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (SAS-mode-font-lock-keywords): generalized
+	support for NOTEs/WARNINGs/ERRORs with numeric
+	call signs that match the regexp [0-9]+-[0-9]+
+
+2012-01-18  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-mode): added ac support
+
+	* ess-inf.el (inferior-ess-mode): added ac support
+
+	* ess-r-d.el (R): added ac support
+
+	* ess-custom.el (ess-use-ac-p, ess-ac-source-R)
+	(ess-ac-sources-R, ess-ac-source): added auto-complete integration.
+
+	* ess-r-d.el (ess-R-complete-object-name): simplified
+	ess-R-complete-object-name by reducing huge number of invocations
+	of ess-command to 2
+	(ess-R-get-rcompletions): new function - workhorse of internal
+	r-completions.
+
+	* ess-r-args.el (ess-r-args-get): new TRIM argument
+	(ess-r-args-show): rearrangement of the code.
+
+	* ess-eldoc.el (ess-eldoc): moved new-line replacement into
+	ess-r-args-get.
+
+2012-01-17  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess.el: added xemacs support for process-plist,
+	set-process-plist, process-put and process-get.  All should be
+	removed when xemacs finally supports them.
+
+	* ess-site.el: removed the piece on customizing prompts, it does
+	not work and is misleading for the users.
+
+	* ess-r-d.el (R): write proc version into dribble.
+
+	* ess-inf.el (ess-multi): marking newly created ess process as
+	busy and wait for the proc afterward.
+
+2012-01-16  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-trns.el (ess-transcript-mode): small adjustment of the prompt.
+
+	* ess-inf.el (inferior-ess-get-old-input): supports both fields
+	and regexp comint and acts in accordance with the value of
+	'comint-use-prompt-regexp.
+	(ess-smart-comma): improved usability.
+
+	* ess-custom.el (ess-handy-commands): improved handy commands for
+	smart comma.
+
+	* ess-trns.el (ess-transcript-mode): set comint-use-prompt-regexp
+	to t in trns-mode and adjusted regexp of the inferior-ess-prompt.
+
+2012-01-15  Vitalie Spinu  <spinuvit@gmail.com>
+
+	Major re-factoring of ess-inf.el - new waiting-for-prompt mechanism.
+
+	* ess-inf.el (ordinary-insertion-filter): complete cleanup.
+	(inferior-ess-output-filter): sets process status (i.e. busy,
+	sec-prompt properties)
+
+	* ess-inf.el (ess-multi): removed inferior-ess-wait-for-prompt and
+	replaces with ess-wait-for-process which uses new prompt
+	monitoring mechanism
+	(ess-eval-linewise): removed timeout-ms and replaced with wait-sec
+	to be parsed to ess-wait-for-process. Default is 0s. Removed
+	kludges and prompt waiting loop.
+	(inferior-ess-get-old-input): completely redefined to take
+	advantage of fields.
+	(inferior-ess-goto-input-end):
+	(inferior-ess-goto-input-end): new functions to navigate through
+	input by means of fields in inferior-buffer or transcript.
+
+	* ess-custom.el (inferior-ess-primary-prompt): simplified default
+	prompts to "> " and "+ "
+
+	* ess-arc-d.el (xxx-customize-alist): replaced deprecated
+	comint-use-prompt-regexp-instead-of-fields with
+	comint-use-prompt-regexp.
+
+2012-01-14  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (R-customize-alist): removed
+	inferior-ess-command-prompt. It is no longer necessary with recent
+	changes in the waiting mechanism.
+
+
+2012-01-14  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-eldoc.el (ess-eldoc): remove new lines from argument list to
+	avoid frequent distortion of emacs windows.
+
+2012-01-07  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-mode.el (ess-mode-map): C-c . sets style (as in C-mode)
+
+2011-12-23  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-smart-comma): inspired by slime-repl ,shortcut.
+	If "," is the first character typed in the inferior-ess buffer it
+	requests for execution one of the commands in ess-handy-commands
+	list.
+
+2011-12-14  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-calculate-indent): let bind
+	beginning-of-defun-function to nil in ess-calculate-indent to
+	prevent the use of ess-beginning-of-function
+
+2011-12-13  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-mode.el (ess-mode): set beginning-of-defun-function and
+	end-of-defun-function to make swank/slime work.
+	(ess-function-pattern): allowed for function names of the form
+	'.+', '.+', ".+" in ess-R-function-pattern.
+
+2011-12-12  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-developer.el (ess-developer): the bulk of ess-developer.el
+	and ess-developer.R is finished. See the file header for the full
+	details.
+
+2011-12-01  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (ess-library): ido interface to library()
+
+2011-11-24  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-prompt-wait): ess-prompt-wait is more
+	sophisticated now. It checks for prompt only if no more output has
+	been received from the process. Looking-at is replaced with
+	re-search-forward in order to avoid anchoring the prompt to the
+	bol.
+
+2011-11-18  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-developer.el (ess-developer-source-current-file):
+	interface to insertSource.
+
+	* ess-inf.el (ess-get-process-variable): added (boundedp var)
+	check.  If var is not defined ess-get-process-variable returns
+	nil. Useful when some vars are defined for one mode and not for
+	others.
+
+2011-11-17  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-inf.el (ess-eval-function-or-paragraph-and-step): now calls
+	ess-eval-function in order to reuse ess-developer and ess-tracebug
+	improvements of ess-eval-function.
+	(ess-eval-function): new argument 'no-error
+
+
+2011-11-14  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-help.el (ess-read-helpobj-name-default): defined alias for
+		  ess-helpobj-at-point.
+
+2011-11-13  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-help.el (ess-helpobj-at-point): modified the name of
+	ess-read-helpobj-name-default to a more intuitive one and
+	consistent with emacs conventions.
+
+	* ess-custom.el (ess-help-pop-to-buffer): If non-nil ess-help
+	buffers are given focus during the display.
+	(ess-ido-flex-matching): if you don't use ido flex matching but
+	still want it for ESS, here it is.
+
+	* ess-help.el (ess-display-help-on-object): put cache update on
+	universal argument, it also regenerates the help buffer as
+	before. Removed curr-* kludge which was not necessary. Removed the
+	handling of help buffer into separate function.
+	(ess-help-type): local variable in help files holding the help
+	type symbol. So far, 'help, 'index, 'vignette.
+	(ess-help-object): local in help files holding the name of the
+	help object, i.e. name of the package for index and help topic for
+	ordinary help.
+	(ess-help-mode-map): new keys - i for index, v for vignette, w for
+	help in web-browser. "q" key is not burring the buffer instead of
+	jumping to the end of ESS. C-c C-z is standard combination for
+	that action.
+	(ess-help-mode-menu): new menu entries for index vignette and
+	browse in web-browser.
+	(ess-find-help-file): This one does not do the prompt processing
+	anymore. Everything is done in ess-completing-read now.
+	(ess-get-help-topics-list): topics are now list of strings instead
+	of alist. IDO and emacs handles them better. A workaround is
+	implemented for Xemacs to use alist in ess-completing-read.
+	-------------
+	New functions:
+	(ess-display-index): linked index with ido request.
+	(ess-R-display-vignettes, ess-display-vignettes): display
+	vignettes in nicely formatted, linked help buffer. In xemacs emits
+	the call to browseVignettes() instead.
+	(ess-display-help-in-browser): pop the current help page in
+	browser.
+	(ess--switch-to-help-buffer): display help buffers, consistently
+	with `ess-help-pop-to-buffer' and `ess-help-own-frame'.
+
+	* ess.el (ess-completing-read): moved code around.
+
+	* ess-inf.el (ess-eval-function): integrated ess-developer in ess-eval-function
+	Works only for R, useful for S as well?
+
+	* ess-mode.el (ess-mode): integrated mode-line-indicator.
+
+	* ess-inf.el (inferior-ess-mode): integrated mode-line-indicator.
+
+	* ess-custom.el (ess-mode-line-indicator): added dynamic mode-line
+	indicator. Mode line of ess-mode is now in sync with the
+	associated process. This feature is used by ess-developer and
+	ess-tracebug.  Xemacs does not have the necessary support for it.
+
+2011-11-12  Vitalie Spinu  <spinuvit@gmail.com>
+
+
+	* ess.el (ess-completing-read): new function to use for completion
+	in ESS. It uses ido completion mechanism whenever available, and
+	falls back on classical completing-read  otherwise.
+
+	* ess-r-d.el (ess-install.packages): fast way to instal packages
+	with ido interface.
+
+	* ess-custom.el (ess-use-ido): users can disable ido if they
+	don't want it.
+	(ess--completing-hist): new internal variable to store completion
+	history.
+
+	* ess-inf.el (ess-get-words-from-vector): addapted regular
+	expression to match "\"", this was breaking the command
+	before. See etc/R-ESS-bugs.el (bug 1).
+
+	Added comment on max.print truncating the vector in the
+	doc string (bug 2 in etc/R-ESS-bugs.el). Sill not sure if
+	should wrap the code automatically or leave it to the user.
+
+2011-11-11  Vitalie Spinu  <spinuvit@gmail.com>
+
+	* ess-r-d.el (R-customize-alist): added
+	`inferior-ess-command-prompt' to R-customize-alist. Solves bug 3
+	in etc/R-ESS-bugs.el.
+
+	* ess-custom.el (inferior-ess-command-prompt): new prompt regexp
+	to be used specifically in ess-command. If nil (the default)
+	ess-command uses `inferior-ess-primary-prompt' as it was before.
+
+	* ess-inf.el (ess-command): Anchoring the prompt to the end of
+	buffer in order to avoid premature prompt detection (see
+	etc/R-ESS-bugs.el bug 4). Moved ..ok{ess-command} inside
+	unwind-protect. Before it was ..ok even when ess-command failed.
+	(ess-prompt-wait): Added new required parameter PROMPT-REG for the
+	local prompt regexp to be passed explicitly. Before, it was using
+	global value of the prompt regexp.
+	Dropped start-of-output argument. It's never used in ess-code and
+	had confusing meaning wich was not even documented.
+
+2011-11-03  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-l.el (sas-fix-life-tables): if read-only,
+	then toggle to read-write first
+	(SAS-listing-mode): name ESS[LST] for emacs functionality
+	that cares about names like tabbar
+
+2011-09-30  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-sas-a.el (ess-sas-graph-view): search for GSASFILE more
+	robust to handle recent versions of SAS and embedded dots in
+	filename
+
+2011-09-17  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-fill-field): Filling text inside roxygen
+	entries now operate on individual paragraphs instead of the whole
+	field.
+
+2011-09-16  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-swv.el (ess-swv-remove-TeX-commands): Simplify removal of
+	commands from TeX-command-list (AUCTeX users).  Thanks to Stephen.
+	(ess-swv-toggle-plug-into-AUCTeX): Fixed doc string.
+
+2011-09-11  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-update-entry): fixes problem with roxy
+	entries in the beginning of a file
+
+2011-09-03  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-in-header-p): fix introduced bug in update-entry
+
+2011-09-01  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-get-args-list-from-entry): couldnt really
+	handle the ... argument param description before. can now.
+
+2011-09-01  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* ess-custom.el (ess-history-file): now three-valued;
+	(nil, t, <string>). If nil, *no* history is read or written.
+
+	* ess-inf.el (inferior-ess, ess-multi): ess-history-file changes;
+	finally *use* the ess-history-directory.
+
+2011-08-31  Henning Redestig  <henning@psc.riken.jp>
+
+	* ess-roxy.el (ess-roxy-end-of-field): attempt to handle mutiple
+	paragraphs inside @param fields etc.
+
+2011-08-31  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-help.el (ess-get-help-aliases-list): Choose whether to use
+	.readRDS() or readRDS() based on R version.
+
+2011-08-30  Sebastian P. Luque  <spluque@gmail.com>
+
+	* ess-swv.el (ess-swv-plug-into-AUCTeX): Evaluate this function
+	after loading tex.
+
+2011-08-18  Rodney Sparapani  <rsparapa@mcw.edu>
+
+	* ess-bugs-d.el (ess-bugs-switch-to-suffix): let's not
+	magnify burn-in (via the thinning multiple)
+
+2011-08-17  Stephen Eglen  <stephen@gnu.org>
+
+	* ess-r-d.el (ess-r-versions): Add "R32" and "R64" if working on a
+	mac.
+
 2011-07-28  Rodney Sparapani  <rsparapa@mcw.edu>
 
 	* ess-bugs-d.el (ess-bugs-switch-to-suffix): complete
@@ -2776,7 +3830,7 @@
 
 2002-01-26  Martin Maechler  <maechler@stat.math.ethz.ch>
 
-	* essddr.el (Rd-font): new function, put on C-c C-f à la TeX-font
+	* essddr.el (Rd-font): new function, put on C-c C-f Ã  la TeX-font
 	(Rd-font-list): e.g. `C-c C-f l' now surrounds word by \code{\link{.}}!
 
 2002-01-16  Martin Maechler  <maechler@stat.math.ethz.ch>

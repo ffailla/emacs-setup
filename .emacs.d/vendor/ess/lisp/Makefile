@@ -47,39 +47,34 @@ ELC = $(CORE) ess-comp.elc ess-custom.elc \
 	ess-sta-l.elc ess-sta-d.elc make-regexp.elc \
 	ess-omg-l.elc ess-omg-d.elc \
 	ess-bugs-l.elc ess-bugs-d.elc ess-jags-d.elc \
-	ess-noweb.elc noweb-mode.elc noweb-font-lock-mode.elc \
+	ess-noweb.elc ess-noweb-mode.elc ess-noweb-font-lock-mode.elc \
 	ess-eldoc.elc ess-roxy.elc ess-rutils.elc \
 	ess-s-l.elc ess-s3-d.elc ess-s4-d.elc \
 	ess-sp3-d.elc ess-sp4-d.elc ess-sp5-d.elc ess-sp6-d.elc \
-	ess-r-d.elc ess-rdired.elc ess-r-args.elc ess-r-d.elc ess-rd.elc \
+	ess-rdired.elc ess-r-args.elc ess-r-d.elc ess-rd.elc \
+	ess-developer.elc ess-tracebug.elc ess-julia.elc\
 	ess-sp6w-d.elc msdos.elc
 ##      ^^^^^^^^^^^^^^^^^^^^^^^ Windows only (but be platform-oblivious)
 
 ### Targets
 
-all: $(ELC)
+all: $(ELC) ess-custom.el
 
-install: $(ELC)
+dist: all
+	@touch dist
+## svn committing happens in ../Makefile
+
+install: dist
 	-$(INSTALLDIR) $(LISPDIR)
 	$(INSTALL) ChangeLog *.elc $(LISPDIR)
 	export J; for I in *.elc; do J=$$I; $(INSTALL) `basename $$J .elc`.el $(LISPDIR); done
 #	test "$(LISPDIR)" = "." || $(INSTALL) *.elc $(LISPDIR)
 
-dist: ess-custom.el
-	@touch dist
-## svn committing happens in ../Makefile
+uninstall: 
+	-cd $(LISPDIR) && $(UNINSTALL) ChangeLog *.elc *.el
 
 clean:
-	rm -f $(ELC) \
-	ess-cust.elc ess-emcs.elc essl-bug.elc \
-	essl-sas.elc essd-sas.elc essa-sas.elc \
-	essl-bugs.elc essd-bugs.elc essd-jags.elc \
-	essl-sta.elc essd-sta.elc \
-	essl-s.elc essd-s3.elc essd-s4.elc \
-	essd-sp3.elc essd-sp4.elc essd-sp5.elc essd-sp6.elc \
-	essd-r.elc essd-r-args.elc essa-r.elc essddr.elc \
-	essd-sp6w.elc \
-	essd-arc.elc essd-omg.elc essd-vst.elc essd-xls.elc essl-lsp.elc essl-omg.elc ess-mous.elc
+	rm -f $(ELC) noweb-font-lock-mode.elc noweb-mode.elc dist
 
 distclean: clean
 # and potentially more
@@ -88,9 +83,9 @@ distclean: clean
 ### Targets below here are only for developers - and these must have perl
 
 ### Replace Version numbers (as in ../doc/Makefile !):
+## "../VERSION" if that changes, *definitely* need to update ess-custom.el
 ess-custom.el: ../VERSION
 	perl -pi -e 's/".*"/"$(ESSVERSION)"/ if /ess-version/' $@
-
 
 ### File Dependencies
 

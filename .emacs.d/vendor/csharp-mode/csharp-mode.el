@@ -7,7 +7,7 @@
 ;; Version    : 0.8.6
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : http://code.google.com/p/csharpmode/
-;; Last-saved : <2011-May-21 20:28:30>
+;; Last-saved : <2011-May-22 10:48:26>
 
 ;;
 ;; This program is free software; you can redistribute it and/or modify
@@ -377,8 +377,8 @@
 ;;          - imenu: split menus now have better labels, are sorted correctly.
 ;;
 ;;    0.8.6 DPC 2011 May ??
-;;          -
-
+;;          - extern keyword
+;;
 
 (require 'cc-mode)
 
@@ -1852,7 +1852,7 @@ wrote this alternative.
   csharp '("namespace"))
 
 (c-lang-defconst c-other-kwds
-  csharp '("sizeof" "typeof" "is" "as" "yield"
+  csharp '("sizeof" "typeof" "is" "as" "yield" "extern"
            "where" "select" "in" "from"))
 
 (c-lang-defconst c-overloadable-operators
@@ -3938,7 +3938,7 @@ Returns nil if not found.
 See also, `string-indexof'
 
 "
-  (let ((i (length s))
+  (let ((i (1- (length s)))
         ix c2)
     (while (and (>= i 0) (not ix))
       (setq c2 (aref s i))

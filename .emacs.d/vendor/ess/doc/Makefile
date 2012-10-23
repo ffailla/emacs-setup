@@ -24,7 +24,7 @@ TEXISRC = announc.texi authors.texi bugrept.texi bugs.texi bugs-ms.texi     \
 	help-s.texi help-sas.texi inst_svn.texi unixlike.texi windows.texi \
 	license.texi mailing.texi onewfeat.texi \
 	newfeat.texi readme.texi requires.texi stabilty.texi help-bugs.texi \
-        help-jags.texi ../VERSION Makefile ../Makeconf
+        help-jags.texi Makefile ../Makeconf
 
 ESSINFONODE1='* ESS: (ess).'
 ESSINFONODE2='	        Emacs Speaks Statistics'
@@ -33,12 +33,12 @@ ESSINFONODE3='                        (S/S+/R, SAS, BUGS, Stata, XLisp-Stat).'
 ### Targets --
 PDFs = ess.pdf readme.pdf refcard/refcard.pdf
 DVIs = ess.dvi readme.dvi
-TXTs = ../README ../ANNOUNCE
+TXTs = ../README ../ANNOUNCE ../NEWS ../ONEWS
 
 all  : info text html dvi pdf
 docs : info text html
 info : info/ess.info
-text : $(TXTs) ../NEWS ../ONEWS
+text : $(TXTs)
 html : html/ess.html html/readme.html
 dvi  : $(DVIs)
 pdf  : $(PDFs)
@@ -57,11 +57,11 @@ cleanaux:
 	        *.pg *.pgs *.ps *.ps-2 *.tmp *.toc *.tp *.vr *.vrs
 ## this shall remove *exactly* those things that are *not* in version control:
 clean: cleanaux
-	-@rm -f $(PDFs) $(DVIs) info/*.info*
+	-@rm -f $(DVIs) $(TXTs) $(PDFs) info/*.info* html/*
 
-## this removes also things in VC (when they are remade by "make"):
+## this removes also things in VC (svn, when they are remade by "make"):
 distclean : clean
-	-@rm -f $(TXTs) ../NEWS ../ONEWS html/*
+#	-@rm -f $(PDFs)
 
 ../README: $(TEXISRC)
 	$(MAKETXT) readme.texi \
@@ -78,17 +78,17 @@ README.Microsoft : README.Microsoft.texi
 	| perl -pe 'last if /^Concept Index/;' > README.Microsoft
 
 ../NEWS: Makefile ess-defs.texi newfeat.texi news.texi
-	$(MAKETXT) news.texi > ../NEWS 
+	$(MAKETXT) news.texi > ../NEWS
 
 ../ONEWS: Makefile ess-defs.texi onewfeat.texi onews.texi
-	$(MAKETXT) onews.texi > ../ONEWS 
+	$(MAKETXT) onews.texi > ../ONEWS
 
 ### File Dependencies
 
-info/ess.info: $(TEXISRC)
+info/ess.info: $(TEXISRC) ../VERSION
 	@echo "making Info documentation..."
 	$(MAKEINFO) ess.texi
-	mv -f ess.info info
+	mv -f ess.info info/
 
 install: install-info install-other-docs
 
@@ -107,9 +107,15 @@ install-other-docs: pdf html
 	$(INSTALL) html/ess.html html/readme.html $(DOCDIR)
 	$(INSTALL) refcard/refcard.pdf $(DOCDIR)
 
+uninstall :
+	-cd $(DOCDIR) && $(UNINSTALL) ess.dvi ess.pdf readme.dvi readme.pdf README ANNOUNCE
+	-cd $(DOCDIR) && $(UNINSTALL) ess.html readme.html 
+	-cd $(DOCDIR) && $(UNINSTALL) refcard.pdf 
+
 ##  TO DO:  ess_toc.html & readme_toc.html should be merged into index.html
 html/ess.html: $(TEXISRC)
 	@echo "making HTML documentation..."
+	mkdir -p html
 	$(MAKEHTML) ess.texi > html/ess.html
 #MM	$(TEXI2HTML) $(SPLITCHAP) ess.texi
 #MM	test -d ess && cp -p ess/ess_toc.html html/index.html || cp -p ess_toc.html html/index.html
