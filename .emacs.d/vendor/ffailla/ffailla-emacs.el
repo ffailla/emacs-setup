@@ -425,4 +425,16 @@ Symbols matching the text at point are put first in the completion list."
  '(diff-refine-change ((((class color) (min-colors 88) (background dark)) (:background "#182042"))))
  '(diff-removed ((t (:foreground "#de1923")))))
 
+;;;
+;;; markdown mode
+;;;  * git://jblevins.org/git/markdown-mode.git
+;;;
+(autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
+(setq auto-mode-alist
+      (append '(("\\.text" . markdown-mode)
+		("\\.md" . markdown-mode)
+		("\\.mdwn" . markdown-mode) 
+		("\\.mdt" . markdown-mode))
+	      auto-mode-alist))
+
 (provide 'ffailla-emacs)

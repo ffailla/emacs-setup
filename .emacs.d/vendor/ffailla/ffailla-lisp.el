@@ -29,13 +29,31 @@
 ;;;
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 
+;;;
+;;; nrepl
+;;;  * github.com:kingtim/nrepl.el.git
+;;;
+(require 'nrepl)
+(autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
+(setq nrepl-history-file "~/.nrepl.history")
+
+;;;
+;;; ac-nrepl
+;;;  * http://github.com:purcell/ac-nrepl.git
+;;;
+(require 'ac-nrepl)
+(eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
+
 ;;
 ;; clojure-mode
 ;;  * http://github.com/technomancy/clojure-mode
 ;;  * find . -name '*.clj' | xargs etags --regex=@/Users/ffailla/bin/clojure.tags
 ;;
 (defun clojure-mode-setup ()
-  (slime-mode t)
+  ;;(slime-mode t)
+  (nrepl-interaction-mode t)
+  (ac-nrepl-setup)
+  (auto-complete-mode t)
   (show-paren-mode t)
   (column-number-mode t)
   (paredit-mode t)
@@ -44,8 +62,15 @@
 
 (autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
+
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-hook 'inferior-lisp-mode-hook #'clojure-mode-setup)
+
+(add-hook 'nrepl-mode-hook #'clojure-mode-setup)
+(add-hook 'nrepl-interaction-mode-hook 'nrepl-turn-on-eldoc-mode)
+(add-hook 'nrepl-mode-hook 'ac-nrepl-setup)
+(add-hook 'nrepl-interaction-mode-hook 'ac-nrepl-setup)
+
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 
 ;;;
