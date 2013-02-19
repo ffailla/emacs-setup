@@ -11,10 +11,18 @@
 (if (not (file-exists-p "~/org")) (make-directory "~/org"))
 (setq org-directory "~/org")
 (setq org-mobile-inbox-for-pull "~/org/flagged.org")
-(setq org-mobile-directory "~/Dropbox/MobileOrg")
+;;(setq org-mobile-directory "~/Dropbox/MobileOrg")
+(setq org-mobile-directory "~/org/mobile")
 (setq org-default-notes-file "~/org/notes.org")
 (setq org-agenda-files (directory-files "~/org" t ".org$"))
 (setq org-mobile-files org-agenda-files)
+
+;; webdav rsync command
+(setq org-webdav-username nil)
+(setq org-webdav-server nil)
+(setq org-webdav-directory "~/org")
+;; override with my settings
+(load "~/.mobile-org.el" t)
 
 (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
 (modify-coding-system-alist 'file "\\.dat\\'" 'utf-8)
@@ -26,6 +34,51 @@
 (defun org-set-org-mobile-files ()
   (interactive)
   (setq org-mobile-files org-agenda-files))
+
+(defun org-sync-push ()
+  (interactive)
+  (org-mobile-push)  
+  ;; (shell-command (format "rsync -e ssh -avzuP %s %s@%s:%s" 
+  ;; 			 org-mobile-directory 
+  ;; 			 org-webdav-username 
+  ;; 			 org-webdav-server 
+  ;; 			 org-webdav-directory))
+
+  (start-process "mobile-org-rsync" 
+  		 (get-buffer-create "*rsync-buffer*") 
+  		 "rsync" "--verbose" "-e" "ssh" "-avzuP"
+  		 (expand-file-name org-mobile-directory)
+  		 (format "%s@%s:%s" 
+  			 org-webdav-username 
+  			 org-webdav-server 
+  			 org-webdav-directory))
+  )
+
+(defun org-sync-pull ()
+  (interactive)
+  ;; (shell-command (format "rsync -e ssh -avzuP %s@%s:%s/mobile %s/.." 
+  ;; 			 org-webdav-username 
+  ;; 			 org-webdav-server 
+  ;; 			 org-webdav-directory
+  ;; 			 (expand-file-name org-mobile-directory)))
+
+  (start-process "mobile-org-rsync" 
+		 (get-buffer-create "*rsync-buffer*") 
+		 "rsync" "--verbose" "-e" "ssh" "-avzuP"
+		 (format "%s@%s:%s/mobile" 
+			 org-webdav-username 
+			 org-webdav-server 
+			 org-webdav-directory)
+		 (format "%s/.." (expand-file-name org-mobile-directory)))
+  (org-mobile-pull)
+)
+
+;;; org-mode
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+(defalias 'omps 'org-sync-push)
+(defalias 'ompl 'org-sync-pull)
 
 ;;; 
 ;;; evernote-mode

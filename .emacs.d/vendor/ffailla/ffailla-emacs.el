@@ -31,6 +31,30 @@
 (setq column-number-mode t)
 
 (put 'downcase-region 'disabled nil)
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+;;—————————————————————–
+;; Mac Specific Configuration
+;;—————————————————————–
+;; Copy and Paste
+;; (defun copy-from-osx ()
+;;   (shell-command-to-string “pbpaste”))
+
+;; (defun paste-to-osx (text &optional push)
+;;   (let ((process-connection-type nil))
+;;     (let ((proc (start-process “pbcopy” “*Messages*” “pbcopy”)))
+;;       (process-send-string proc text)
+;;       (process-send-eof proc))))
+
+;; ;; Override defaults to use the mac copy and paste
+;; (setq interprogram-cut-function ‘paste-to-osx)
+;; (setq interprogram-paste-function ‘copy-from-osx)
+
+;; ;; System-specific configuration
+;; (if (not (eq system-type 'windows-nt))
+;;   (let ((system-type-config (concat emacs-dir (symbol-name system-type) “.el”)))
+;;     (if (file-exists-p system-type-config)
+;; 	(load system-type-config))))
 
 ;;;
 ;;; linum settings
@@ -39,6 +63,7 @@
 (require 'hlinum)
 (when (fboundp 'fringe-mode) (fringe-mode 0))
 (global-linum-mode 1)
+(setq linum-format "%d ")
 (require 'linum-off)
 ;;(require 'linum+)
 (setq linum-disabled-modes-list '(eshell-mode 
@@ -64,7 +89,6 @@
 (require 'saveplace)
 (setq-default save-place t)
 
-;;(setq fringe-mode (cons 4 0))
 ;;(setq visible-bell f)
 ;;(setq ring-bell-function 'ignore)
 (setq ring-bell-function
@@ -159,13 +183,6 @@
 
 ;;; slime
 (defalias 'slc 'slime-connect)
-
-;;; org-mode
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cb" 'org-iswitchb)
-(defalias 'omps 'org-mobile-push)
-(defalias 'ompl 'org-mobile-pull)
 
 ;;; ido
 (global-set-key (kbd "C-x C-i") 'ido-imenu)
@@ -436,5 +453,119 @@ Symbols matching the text at point are put first in the completion list."
 		("\\.mdwn" . markdown-mode) 
 		("\\.mdt" . markdown-mode))
 	      auto-mode-alist))
+
+;;;
+;;; erc settings
+;;;
+(load "~/.ercpass" t)
+(require 'erc-services)
+(erc-services-mode 1)
+;; (setq erc-prompt-for-nickserv-password nil)
+;; (setq erc-nickserv-passwords
+;;       `((freenode (("ffailla" . ,freenode-ffailla-pass)))))
+
+;;(add-hook 'erc-text-matched-hook 'erc-beep-on-match)
+(setq erc-beep-match-types '(current-nick keyword pal))
+(setq erc-fill-column 115)
+(setq erc-hide-list '("JOIN" "PART" "QUIT" "NICK" "MODE"
+		      ;;"324" "329" "332" "333" "353" "477"
+))
+
+(setq erc-pals '("ethorsen1" "ethorsen" "thickey" "dkapsalis" "bstephenson" "pwade" "jstonier" "rhickey" "pairuser" "ffmacpro"))
+(setq erc-enable-logging t)
+(setq erc-log-channels-directory "~/.erc/logs/")
+(setq erc-save-buffer-on-part t)
+
+;; (setq apscript (format "
+;;     set cusrPath to (path to \"cusr\" as string)
+;;     set soundAlias to (cusrPath & \"bin:campfire-incoming.mp3\") as alias
+;;     tell application \"Play Sound\"
+;; 	play (soundAlias as alias)
+;;     end tell
+;;     "))
+
+;; FF - problems in iterm via ssh/screen
+;; (add-hook 'erc-text-matched-hook
+;; 	  (lambda (match-type nickuserhost message)
+;; 	    (do-applescript apscript)))
+
+;;;
+;;; magit
+;;;  * http://github.com/philjackson/magit
+;;;
+(autoload 'magit-status "magit" nil t)
+
+;;;
+;;; mo-git-blame
+;;;  * https://github.com/mbunkus/mo-git-blame.git
+;;;
+(autoload 'mo-git-blame-file "mo-git-blame" nil t)
+(autoload 'mo-git-blame-current "mo-git-blame" nil t)
+
+;;;
+;;; nxml-mode
+;;;  * http://www.thaiopensource.com/nxml-mode/
+;;;
+(autoload 'nxml-mode "nxml-mode" nil t)
+(setq auto-mode-alist (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
+                            auto-mode-alist))
+(unify-8859-on-decoding-mode)
+
+;;;
+;;; xml pretty printer
+;;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
+;;;
+(defun xml-pprint-region (begin end)
+  "Pretty format XML markup in region. You need to have nxml-mode
+http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
+this.  The function inserts linebreaks to separate tags that have
+nothing but whitespace between them.  It then indents the markup
+by using nxml's indentation rules."
+  (interactive "r")
+  (save-excursion
+    (nxml-mode)
+    (goto-char begin)
+    (while (search-forward-regexp "\>[ \\t]*\<" nil t)
+      (backward-char) (insert "\n"))
+    (indent-region begin end))
+  (message "Ah, much better!"))
+
+(defun xml-pprint ()
+  (interactive)
+  (push-mark)
+  (xml-pprint-region (point-min) (point-max)))
+
+;;;
+;;; Setup TRAMP mode
+;;;
+(setq tramp-default-method "ssh")
+(setq tramp-default-user "root")
+(setq tramp-default-host "localhost")
+(setq tramp-chunksize 500)
+
+;;; TRAMP beep when done downloading files
+(defadvice tramp-handle-write-region
+  (after tramp-write-beep-advice activate)
+  " make tramp beep after writing a file."
+  (interactive)
+  (beep))
+(defadvice tramp-handle-do-copy-or-rename-file
+  (after tramp-copy-beep-advice activate)
+  " make tramp beep after copying a file."
+  (interactive)
+  (beep))
+(defadvice tramp-handle-insert-file-contents
+  (after tramp-copy-beep-advice activate)
+  " make tramp beep after copying a file."
+  (interactive)
+  (beep))
+
+;;;
+;;; log4j mode
+;;;  * http://log4j-mode.sourceforge.net/
+;;;
+(autoload 'log4j-mode "log4j-mode" "Major mode for viewing log files." t)
+(add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))
+;;(add-hook 'log4j-mode-hook (lambda () (linum-mode nil)))
 
 (provide 'ffailla-emacs)

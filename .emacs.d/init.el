@@ -36,19 +36,16 @@
 ;;; ffailla requires
 ;;;
 (require 'ffailla-emacs)
-(require 'ffailla-erc)
+(require 'ffailla-org)
+(require 'ffailla-cedet)
 (require 'ffailla-prolog)
-(require 'ffailla-tramp)
 (require 'ffailla-lisp)
 (require 'ffailla-objc)
-(require 'ffailla-org)
 (require 'ffailla-csharp)
 (require 'ffailla-ess)
 (require 'ffailla-sql)
-(require 'ffailla-vc)
-(require 'ffailla-xml)
 (require 'ffailla-js)
-(require 'ffailla-log4j)
+(require 'ffailla-arduino)
 
 ;;;
 ;;; start emacs server
@@ -62,4 +59,3 @@
 
 (message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
                                      (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
-

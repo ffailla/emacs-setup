@@ -62,10 +62,8 @@
 
 (autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
-
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-hook 'inferior-lisp-mode-hook #'clojure-mode-setup)
-
 (add-hook 'nrepl-mode-hook #'clojure-mode-setup)
 (add-hook 'nrepl-interaction-mode-hook 'nrepl-turn-on-eldoc-mode)
 (add-hook 'nrepl-mode-hook 'ac-nrepl-setup)
@@ -88,11 +86,11 @@
 ;;;
 ;;; clojurescript 
 ;;;
-(defun start-clojurescript ()
-  (interactive)
-  ;;(setq inferior-lisp-program "/Users/ffailla/dev/clojurescript/script/repljs")
-  (cd "/Users/ffailla/dev/clojurescript/")
-  (run-lisp "script/repljs"))
+;; (defun start-clojurescript ()
+;;   (interactive)
+;;   ;;(setq inferior-lisp-program "/Users/ffailla/dev/clojurescript/script/repljs")
+;;   (cd "/Users/ffailla/dev/clojurescript/")
+;;   (run-lisp "script/repljs"))
 
 (add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojure-mode))
 
