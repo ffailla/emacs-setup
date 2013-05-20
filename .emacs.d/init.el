@@ -37,7 +37,7 @@
 ;;;
 (require 'ffailla-emacs)
 (require 'ffailla-org)
-(require 'ffailla-cedet)
+;;(require 'ffailla-cedet)
 (require 'ffailla-prolog)
 (require 'ffailla-lisp)
 (require 'ffailla-objc)
@@ -45,7 +45,7 @@
 (require 'ffailla-ess)
 (require 'ffailla-sql)
 (require 'ffailla-js)
-(require 'ffailla-arduino)
+;;(require 'ffailla-arduino)
 
 ;;;
 ;;; start emacs server
@@ -57,5 +57,6 @@
 ;;     (server-start))
 (setq ns-pop-up-frames nil)
 
-(message "My .emacs loaded in %ds" (destructuring-bind (hi lo ms) (current-time)
-                                     (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
+(message "My .emacs loaded in %ds"
+	 (destructuring-bind (hi lo ms) (current-time)
+	   (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))

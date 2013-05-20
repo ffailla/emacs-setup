@@ -206,6 +206,10 @@
 ;;; magit
 (defalias 'ms 'magit-status)
 
+;;; git gutter
+;; (require 'git-gutter)
+;; (global-git-gutter-mode t)
+
 ;;; zoom in/out
 ;;(global-set-key [(control shift ?z)] 'text-scale-increase)
 ;;(global-set-key [(control ?z)]       'text-scale-decrease)
@@ -376,8 +380,6 @@ Symbols matching the text at point are put first in the completion list."
 (eval-after-load 'color-theme
   '(progn
      
-     ;;(color-theme-initialize)
-     
      ;; https://github.com/bbatsov/zenburn-emacs
      (add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")  ; ensure zenburns's version of color-theme loaded
      (require 'color-theme-zenburn)
@@ -396,11 +398,12 @@ Symbols matching the text at point are put first in the completion list."
      ;; 		      ;; dirty fix
      ;; 		      "white")))
 
+     ;;(color-theme-initialize)
+     
      ;;(require 'calm-forest-rainbow)
      ;;(color-theme-calm-forest-rainbow)
      ;;(require 'zenburn-rainbow)
-     ;;(color-theme-zenburn-rainbow)
-     
+     ;;(color-theme-zenburn-rainbow)     
      ;;(require 'subtle-hacker-rainbow)
      ;;(color-theme-subtle-hacker-rainbow)
 

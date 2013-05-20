@@ -56,20 +56,21 @@
 
 (defun org-sync-pull ()
   (interactive)
-  ;; (shell-command (format "rsync -e ssh -avzuP %s@%s:%s/mobile %s/.." 
+  (shell-command (format "rsync --verbose -e ssh -avzuP %s@%s:%s/mobile %s/.." 
+  			 org-webdav-username 
+  			 org-webdav-server 
+  			 org-webdav-directory
+  			 (expand-file-name org-mobile-directory)))
+
+  ;; (start-process "mobile-org-rsync" 
+  ;; 		 (get-buffer-create "*rsync-buffer*") 
+  ;; 		 "rsync" "--verbose" "-e" "ssh" "-avzuP"
+  ;; 		 (format "%s@%s:%s/mobile" 
   ;; 			 org-webdav-username 
   ;; 			 org-webdav-server 
-  ;; 			 org-webdav-directory
-  ;; 			 (expand-file-name org-mobile-directory)))
+  ;; 			 org-webdav-directory)
+  ;; 		 (format "%s/.." (expand-file-name org-mobile-directory)))
 
-  (start-process "mobile-org-rsync" 
-		 (get-buffer-create "*rsync-buffer*") 
-		 "rsync" "--verbose" "-e" "ssh" "-avzuP"
-		 (format "%s@%s:%s/mobile" 
-			 org-webdav-username 
-			 org-webdav-server 
-			 org-webdav-directory)
-		 (format "%s/.." (expand-file-name org-mobile-directory)))
   (org-mobile-pull)
 )
 
@@ -84,9 +85,10 @@
 ;;; evernote-mode
 ;;;  * http://code.google.com/p/emacs-evernote-mode/
 ;;;
-;;(require 'evernote-mode) 
-;;(setq evernote-username "ffailla") ; optional: you can use this username as default.
-;;(setq evernote-enml-formatter-command '("w3m" "-dump" "-I" "UTF8" "-O" "UTF8")) ; option
+;; (setq evernote-ruby-command "/opt/local/bin/ruby")
+;; (require 'evernote-mode) 
+;; (setq evernote-username "ffailla") ; optional: you can use this username as default.
+;; (setq evernote-enml-formatter-command '("w3m" "-dump" "-I" "UTF8" "-O" "UTF8")) ; option
 ;;?? (add-hook 'evernote-mode-hook (function (lambda () (org-mode))))
 
 ;; (global-set-key "\C-cec" 'evernote-create-note)
@@ -97,6 +99,7 @@
 ;; (global-set-key "\C-cep" 'evernote-post-region)
 ;; (global-set-key "\C-ceb" 'evernote-browser)
 
+;;;
 ;; FF - problems with screen
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
