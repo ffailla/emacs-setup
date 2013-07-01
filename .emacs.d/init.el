@@ -1,4 +1,4 @@
-(defvar *emacs-load-start* (current-time))
+;;(defvar *emacs-load-start* (current-time))
 
 (defvar dotfiles-dir "~/.emacs.d/" "The root Emacs Lisp source folder")
 (defvar ext-dir (concat dotfiles-dir "vendor/") "The root folder for external packages")
@@ -43,7 +43,6 @@
 (require 'ffailla-objc)
 (require 'ffailla-csharp)
 (require 'ffailla-ess)
-(require 'ffailla-sql)
 (require 'ffailla-js)
 ;;(require 'ffailla-arduino)
 
@@ -57,6 +56,6 @@
 ;;     (server-start))
 (setq ns-pop-up-frames nil)
 
-(message "My .emacs loaded in %ds"
-	 (destructuring-bind (hi lo ms) (current-time)
-	   (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))
+;; (message "My .emacs loaded in %ds"
+;; 	 (destructuring-bind (hi lo ms) (current-time)
+;; 	   (- (+ hi lo) (+ (first *emacs-load-start*) (second *emacs-load-start*)))))

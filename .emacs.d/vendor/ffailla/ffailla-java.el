@@ -6,4 +6,4 @@
 
 (require 'jde)
 
-(provide 'ffaill-javak)
+(provide 'ffailla-java)
