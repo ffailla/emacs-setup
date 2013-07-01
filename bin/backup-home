@@ -1,3 +1,0 @@
-#!/bin/sh
-
-rsync -P -r --delete --exclude 'Documents' --exclude 'Music' --exclude 'Movies' --exclude 'Pictures' --exclude 'VirtualMachines' --exclude 'mount' /Users/ffailla/ /Volumes/untitled

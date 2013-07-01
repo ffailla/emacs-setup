@@ -1,8 +1,0 @@
-#!/bin/sh
-
-mvn archetype:create \
-     -DgroupId=$1 \
-     -DartifactId=$2 \
-     -DarchetypeGroupId=com.frankfailla \
-     -DarchetypeArtifactId=clojure-archetype \
-     -DarchetypeVersion=1.1-SNAPSHOT
