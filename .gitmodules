@@ -10,3 +10,6 @@
 [submodule ".emacs.d/vendor/auto-complete"]
 	path = .emacs.d/vendor/auto-complete
 	url = git@github.com:auto-complete/auto-complete.git
+[submodule ".emacs.d/vendor/clojure-mode"]
+	path = .emacs.d/vendor/clojure-mode
+	url = git@github.com:clojure-emacs/clojure-mode.git
