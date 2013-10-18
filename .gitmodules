@@ -7,3 +7,6 @@
 [submodule ".emacs.d/vendor/arduino-mode"]
 	path = .emacs.d/vendor/arduino-mode
 	url = git@github.com:bookest/arduino-mode.git
+[submodule ".emacs.d/vendor/auto-complete"]
+	path = .emacs.d/vendor/auto-complete
+	url = git@github.com:auto-complete/auto-complete.git
