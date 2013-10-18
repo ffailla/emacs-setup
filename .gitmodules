@@ -40,3 +40,6 @@
 [submodule ".emacs.d/vendor/cider"]
 	path = .emacs.d/vendor/cider
 	url = git@github.com:clojure-emacs/cider.git
+[submodule ".emacs.d/vendor/org-mode"]
+	path = .emacs.d/vendor/org-mode
+	url = git://orgmode.org/org-mode.git
