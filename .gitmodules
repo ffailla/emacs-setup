@@ -43,3 +43,6 @@
 [submodule ".emacs.d/vendor/org-mode"]
 	path = .emacs.d/vendor/org-mode
 	url = git://orgmode.org/org-mode.git
+[submodule ".emacs.d/vendor/paredit"]
+	path = .emacs.d/vendor/paredit
+	url = http://mumble.net/~campbell/git/paredit.git
