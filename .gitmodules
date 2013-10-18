@@ -1,3 +1,6 @@
 [submodule ".emacs.d/vendor/ac-slime"]
 	path = .emacs.d/vendor/ac-slime
 	url = git@github.com:purcell/ac-slime.git
+[submodule ".emacs.d/vendor/ac-nrepl"]
+	path = .emacs.d/vendor/ac-nrepl
+	url = https://github.com/clojure-emacs/ac-nrepl
