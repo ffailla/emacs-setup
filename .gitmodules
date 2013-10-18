@@ -31,3 +31,6 @@
 [submodule ".emacs.d/vendor/js2-mode"]
 	path = .emacs.d/vendor/js2-mode
 	url = git@github.com:mooz/js2-mode.git
+[submodule ".emacs.d/vendor/log4j-mode"]
+	path = .emacs.d/vendor/log4j-mode
+	url = git@github.com:emacsmirror/log4j-mode.git
