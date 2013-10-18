@@ -28,3 +28,6 @@
 [submodule ".emacs.d/vendor/js-comint"]
 	path = .emacs.d/vendor/js-comint
 	url = git@github.com:emacsmirror/js-comint.git
+[submodule ".emacs.d/vendor/js2-mode"]
+	path = .emacs.d/vendor/js2-mode
+	url = git@github.com:mooz/js2-mode.git
