@@ -1,0 +1,3 @@
+[submodule ".emacs.d/vendor/ac-slime"]
+	path = .emacs.d/vendor/ac-slime
+	url = git@github.com:purcell/ac-slime.git
