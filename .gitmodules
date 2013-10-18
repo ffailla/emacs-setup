@@ -22,3 +22,9 @@
 [submodule ".emacs.d/vendor/jdee"]
 	path = .emacs.d/vendor/jdee
 	url = git@github.com:emacsmirror/jdee.git
+[submodule ".emacs.d/vendor/js2-comint"]
+	path = .emacs.d/vendor/js2-comint
+	url = git@github.com:emacsmirror/js-comint.git
+[submodule ".emacs.d/vendor/js-comint"]
+	path = .emacs.d/vendor/js-comint
+	url = git@github.com:emacsmirror/js-comint.git
