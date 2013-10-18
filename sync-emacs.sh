@@ -1,5 +1,7 @@
 #!/bin/sh
 
+git submodule init
+
 if [ "$1" == "--restore" ] 
 then  
   #cp ./.emacs ~/
