@@ -34,3 +34,6 @@
 [submodule ".emacs.d/vendor/log4j-mode"]
 	path = .emacs.d/vendor/log4j-mode
 	url = git@github.com:emacsmirror/log4j-mode.git
+[submodule ".emacs.d/vendor/magit"]
+	path = .emacs.d/vendor/magit
+	url = git@github.com:magit/magit.git
