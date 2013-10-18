@@ -19,3 +19,6 @@
 [submodule ".emacs.d/vendor/markdown-mode"]
 	path = .emacs.d/vendor/markdown-mode
 	url = git://jblevins.org/git/markdown-mode.git
+[submodule ".emacs.d/vendor/jdee"]
+	path = .emacs.d/vendor/jdee
+	url = git@github.com:emacsmirror/jdee.git
