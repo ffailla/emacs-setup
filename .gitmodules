@@ -49,3 +49,6 @@
 [submodule ".emacs.d/vendor/popup-el"]
 	path = .emacs.d/vendor/popup-el
 	url = git@github.com:auto-complete/popup-el.git
+[submodule ".emacs.d/vendor/rainbow-delimiters"]
+	path = .emacs.d/vendor/rainbow-delimiters
+	url = git@github.com:jlr/rainbow-delimiters.git
