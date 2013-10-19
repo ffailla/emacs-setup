@@ -52,3 +52,6 @@
 [submodule ".emacs.d/vendor/rainbow-delimiters"]
 	path = .emacs.d/vendor/rainbow-delimiters
 	url = git@github.com:jlr/rainbow-delimiters.git
+[submodule ".emacs.d/vendor/go-mode"]
+	path = .emacs.d/vendor/go-mode
+	url = git@github.com:dominikh/go-mode.el.git
