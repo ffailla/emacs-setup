@@ -181,9 +181,6 @@
 (defalias 'rnb 'rename-buffer)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
-;;; slime
-(defalias 'slc 'slime-connect)
-
 ;;; ido
 (global-set-key (kbd "C-x C-i") 'ido-imenu)
 (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
@@ -202,9 +199,6 @@
     (interactive)
     (message "restoring frame and window layout")
     (set-frame-configuration my-favorite-frame-setup)))
-
-;;; magit
-(defalias 'ms 'magit-status)
 
 ;;; zoom in/out
 ;;(global-set-key [(control shift ?z)] 'text-scale-increase)
@@ -316,32 +310,6 @@ Symbols matching the text at point are put first in the completion list."
     (when file
       (find-file file))))
 
-;; (defvar ido-enable-replace-completing-read t
-;;   "If t, use ido-completing-read instead of completing-read if possible.
-    
-;;     Set it to nil using let in around-advice for functions where the
-;;     original completing-read is required.  For example, if a function
-;;     foo absolutely must use the original completing-read, define some
-;;     advice like this:
-    
-;;     (defadvice foo (around original-completing-read-only activate)
-;;       (let (ido-enable-replace-completing-read) ad-do-it))")
-
-;; ;; Replace completing-read wherever possible, unless directed otherwise
-;; (defadvice completing-read
-;;   (around use-ido-when-possible activate)
-;;   (if (or (not ido-enable-replace-completing-read) ; Manual override disable ido
-;; 	  (and (boundp 'ido-cur-list)
-;; 	       ido-cur-list)) ; Avoid infinite loop from ido calling this
-;;       ad-do-it
-;;     (let ((allcomp (all-completions "" collection predicate)))
-;;       (if allcomp
-;; 	  (setq ad-return-value
-;; 		(ido-completing-read prompt
-;; 				     allcomp
-;; 				     nil require-match initial-input hist def))
-;; 	ad-do-it))))
-
 (defun show-file-name ()
   "Show the full path file name in the minibuffer."
   (interactive)
@@ -370,7 +338,6 @@ Symbols matching the text at point are put first in the completion list."
 ;;; color-theme
 ;;;  * http://www.nongnu.org/color-theme/
 ;;;
-(add-to-list 'load-path "~/.emacs.d/vendor/ffailla/color-theme/")
 (require 'color-theme)
 
 (eval-after-load 'color-theme
@@ -380,50 +347,7 @@ Symbols matching the text at point are put first in the completion list."
      (add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")  ; ensure zenburns's version of color-theme loaded
      (require 'color-theme-zenburn)
      (color-theme-zenburn)
-
-     ;; (eval-after-load 'term
-     ;;   '(setq ansi-term-color-vector
-     ;; 	      (vector 'unspecified 
-     ;; 		      zenburn-bg
-     ;; 		      zenburn-red 
-     ;; 		      zenburn-green
-     ;; 		      zenburn-bg ;zenburn-yellow 
-     ;; 		      zenburn-blue+1
-     ;; 		      zenburn-magenta 
-     ;; 		      zenburn-cyan
-     ;; 		      ;; dirty fix
-     ;; 		      "white")))
-
-     ;;(color-theme-initialize)
      
-     ;;(require 'calm-forest-rainbow)
-     ;;(color-theme-calm-forest-rainbow)
-     ;;(require 'zenburn-rainbow)
-     ;;(color-theme-zenburn-rainbow)     
-     ;;(require 'subtle-hacker-rainbow)
-     ;;(color-theme-subtle-hacker-rainbow)
-
-     ;; white bg
-     ;;(color-theme-feng-shui) 
-     ;;(color-theme-katester)
-     ;;(color-theme-snowish)
-     ;;(color-theme-wheat)
-     ;;(color-theme-jsc-light)
-
-     ;;(require 'blippblopp-rainbow)
-     ;;(color-theme-blippblopp-rainbow)
-     ;;(color-theme-blippblopp)
-
-     ;;(color-theme-subtle-hacker-rainbow)
-     ;;(color-theme-clarity-rainbow)
-     ;;(color-theme-zenburn-rainbow)
-     ;;(color-theme-hober)
-     ;;(color-theme-classic)
-     ;;(color-theme-comidia)
-     ;;(color-theme-subtle-hacker)
-     ;;(color-theme-matrix)
-     ;;(color-theme-emacs-nw)
-     ;;(color-theme-jsc-dark)
      ))
 
 ;;;
@@ -503,13 +427,7 @@ Symbols matching the text at point are put first in the completion list."
 ;;;  * http://github.com/philjackson/magit
 ;;;
 (autoload 'magit-status "magit" nil t)
-
-;;;
-;;; mo-git-blame
-;;;  * https://github.com/mbunkus/mo-git-blame.git
-;;;
-(autoload 'mo-git-blame-file "mo-git-blame" nil t)
-(autoload 'mo-git-blame-current "mo-git-blame" nil t)
+(defalias 'ms 'magit-status)
 
 ;;;
 ;;; nxml-mode
@@ -577,11 +495,10 @@ by using nxml's indentation rules."
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))
 ;;(add-hook 'log4j-mode-hook (lambda () (linum-mode nil)))
 
-(provide 'ffailla-emacs)
-
-
 ;;;
 ;;; sql-mode
 ;;;
 ;;(sql-set-product 'ms)
+
+(provide 'ffailla-emacs)
 

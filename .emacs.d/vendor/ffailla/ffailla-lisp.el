@@ -16,6 +16,8 @@
      (slime-setup '(slime-repl))
      ))
 
+(defalias 'slc 'slime-connect)
+
 ;;;
 ;;; ac-slime
 ;;;  * http://github.com/purcell/ac-slime
