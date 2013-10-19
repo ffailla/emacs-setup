@@ -31,9 +31,24 @@
 
 ;;;
 ;;; nrepl
-;;;  * github.com:kingtim/nrepl.el.git
 ;;;
 (require 'nrepl)
+
+;; (require 'cider)
+;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+;; (setq cider-repl-tab-command 'indent-for-tab-command)
+;; (setq cider-repl-pop-to-buffer-on-connect nil)
+;; (setq cider-popup-stacktraces nil)
+;; (setq cider-repl-popup-stacktraces t)
+;; (setq cider-auto-select-error-buffer t)
+;; ;;(setq nrepl-buffer-name-separator "-")
+;; ;;(setq nrepl-buffer-name-show-port t)
+;; (add-to-list 'same-window-buffer-names "*cider*")
+;; (add-hook 'cider-repl-mode-hook 'subword-mode)
+;; (add-hook 'cider-repl-mode-hook 'paredit-mode)
+;; (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
+;;(autoload 'cider-interaction-mode "cider-interaction" "Minor mode for cider interaction from a Clojure buffer.")
+
 (autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
 (setq nrepl-history-file "~/.nrepl.history")
 
@@ -46,11 +61,10 @@
 
 ;;
 ;; clojure-mode
-;;  * http://github.com/technomancy/clojure-mode
-;;  * find . -name '*.clj' | xargs etags --regex=@/Users/ffailla/bin/clojure.tags
 ;;
 (defun clojure-mode-setup ()
   ;;(slime-mode t)
+  ;;(cider-interaction-mode t)
   (nrepl-interaction-mode t)
   (ac-nrepl-setup)
   (auto-complete-mode t)
@@ -60,10 +74,12 @@
   (outline-minor-mode t)
   (rainbow-delimiters-mode t))
 
-(autoload 'clojure-mode "clojure-mode" nil t)
+(require 'clojure-mode)
+;;(autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-hook 'inferior-lisp-mode-hook #'clojure-mode-setup)
+
 (add-hook 'nrepl-mode-hook #'clojure-mode-setup)
 (add-hook 'nrepl-interaction-mode-hook 'nrepl-turn-on-eldoc-mode)
 (add-hook 'nrepl-mode-hook 'ac-nrepl-setup)

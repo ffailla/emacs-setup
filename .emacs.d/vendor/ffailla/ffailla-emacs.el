@@ -206,10 +206,6 @@
 ;;; magit
 (defalias 'ms 'magit-status)
 
-;;; git gutter
-;; (require 'git-gutter)
-;; (global-git-gutter-mode t)
-
 ;;; zoom in/out
 ;;(global-set-key [(control shift ?z)] 'text-scale-increase)
 ;;(global-set-key [(control ?z)]       'text-scale-decrease)

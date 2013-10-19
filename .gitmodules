@@ -55,3 +55,15 @@
 [submodule ".emacs.d/vendor/go-mode"]
 	path = .emacs.d/vendor/go-mode
 	url = git@github.com:dominikh/go-mode.el.git
+[submodule ".emacs.d/vendor/dash"]
+	path = .emacs.d/vendor/dash
+	url = git@github.com:magnars/dash.el.git
+[submodule ".emacs.d/vendor/pkg-info"]
+	path = .emacs.d/vendor/pkg-info
+	url = git@github.com:lunaryorn/pkg-info.el.git
+[submodule ".emacs.d/vendor/s"]
+	path = .emacs.d/vendor/s
+	url = git@github.com:magnars/s.el.git
+[submodule ".emacs.d/vendor/git-modes"]
+	path = .emacs.d/vendor/git-modes
+	url = git@github.com:magit/git-modes.git
