@@ -457,6 +457,16 @@ Symbols matching the text at point are put first in the completion list."
 		("\\.mdt" . markdown-mode))
 	      auto-mode-alist))
 
+(defun markdown-preview-file ()
+  "run Marked on the current file and revert the buffer"
+  (interactive)
+  (shell-command
+   (format "open -a /Applications/Marked.app %s"
+       (shell-quote-argument (buffer-file-name)))))
+
+(eval-after-load 'markdown-mode
+  '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
+
 ;;;
 ;;; erc settings
 ;;;
@@ -572,3 +582,10 @@ by using nxml's indentation rules."
 ;;(add-hook 'log4j-mode-hook (lambda () (linum-mode nil)))
 
 (provide 'ffailla-emacs)
+
+
+;;;
+;;; sql-mode
+;;;
+;;(sql-set-product 'ms)
+
