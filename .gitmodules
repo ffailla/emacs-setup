@@ -67,3 +67,7 @@
 [submodule ".emacs.d/vendor/git-modes"]
 	path = .emacs.d/vendor/git-modes
 	url = git@github.com:magit/git-modes.git
+
+[submodule ".emacs.d/vendor/csharpmode"]
+	path = .emacs.d/vendor/csharpmode
+	url = git@github.com:ffailla/csharpmode.git
