@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mate -t text.html.markdown "$@"

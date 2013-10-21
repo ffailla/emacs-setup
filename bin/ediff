@@ -2,5 +2,5 @@
 
 echo ediff $1 $2
 
-#/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-files \"$1\" \"$2\")" 
-/usr/local/Cellar/emacs/24.2/bin/emacsclient --eval "(ediff-files \"$1\" \"$2\")" 
+/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-files \"$1\" \"$2\")" 
+#/usr/local/Cellar/emacs/24.2/bin/emacsclient --eval "(ediff-files \"$1\" \"$2\")" 

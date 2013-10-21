@@ -2,8 +2,8 @@
 
 echo emerge $1 $2 $3 $4
 
-#/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
+/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
 
 #/Applications/Emacs.app/Contents/MacOS/bin/emacsclient --eval "(ediff-merge-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
 
-/usr/local/Cellar/emacs/24.2/bin/emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
+#/usr/local/Cellar/emacs/24.2/bin/emacsclient --eval "(ediff-merge-files-with-ancestor \"$1\" \"$2\" \"$3\" nil \"$4\")"
