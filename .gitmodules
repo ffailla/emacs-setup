@@ -82,3 +82,6 @@
 [submodule ".emacs.d/vendor/erc"]
 	path = .emacs.d/vendor/erc
 	url = git://git.sv.gnu.org/erc.git
+[submodule ".emacs.d/vendor/hlinum-mode"]
+	path = .emacs.d/vendor/hlinum-mode
+	url = git@github.com:ffailla/hlinum-mode.git

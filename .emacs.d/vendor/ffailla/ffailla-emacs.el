@@ -59,19 +59,18 @@
 ;;;
 ;;; linum settings
 ;;;
-;;(require 'linum)
 (require 'hlinum)
 (when (fboundp 'fringe-mode) (fringe-mode 0))
 (global-linum-mode 1)
 (setq linum-format "%d ")
-(require 'linum-off)
-;;(require 'linum+)
-(setq linum-disabled-modes-list '(eshell-mode 
-				  wl-summary-mode 
-				  compilation-mode 
-				  erc-mode 
-				  org-mode
-				  grep-mode))
+
+;; (require 'linum-off)
+;; (setq linum-disabled-modes-list '(eshell-mode 
+;; 				  wl-summary-mode 
+;; 				  compilation-mode 
+;; 				  erc-mode 
+;; 				  org-mode
+;; 				  grep-mode))
 
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."
