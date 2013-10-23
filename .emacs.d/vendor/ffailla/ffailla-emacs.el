@@ -63,6 +63,7 @@
 (when (fboundp 'fringe-mode) (fringe-mode 0))
 (global-linum-mode 1)
 (setq linum-format "%d ")
+(hlinum-activate)
 
 ;; (require 'linum-off)
 ;; (setq linum-disabled-modes-list '(eshell-mode 
