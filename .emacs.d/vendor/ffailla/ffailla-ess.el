@@ -1,6 +1,5 @@
 ;;;
 ;;; ess
-;;;  * http://ess.r-project.org/
 ;;;
 (add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (setq ess-r-versions nil)

@@ -3,9 +3,6 @@
 
 ;;;
 ;;; slime - cvs distro
-;;;  * http://common-lisp.net/project/slime/
-;;;  * cvs -d :pserver:anonymous:anonymous@common-lisp.net:/project/slime/cvsroot co slime
-;;;  * https://github.com/technomancy/slime
 ;;;
 (autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
 (autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
@@ -20,14 +17,12 @@
 
 ;;;
 ;;; ac-slime
-;;;  * http://github.com/purcell/ac-slime
 ;;;
 (require 'ac-slime)
 (add-hook 'slime-mode-hook 'set-up-slime-ac)
 
 ;;;
 ;;; paredit
-;;;  * http://mumble.net/~campbell/emacs/paredit.el
 ;;;
 (autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 
@@ -56,7 +51,6 @@
 
 ;;;
 ;;; ac-nrepl
-;;;  * http://github.com:purcell/ac-nrepl.git
 ;;;
 (require 'ac-nrepl)
 (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
@@ -127,6 +121,5 @@
 	   "/Applications/Emacs.app/Contents/MacOS/bin/etags" ; path-to-etags  
 	   "/Users/ffailla/bin/clojure.tags"
 	   project-root)))
-
 
 (provide 'ffailla-lisp)

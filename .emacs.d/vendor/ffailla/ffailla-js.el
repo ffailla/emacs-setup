@@ -9,7 +9,6 @@
 
 ;;;
 ;;; js-comint
-;;;  * http://js-comint-el.sourceforge.net/
 ;;;
 (require 'js-comint)
 ;;(setq inferior-js-program-command "java org.mozilla.javascript.tools.shell.Main")
