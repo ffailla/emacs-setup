@@ -85,3 +85,6 @@
 [submodule ".emacs.d/vendor/hlinum-mode"]
 	path = .emacs.d/vendor/hlinum-mode
 	url = git@github.com:ffailla/hlinum-mode.git
+[submodule ".emacs.d/vendor/slime"]
+	path = .emacs.d/vendor/slime
+	url = git@github.com:ffailla/slime.git
