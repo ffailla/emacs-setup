@@ -79,3 +79,6 @@
 [submodule ".emacs.d/vendor/color-theme"]
 	path = .emacs.d/vendor/color-theme
 	url = git@github.com:ffailla/color-theme.git
+[submodule ".emacs.d/vendor/erc"]
+	path = .emacs.d/vendor/erc
+	url = git://git.sv.gnu.org/erc.git
