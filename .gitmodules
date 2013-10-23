@@ -77,3 +77,6 @@
 [submodule ".emacs.d/vendor/zenburn-emacs"]
 	path = .emacs.d/vendor/zenburn-emacs
 	url = git@github.com:bbatsov/zenburn-emacs.git
+[submodule ".emacs.d/vendor/color-theme"]
+	path = .emacs.d/vendor/color-theme
+	url = git@github.com:ffailla/color-theme.git
