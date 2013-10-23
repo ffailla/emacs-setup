@@ -336,19 +336,13 @@ Symbols matching the text at point are put first in the completion list."
 
 ;;;
 ;;; color-theme
-;;;  * http://www.nongnu.org/color-theme/
 ;;;
 (require 'color-theme)
 
+(add-to-list 'custom-theme-load-path "~/.emacs.d/vendor/zenburn-emacs/")
 (eval-after-load 'color-theme
   '(progn
-     
-     ;; https://github.com/bbatsov/zenburn-emacs
-     (add-to-list 'load-path "~/.emacs.d/vendor/color-theme/themes/zenburn-emacs")  ; ensure zenburns's version of color-theme loaded
-     (require 'color-theme-zenburn)
-     (color-theme-zenburn)
-     
-     ))
+     (load-theme 'zenburn)))
 
 ;;;
 ;;; diff-mode customization
@@ -367,7 +361,6 @@ Symbols matching the text at point are put first in the completion list."
 
 ;;;
 ;;; markdown mode
-;;;  * git://jblevins.org/git/markdown-mode.git
 ;;;
 (autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
 (setq auto-mode-alist
@@ -431,7 +424,6 @@ Symbols matching the text at point are put first in the completion list."
 
 ;;;
 ;;; nxml-mode
-;;;  * http://www.thaiopensource.com/nxml-mode/
 ;;;
 (autoload 'nxml-mode "nxml-mode" nil t)
 (setq auto-mode-alist (cons '("\\.\\(xml\\|xsl\\|rng\\|xhtml\\)\\'" . nxml-mode)
@@ -489,7 +481,6 @@ by using nxml's indentation rules."
 
 ;;;
 ;;; log4j mode
-;;;  * http://log4j-mode.sourceforge.net/
 ;;;
 (autoload 'log4j-mode "log4j-mode" "Major mode for viewing log files." t)
 (add-to-list 'auto-mode-alist '("\\.log\\'" . log4j-mode))

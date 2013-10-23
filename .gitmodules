@@ -71,3 +71,9 @@
 [submodule ".emacs.d/vendor/csharpmode"]
 	path = .emacs.d/vendor/csharpmode
 	url = git@github.com:ffailla/csharpmode.git
+[submodule ".emacs.d/vendor/cypher-mode"]
+	path = .emacs.d/vendor/cypher-mode
+	url = git@github.com:fxbois/cypher-mode.git
+[submodule ".emacs.d/vendor/zenburn-emacs"]
+	path = .emacs.d/vendor/zenburn-emacs
+	url = git@github.com:bbatsov/zenburn-emacs.git
