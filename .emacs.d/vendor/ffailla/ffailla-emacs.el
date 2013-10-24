@@ -215,23 +215,6 @@
 ;;; printing support
 ;;;
 (require 'printing)
-(require 'ps2pdf)
-(pr-update-menus)
-(setq ps-printer-name "PDF_file_generator")
-(setq ps-printer-name t)
-
-(defun print-to-pdf ()
-  (interactive)
-  (ps-spool-buffer-with-faces)
-  (switch-to-buffer "*PostScript*")
-  (write-file "/tmp/tmp.ps")
-  (kill-buffer "tmp.ps")
-  (message (pwd))
-  (setq cmd (concat "ps2pdf14 /tmp/tmp.ps " (buffer-name) ".pdf"))
-  (shell-command cmd)
-  (shell-command "rm /tmp/tmp.ps")
-  (message (concat "Saved to:  " (buffer-name) ".pdf")))
-
 ;;;
 ;;; Emacs Starter Kit fns
 ;;;
