@@ -5,6 +5,7 @@
 (require 'cl)
 (require 'imenu)
 (require 'recentf)
+(require 'flymake)
 
 ;;set the title bar to display the full path of the buffer
 (setq-default frame-title-format
@@ -29,32 +30,28 @@
 (setq inhibit-splash-screen t)
 (recentf-mode 1)
 (setq column-number-mode t)
+(setq ns-pop-up-frames nil)
 
 (put 'downcase-region 'disabled nil)
 (define-key global-map (kbd "RET") 'newline-and-indent)
 
-;;—————————————————————–
-;; Mac Specific Configuration
-;;—————————————————————–
-;; Copy and Paste
-;; (defun copy-from-osx ()
-;;   (shell-command-to-string “pbpaste”))
+;;;
+;;; windows specific configuration
+;;;
+(if (eq system-type 'windows-nt)
+  (setenv "PATH" (concat "c:/cygwin/bin;" (getenv "PATH")))
+  (setq exec-path (cons "c:/cygwin/bin/" exec-path))
+  (require 'cygwin-mount)
+  (cygwin-mount-activate)
 
-;; (defun paste-to-osx (text &optional push)
-;;   (let ((process-connection-type nil))
-;;     (let ((proc (start-process “pbcopy” “*Messages*” “pbcopy”)))
-;;       (process-send-string proc text)
-;;       (process-send-eof proc))))
-
-;; ;; Override defaults to use the mac copy and paste
-;; (setq interprogram-cut-function ‘paste-to-osx)
-;; (setq interprogram-paste-function ‘copy-from-osx)
-
-;; ;; System-specific configuration
-;; (if (not (eq system-type 'windows-nt))
-;;   (let ((system-type-config (concat emacs-dir (symbol-name system-type) “.el”)))
-;;     (if (file-exists-p system-type-config)
-;; 	(load system-type-config))))
+  (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m nil t)
+  (add-hook 'comint-output-filter-functions 'comint-watch-for-password-prompt nil t)
+  (setq explicit-shell-file-name "bash.exe")
+  ;; For subprocesses invoked via the shell
+  ;; (e.g., "shell -c command")
+  (setq shell-file-name explicit-shell-file-name)
+  
+  )
 
 ;;;
 ;;; linum settings
@@ -218,6 +215,10 @@
 ;;; printing support
 ;;;
 (require 'printing)
+(require 'ps2pdf)
+(pr-update-menus)
+(setq ps-printer-name "PDF_file_generator")
+(setq ps-printer-name t)
 
 (defun print-to-pdf ()
   (interactive)

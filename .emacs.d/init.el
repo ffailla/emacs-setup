@@ -30,10 +30,8 @@
                          ("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize)
 
-(require 'flymake)
-
 ;;;
-;;; ffailla requires
+;;; requires
 ;;;
 (require 'ffailla-emacs)
 (require 'ffailla-lang)
@@ -46,7 +44,6 @@
 ;; (if (not (and (boundp 'server-process)
 ;;               (memq (process-status server-process) '(connect listen open run))))
 ;;     (server-start))
-(setq ns-pop-up-frames nil)
 
 ;; (message "My .emacs loaded in %ds"
 ;; 	 (destructuring-bind (hi lo ms) (current-time)
