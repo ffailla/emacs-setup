@@ -36,15 +36,7 @@
 ;;; ffailla requires
 ;;;
 (require 'ffailla-emacs)
-(require 'ffailla-org)
-;;(require 'ffailla-cedet)
-(require 'ffailla-prolog)
-(require 'ffailla-lisp)
-(require 'ffailla-objc)
-(require 'ffailla-csharp)
-(require 'ffailla-ess)
-(require 'ffailla-js)
-;;(require 'ffailla-arduino)
+(require 'ffailla-lang)
 
 ;;;
 ;;; start emacs server
