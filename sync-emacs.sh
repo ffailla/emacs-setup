@@ -1,10 +1,9 @@
 #!/bin/sh
 
-git submodule init
-git submodule update
-
 if [ "$1" == "--restore" ] 
 then  
+  git submodule init
+  git submodule update
   rsync -av --delete ./.emacs.d/ ~/.emacs.d
   #rsync -av --delete ./bin/ ~/bin
   cp ./.screenrc ~/  

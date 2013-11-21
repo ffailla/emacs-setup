@@ -278,7 +278,8 @@
 ;;;
 ;;; paredit
 ;;;
-(autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
+;;(autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
+(require 'paredit)
 
 ;;;
 ;;; nrepl
@@ -324,16 +325,65 @@
   (outline-minor-mode t)
   (rainbow-delimiters-mode t))
 
-(require 'clojure-mode)
+(defun emit-form-handler (buffer form)
+  (lexical-let ((form form))
+    (nrepl-make-response-handler buffer
+                                 (lambda (buffer value)
+				   (nrepl-emit-result buffer (format "%s" form) t)
+				   (nrepl-emit-result buffer (format "%s" value) t))
+                                 (lambda (buffer out)
+                                   (nrepl-emit-output buffer out t))
+                                 (lambda (buffer err)
+                                   (nrepl-emit-output buffer err t))
+                                 (lambda (buffer)
+                                   (nrepl-emit-prompt buffer)))))
+
+;; (require 'clojure-mode)
 ;;(autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-hook 'inferior-lisp-mode-hook #'clojure-mode-setup)
 
 (add-hook 'nrepl-mode-hook #'clojure-mode-setup)
-(add-hook 'nrepl-interaction-mode-hook 'nrepl-turn-on-eldoc-mode)
-(add-hook 'nrepl-mode-hook 'ac-nrepl-setup)
-(add-hook 'nrepl-interaction-mode-hook 'ac-nrepl-setup)
+(add-hook 'nrepl-repl-mode-hook
+	  (lambda ()
+            (nrepl-turn-on-eldoc-mode)
+	    (ac-nrepl-setup)
+	    (auto-complete-mode t)
+	    (show-paren-mode t)
+	    (paredit-mode t)
+	    (outline-minor-mode t)
+	    (rainbow-delimiters-mode t)))
+
+(defun eval-and-print-form (form)
+  (nrepl-send-string form
+		     (emit-form-handler (nrepl-current-repl-buffer) form)
+		     (nrepl-current-ns)))
+ 
+(add-hook 'nrepl-interaction-mode-hook
+          (lambda ()
+            (nrepl-turn-on-eldoc-mode)
+	    (ac-nrepl-setup)
+	    (auto-complete-mode t)
+	    (show-paren-mode t)
+	    (paredit-mode t)
+	    (outline-minor-mode t)
+	    (rainbow-delimiters-mode t)
+	    
+	    (define-key nrepl-interaction-mode-map
+              (kbd "C-x C-e")
+	      (lambda (&optional prefix)
+		(interactive "P")
+		(eval-and-print-form (nrepl-last-expression))))
+	    
+            (define-key nrepl-interaction-mode-map
+              (kbd "C-M-x")
+	      (lambda (&optional prefix)
+		(interactive "P")
+		(let ((form (nrepl-expression-at-point)))
+		  (if prefix
+		      (nrepl-interactive-eval-print form)
+		    (eval-and-print-form form)))))))
 
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 
@@ -359,6 +409,7 @@
 ;;   (run-lisp "script/repljs"))
 
 (add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.edn\\'" . clojure-mode))
 
 ;;
 ;; clojure.etags
