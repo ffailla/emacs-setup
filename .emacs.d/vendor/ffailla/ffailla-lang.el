@@ -186,7 +186,9 @@
 
 (autoload 'js2-mode "js2-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-
+(setq js-indent-level 2)
+(require 'flymake-jshint)
+(add-hook 'js-mode-hook 'flymake-mode)
 ;;;
 ;;; js-comint
 ;;;
@@ -285,6 +287,9 @@
 ;;; nrepl
 ;;;
 (require 'nrepl)
+
+(setq nrepl-popup-stacktraces nil)
+(setq nrepl-popup-stacktraces-in-repl t)
 
 ;; (require 'cider)
 ;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)

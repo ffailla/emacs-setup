@@ -579,5 +579,9 @@ by using nxml's indentation rules."
 
 ;;(define-key global-map "\C-cc" 'org-capture)
 
+;;
+;;
+;;(sql-set-product 'ms)
+
 (provide 'ffailla-emacs)
 
