@@ -106,3 +106,12 @@
 [submodule ".emacs.d/vendor/ido-ubiquitous"]
 	path = .emacs.d/vendor/ido-ubiquitous
 	url = https://github.com/technomancy/ido-ubiquitous.git
+[submodule ".emacs.d/vendor/yasnippet"]
+	path = .emacs.d/vendor/yasnippet
+	url = https://github.com/capitaomorte/yasnippet.git
+[submodule ".emacs.d/vendor/multiple-cursors"]
+	path = .emacs.d/vendor/multiple-cursors
+	url = https://github.com/magnars/multiple-cursors.el.git
+[submodule ".emacs.d/vendor/clj-refactor"]
+	path = .emacs.d/vendor/clj-refactor
+	url = https://github.com/magnars/clj-refactor.el.git

@@ -315,6 +315,11 @@
 (require 'ac-nrepl)
 (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
 
+;;;
+;;; clj-refactor
+;;;
+(require 'clj-refactor)
+
 ;;
 ;; clojure-mode
 ;;
@@ -328,7 +333,8 @@
   (column-number-mode t)
   (paredit-mode t)
   (outline-minor-mode t)
-  (rainbow-delimiters-mode t))
+  (rainbow-delimiters-mode t)
+  (clj-refactor-mode 1))
 
 (defun emit-form-handler (buffer form)
   (lexical-let ((form form))
