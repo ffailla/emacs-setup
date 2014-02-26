@@ -7,6 +7,18 @@
 (require 'recentf)
 (require 'flymake)
 
+(require 'ido-ubiquitous)
+
+;;;
+;;; smex
+;;;
+(require 'smex)
+(smex-initialize)
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+;; This is your old M-x.
+(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
+
 ;;set the title bar to display the full path of the buffer
 (setq-default frame-title-format
               (list '((buffer-file-name " %f"
@@ -14,6 +26,9 @@
                                          dired-directory
                                          (revert-buffer-function " %b" ("%b - " default-directory)))))))
 
+;;;
+;;; global settings
+;;;
 (prefer-coding-system       'utf-8)
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
