@@ -334,7 +334,8 @@
   (paredit-mode t)
   (outline-minor-mode t)
   (rainbow-delimiters-mode t)
-  (clj-refactor-mode 1))
+  (clj-refactor-mode 1)
+  (cljr-add-keybindings-with-prefix "C-c C-m"))
 
 (defun emit-form-handler (buffer form)
   (lexical-let ((form form))
