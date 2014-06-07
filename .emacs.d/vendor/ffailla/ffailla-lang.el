@@ -439,4 +439,12 @@
 	   "/Users/ffailla/bin/clojure.tags"
 	   project-root)))
 
+
+;;;
+;;; yaml-mode
+;;;
+(require 'yaml-mode)
+(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
+
 (provide 'ffailla-lang)
