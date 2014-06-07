@@ -115,3 +115,6 @@
 [submodule ".emacs.d/vendor/clj-refactor"]
 	path = .emacs.d/vendor/clj-refactor
 	url = https://github.com/magnars/clj-refactor.el.git
+[submodule ".emacs.d/vendor/yaml-mode"]
+	path = .emacs.d/vendor/yaml-mode
+	url = https://github.com/yoshiki/yaml-mode.git
