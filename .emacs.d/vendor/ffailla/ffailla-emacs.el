@@ -27,6 +27,11 @@
                                          (revert-buffer-function " %b" ("%b - " default-directory)))))))
 
 ;;;
+;;; cl-lib
+;;;
+(require 'cl-lib)
+
+;;;
 ;;; yasnippet
 ;;;
 (require 'yasnippet)
