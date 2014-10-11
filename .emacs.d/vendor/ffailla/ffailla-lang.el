@@ -447,4 +447,11 @@
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 
+;;;
+;;; ruby-mode
+;;;
+(setq enh-ruby-program "/usr/bin/ruby") ; so that still works if ruby points to
+(autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
+(add-hook 'enh-ruby-mode-hook 'inf-ruby-minor-mode)
+
 (provide 'ffailla-lang)

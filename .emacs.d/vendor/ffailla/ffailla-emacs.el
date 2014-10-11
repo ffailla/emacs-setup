@@ -622,5 +622,20 @@ by using nxml's indentation rules."
 ;;
 ;;(sql-set-product 'ms)
 
+
+;; (defun my-find-file-check-make-large-file-read-only-hook ()
+;;   "If a file is over a given size, make the buffer read only."
+;;   (when (> (buffer-size) (* 1024 1024))
+;;     (setq buffer-read-only t)
+;;     (buffer-disable-undo)
+;;     (fundamental-mode)))
+
+;; (add-hook 'find-file-hooks 'my-find-file-check-make-large-file-read-only-hook)
+
+;;;
+;;; vlfi - large file support
+;;;
+(require 'vlf)
+
 (provide 'ffailla-emacs)
 

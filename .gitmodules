@@ -121,3 +121,15 @@
 [submodule ".emacs.d/vendor/cl-lib"]
 	path = .emacs.d/vendor/cl-lib
 	url = https://github.com/emacsmirror/cl-lib.git
+[submodule ".emacs.d/vendor/enhanced-ruby-mode"]
+	path = .emacs.d/vendor/enhanced-ruby-mode
+	url = https://github.com/zenspider/enhanced-ruby-mode.git
+[submodule ".emacs.d/vendor/inf-ruby"]
+	path = .emacs.d/vendor/inf-ruby
+	url = https://github.com/nonsequitur/inf-ruby.git
+[submodule ".emacs.d/vendor/Emacs-Groovy-Mode"]
+	path = .emacs.d/vendor/Emacs-Groovy-Mode
+	url = https://github.com/russel/Emacs-Groovy-Mode.git
+[submodule ".emacs.d/vendor/vlfi"]
+	path = .emacs.d/vendor/vlfi
+	url = https://github.com/m00natic/vlfi.git
