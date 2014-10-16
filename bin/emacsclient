@@ -1,8 +1,13 @@
 #!/bin/sh
 
-/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -n "$@" 2> /dev/null
+#/Applications/Emacs.app/Contents/MacOS/bin/emacsclient -n "$@" 2> /dev/null
+#if [ $? -ne 0 ]; then
+#   open -a /Applications/Emacs.app "$@"
+#fi
+
+/usr/local/Cellar/emacs/24.3/bin/emacsclient -n "$@" 2> /dev/null
 if [ $? -ne 0 ]; then
-   open -a /Applications/Emacs.app "$@"
+   /usr/local/Cellar/emacs/24.3/bin/emacs "$@"
 fi
 
-#/usr/local/Cellar/emacs/24.2/bin/emacsclient -t
+#/usr/local/Cellar/emacs/24.3/bin/emacsclient -n "$@" 
