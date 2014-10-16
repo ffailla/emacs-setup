@@ -133,3 +133,6 @@
 [submodule ".emacs.d/vendor/vlfi"]
 	path = .emacs.d/vendor/vlfi
 	url = https://github.com/m00natic/vlfi.git
+[submodule ".emacs.d/vendor/pbcopy"]
+	path = .emacs.d/vendor/pbcopy
+	url = https://github.com/ffailla/pbcopy.git

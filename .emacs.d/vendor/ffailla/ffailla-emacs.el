@@ -637,5 +637,11 @@ by using nxml's indentation rules."
 ;;;
 (require 'vlf)
 
+;;;
+;;; pbcopy - copy paste support for emacs in terminal on osx
+;;;
+(require 'pbcopy)
+(turn-on-pbcopy)
+
 (provide 'ffailla-emacs)
 
