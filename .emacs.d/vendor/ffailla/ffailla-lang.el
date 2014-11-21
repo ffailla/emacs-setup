@@ -286,25 +286,34 @@
 ;;;
 ;;; nrepl
 ;;;
-(require 'nrepl)
+;; (require 'nrepl)
+;; (setq nrepl-popup-stacktraces nil)
+;; (setq nrepl-popup-stacktraces-in-repl t)
 
-(setq nrepl-popup-stacktraces nil)
-(setq nrepl-popup-stacktraces-in-repl t)
+;;;
+;;; queue
+;;;
+(load-file "~/.emacs.d/vendor/queue/queue-0.1.1.el")
+(require 'queue)
 
-;; (require 'cider)
-;; (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
-;; (setq cider-repl-tab-command 'indent-for-tab-command)
-;; (setq cider-repl-pop-to-buffer-on-connect nil)
-;; (setq cider-popup-stacktraces nil)
-;; (setq cider-repl-popup-stacktraces t)
-;; (setq cider-auto-select-error-buffer t)
-;; ;;(setq nrepl-buffer-name-separator "-")
-;; ;;(setq nrepl-buffer-name-show-port t)
-;; (add-to-list 'same-window-buffer-names "*cider*")
-;; (add-hook 'cider-repl-mode-hook 'subword-mode)
-;; (add-hook 'cider-repl-mode-hook 'paredit-mode)
-;; (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
-;; (autoload 'cider-interaction-mode "cider-interaction" "Minor mode for cider interaction from a Clojure buffer.")
+;;;
+;;; cider
+;;;
+
+(require 'cider)
+(add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
+(setq cider-repl-tab-command 'indent-for-tab-command)
+(setq cider-repl-pop-to-buffer-on-connect nil)
+(setq cider-popup-stacktraces nil)
+(setq cider-repl-popup-stacktraces t)
+(setq cider-auto-select-error-buffer t)
+;;(setq nrepl-buffer-name-separator "-")
+;;(setq nrepl-buffer-name-show-port t)
+(add-to-list 'same-window-buffer-names "*cider*")
+(add-hook 'cider-repl-mode-hook 'subword-mode)
+(add-hook 'cider-repl-mode-hook 'paredit-mode)
+(add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
+(autoload 'cider-interaction-mode "cider-interaction" "Minor mode for cider interaction from a Clojure buffer.")
 
 (autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
 (setq nrepl-history-file "~/.nrepl.history")
@@ -312,8 +321,8 @@
 ;;;
 ;;; ac-nrepl
 ;;;
-(require 'ac-nrepl)
-(eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
+;; (require 'ac-nrepl)
+;; (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
 
 ;;;
 ;;; clj-refactor
