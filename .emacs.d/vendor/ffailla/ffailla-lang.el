@@ -321,8 +321,8 @@
 ;;;
 ;;; ac-nrepl
 ;;;
-;; (require 'ac-nrepl)
-;; (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
+(require 'ac-nrepl)
+(eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
 
 ;;;
 ;;; clj-refactor
