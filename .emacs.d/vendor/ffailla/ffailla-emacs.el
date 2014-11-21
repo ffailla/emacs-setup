@@ -124,15 +124,20 @@
 (require 'saveplace)
 (setq-default save-place t)
 
+(setq echo-keystrokes 0.1
+      use-dialog-box nil
+      visible-bell t)
+(show-paren-mode t)
+
 ;;(setq visible-bell f)
 ;;(setq ring-bell-function 'ignore)
-(setq ring-bell-function
-      (lambda ()
-        (unless (memq this-command
-                      '(isearch-abort abort-recursive-edit exit-minibuffer keyboard-quit
-				      mwheel-scroll down up next-line previous-line
-				      backward-char forward-char))
-          (ding))))
+;; (setq ring-bell-function
+;;       (lambda ()
+;;         (unless (memq this-command
+;;                       '(isearch-abort abort-recursive-edit exit-minibuffer keyboard-quit
+;; 				      mwheel-scroll down up next-line previous-line
+;; 				      backward-char forward-char))
+;;           (ding))))
 
 (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m)
 
@@ -527,6 +532,24 @@ by using nxml's indentation rules."
 (setq org-default-notes-file "~/org/notes.org")
 (setq org-agenda-files (directory-files "~/org" t ".org$"))
 (setq org-mobile-files org-agenda-files)
+
+;; org-mode babel
+(require 'ob)
+(require 'ob-tangle)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (clojure . t)
+   (R . t)))
+
+(setq org-babel-clojure-backend 'nrepl)
+(setq org-src-fontify-natively t)
+(setq org-confirm-babel-evaluate nil)
+(setq org-export-babel-evaluate nil)
+(setq org-src-window-setup 'current-window)
+;;(setq inferior-lisp-program "lein repl")
+(add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
 
 ;; webdav rsync command
 (setq org-webdav-username nil)
