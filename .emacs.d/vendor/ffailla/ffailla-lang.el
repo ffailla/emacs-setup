@@ -293,7 +293,6 @@
 ;;;
 ;;; queue
 ;;;
-(load-file "~/.emacs.d/vendor/queue/queue-0.1.1.el")
 (require 'queue)
 
 ;;;
@@ -319,10 +318,17 @@
 (setq nrepl-history-file "~/.nrepl.history")
 
 ;;;
+;;; company-mode
+;;;
+(require 'company-mode)
+(add-hook 'cider-repl-mode-hook 'company-mode)
+(add-hook 'cider-mode-hook 'company-mode)
+
+;;;
 ;;; ac-nrepl
 ;;;
-(require 'ac-nrepl)
-(eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
+;; (require 'ac-nrepl)
+;; (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
 
 ;;;
 ;;; clj-refactor
@@ -337,7 +343,7 @@
   ;;(cider-interaction-mode t)
   (nrepl-interaction-mode t)
   (ac-nrepl-setup)
-  (auto-complete-mode t)
+  ;; (auto-complete-mode t)
   (show-paren-mode t)
   (column-number-mode t)
   (paredit-mode t)
@@ -370,7 +376,7 @@
 	  (lambda ()
             (nrepl-turn-on-eldoc-mode)
 	    (ac-nrepl-setup)
-	    (auto-complete-mode t)
+	    ;; (auto-complete-mode t)
 	    (show-paren-mode t)
 	    (paredit-mode t)
 	    (outline-minor-mode t)
@@ -385,7 +391,7 @@
           (lambda ()
             (nrepl-turn-on-eldoc-mode)
 	    (ac-nrepl-setup)
-	    (auto-complete-mode t)
+	    ;; (auto-complete-mode t)
 	    (show-paren-mode t)
 	    (paredit-mode t)
 	    (outline-minor-mode t)
