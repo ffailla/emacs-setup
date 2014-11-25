@@ -5,8 +5,6 @@
 (require 'cl)
 (require 'imenu)
 (require 'recentf)
-(require 'flymake)
-
 (require 'ido-ubiquitous)
 
 ;;;

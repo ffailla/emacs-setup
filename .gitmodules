@@ -76,15 +76,6 @@
 [submodule ".emacs.d/vendor/epl"]
 	path = .emacs.d/vendor/epl
 	url = https://github.com/cask/epl.git
-[submodule ".emacs.d/vendor/emacs-flymake"]
-	path = .emacs.d/vendor/emacs-flymake
-	url = https://github.com/illusori/emacs-flymake
-[submodule ".emacs.d/vendor/flymake-jshint"]
-	path = .emacs.d/vendor/flymake-jshint
-	url = https://github.com/Wilfred/flymake-jshint.el
-[submodule ".emacs.d/vendor/flymake-easy"]
-	path = .emacs.d/vendor/flymake-easy
-	url = https://github.com/purcell/flymake-easy
 [submodule ".emacs.d/vendor/smex"]
 	path = .emacs.d/vendor/smex
 	url = https://github.com/nonsequitur/smex.git

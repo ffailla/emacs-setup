@@ -172,12 +172,9 @@
 ;;;  * http://code.google.com/p/js2-mode/
 ;;;
 ;; M-x byte-compile-file js2.el
-
 (autoload 'js2-mode "js2-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 (setq js-indent-level 2)
-(require 'flymake-jshint)
-(add-hook 'js-mode-hook 'flymake-mode)
 
 ;;;
 ;;; js-comint
