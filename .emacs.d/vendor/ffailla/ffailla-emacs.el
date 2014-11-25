@@ -6,6 +6,7 @@
 (require 'imenu)
 (require 'recentf)
 (require 'ido-ubiquitous)
+(require 'flycheck)
 
 ;;;
 ;;; smex

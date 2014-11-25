@@ -115,3 +115,6 @@
 [submodule ".emacs.d/vendor/elpa-queue"]
 	path = .emacs.d/vendor/elpa-queue
 	url = https://github.com/ffailla/elpa-queue.git
+[submodule ".emacs.d/vendor/flycheck"]
+	path = .emacs.d/vendor/flycheck
+	url = https://github.com/flycheck/flycheck.git
