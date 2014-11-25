@@ -1,6 +1,6 @@
-;;;
-;;; ffailla-lang.el
-;;;
+;;; package --- ffailla-lang.el
+;;; Commentary:
+;;; Code:
 
 ;;;
 ;;; arduino
@@ -24,7 +24,10 @@
 ;;;
 ;;; cypher
 ;;;
-(require 'cypher-mode)
+(autoload 'cypher-mode "cypher-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.cypher$" . cypher-modeu))
+;;(define-key cypher-mode-map [(control ?c) (control ?r)] 'sh-send-line-or-region-and-step)
+;;(define-key cypher-mode-map [(control ?c) (control ?z)] 'sh-switch-to-process-buffer)
 
 ;;;
 ;;; sh-mode helpers
@@ -65,9 +68,6 @@
 (defun sh-switch-to-process-buffer ()
   (interactive)
   (pop-to-buffer (process-buffer (get-process "shell")) t))
-
-(define-key cypher-mode-map [(control ?c) (control ?r)] 'sh-send-line-or-region-and-step)
-(define-key cypher-mode-map [(control ?c) (control ?z)] 'sh-switch-to-process-buffer)
 
 ;;;
 ;;; ess
@@ -281,11 +281,6 @@
 ;;;
 (require 'company)
 
-;;;
-;;; clj-refactor
-;;;
-(require 'clj-refactor)
-
 ;;
 ;; clojure-mode
 ;;
@@ -300,11 +295,8 @@
   (column-number-mode t)
   (paredit-mode t)
   (outline-minor-mode t)
-  (rainbow-delimiters-mode t)
-  (clj-refactor-mode 1)
-  (cljr-add-keybindings-with-prefix "C-c C-m"))
+  (rainbow-delimiters-mode t))
 
-;; (require 'clojure-mode)
 ;;(autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
 ;; (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
@@ -320,8 +312,7 @@
 	    (paredit-mode t)
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)))
- 
-(add-hook 'cider-interaction-mode-hook
+ (add-hook 'cider-interaction-mode-hook
           (lambda ()
             (nrepl-turn-on-eldoc-mode)
 	    ;; (ac-nrepl-setup)
@@ -332,7 +323,6 @@
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)
 	    ))
-
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 
 ;;;
@@ -382,7 +372,6 @@
 (require 'yaml-mode)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
-
 ;;;
 ;;; ruby-mode
 ;;;
@@ -412,3 +401,5 @@
   '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
 
 (provide 'ffailla-lang)
+;;; ffailla-lang.el ends here
+

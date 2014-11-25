@@ -1,11 +1,23 @@
-;;
-;; ffailla-emacs.el
-;;
+;;; package --- ffailla-emacs.el
+;;; Commentary:
+;;; Code:
 
-(require 'cl)
+;;(require 'cl)
 (require 'imenu)
 (require 'recentf)
+
+;;;
+;;; ido
+;;
+(require 'ido)
 (require 'ido-ubiquitous)
+(when (> emacs-major-version 21)
+  (ido-mode t)
+  (setq ido-enable-prefix nil
+        ido-enable-flex-matching t
+        ido-create-new-buffer 'always
+        ido-use-filename-at-point t
+        ido-max-prospects 10))
 
 ;;;
 ;;; flycheck
@@ -35,18 +47,6 @@
 ;;;
 (require 'yasnippet)
 ;; (yas-global-mode 1)
-
-;;;
-;;; multiple-cursors
-;;;
-(require 'multiple-cursors)
-;; When you have an active region that spans multiple lines, the following will add a cursor to each line:
-;; (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-
-;; When you want to add multiple cursors not based on continuous lines, but based on keywords in the buffer, use:
-;; (global-set-key (kbd "C->") 'mc/mark-next-like-this)
-;; (global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-;; (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
 ;;;
 ;;; global settings
@@ -318,14 +318,6 @@ Symbols matching the text at point are put first in the completion list."
   (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
     (when file
       (find-file file))))
-
-(when (> emacs-major-version 21)
-  (ido-mode t)
-  (setq ido-enable-prefix nil
-        ido-enable-flex-matching t
-        ido-create-new-buffer 'always
-        ido-use-filename-at-point 'guess
-        ido-max-prospects 10))
 
 (defun show-file-name ()
   "Show the full path file name in the minibuffer."
@@ -602,3 +594,4 @@ by using nxml's indentation rules."
 
 (provide 'ffailla-emacs)
 
+;;; ffailla-emacs.el ends here

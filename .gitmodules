@@ -34,9 +34,6 @@
 [submodule ".emacs.d/vendor/paredit"]
 	path = .emacs.d/vendor/paredit
 	url = http://mumble.net/~campbell/git/paredit.git
-[submodule ".emacs.d/vendor/popup-el"]
-	path = .emacs.d/vendor/popup-el
-	url = https://github.com/auto-complete/popup-el.git
 [submodule ".emacs.d/vendor/rainbow-delimiters"]
 	path = .emacs.d/vendor/rainbow-delimiters
 	url = https://github.com/jlr/rainbow-delimiters.git
@@ -85,12 +82,6 @@
 [submodule ".emacs.d/vendor/yasnippet"]
 	path = .emacs.d/vendor/yasnippet
 	url = https://github.com/capitaomorte/yasnippet.git
-[submodule ".emacs.d/vendor/multiple-cursors"]
-	path = .emacs.d/vendor/multiple-cursors
-	url = https://github.com/magnars/multiple-cursors.el.git
-[submodule ".emacs.d/vendor/clj-refactor"]
-	path = .emacs.d/vendor/clj-refactor
-	url = https://github.com/magnars/clj-refactor.el.git
 [submodule ".emacs.d/vendor/yaml-mode"]
 	path = .emacs.d/vendor/yaml-mode
 	url = https://github.com/yoshiki/yaml-mode.git
