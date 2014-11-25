@@ -168,16 +168,6 @@
       (setq haskell-ghci-program-name "ghci6"))))
 
 ;;;
-;;; java
-;;;
-;;(add-to-list 'load-path "~/.emacs.d/vendor/jdee-2.4.0.1/lisp")
-;;(add-to-list 'load-path "~/.emacs.d/vendor/cedet-1.1/common")
-;;(load-file (expand-file-name "~/.emacs.d/vendor/cedet-1.1/common/cedet.el"))
-;;(add-to-list 'load-path (expand-file-name "~/emacs/site/elib"))
-
-;;(require 'jde)
-
-;;;
 ;;; js2-mode
 ;;;  * http://code.google.com/p/js2-mode/
 ;;;
@@ -188,6 +178,7 @@
 (setq js-indent-level 2)
 (require 'flymake-jshint)
 (add-hook 'js-mode-hook 'flymake-mode)
+
 ;;;
 ;;; js-comint
 ;;;
@@ -257,37 +248,10 @@
 (setq same-window-buffer-names (delete "*inferior-lisp*" same-window-buffer-names))
 
 ;;;
-;;; slime - cvs distro
-;;;
-(autoload 'slime "slime" "Start an inferior^_superior Lisp and connect to its Swank server." t)
-(autoload 'slime-mode "slime" "SLIME: The Superior Lisp Interaction Mode for Emacs (minor-mode)." t)
-(eval-after-load 'slime
-  '(progn
-     (setq slime-protocol-version 'ignore)
-     ;; (slime-setup '(slime-repl slime-fuzzy))
-     (slime-setup '(slime-repl))
-     ))
-
-(defalias 'slc 'slime-connect)
-
-;;;
-;;; ac-slime
-;;;
-(require 'ac-slime)
-(add-hook 'slime-mode-hook 'set-up-slime-ac)
-
-;;;
 ;;; paredit
 ;;;
 ;;(autoload 'paredit-mode "paredit" "Minor mode for pseudo-structurally editing Lisp code." t)
 (require 'paredit)
-
-;;;
-;;; nrepl
-;;;
-;; (require 'nrepl)
-;; (setq nrepl-popup-stacktraces nil)
-;; (setq nrepl-popup-stacktraces-in-repl t)
 
 ;;;
 ;;; queue
@@ -297,7 +261,6 @@
 ;;;
 ;;; cider
 ;;;
-
 (require 'cider)
 (add-hook 'cider-mode-hook 'cider-turn-on-eldoc-mode)
 (setq cider-repl-tab-command 'indent-for-tab-command)
@@ -322,12 +285,6 @@
 (require 'company)
 
 ;;;
-;;; ac-nrepl
-;;;
-;; (require 'ac-nrepl)
-;; (eval-after-load "auto-complete" '(add-to-list 'ac-modes 'nrepl-mode))
-
-;;;
 ;;; clj-refactor
 ;;;
 (require 'clj-refactor)
@@ -350,19 +307,6 @@
   (clj-refactor-mode 1)
   (cljr-add-keybindings-with-prefix "C-c C-m"))
 
-;; (defun emit-form-handler (buffer form)
-;;   (lexical-let ((form form))
-;;     (nrepl-make-response-handler buffer
-;;                                  (lambda (buffer value)
-;; 				   (nrepl-emit-result buffer (format "%s" form) t)
-;; 				   (nrepl-emit-result buffer (format "%s" value) t))
-;;                                  (lambda (buffer out)
-;;                                    (nrepl-emit-output buffer out t))
-;;                                  (lambda (buffer err)
-;;                                    (nrepl-emit-output buffer err t))
-;;                                  (lambda (buffer)
-;;                                    (nrepl-emit-prompt buffer)))))
-
 ;; (require 'clojure-mode)
 ;;(autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
@@ -379,11 +323,6 @@
 	    (paredit-mode t)
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)))
-
-;; (defun eval-and-print-form (form)
-;;   (nrepl-send-string form
-;; 		     (emit-form-handler (nrepl-current-repl-buffer) form)
-;; 		     (nrepl-current-ns)))
  
 (add-hook 'cider-interaction-mode-hook
           (lambda ()
@@ -395,21 +334,6 @@
 	    (paredit-mode t)
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)
-	    
-	    ;; (define-key nrepl-interaction-mode-map
-            ;;   (kbd "C-x C-e")
-	    ;;   (lambda (&optional prefix)
-	    ;; 	(interactive "P")
-	    ;; 	(eval-and-print-form (nrepl-last-expression))))
-	    
-            ;; (define-key nrepl-interaction-mode-map
-            ;;   (kbd "C-M-x")
-	    ;;   (lambda (&optional prefix)
-	    ;; 	(interactive "P")
-	    ;; 	(let ((form (nrepl-expression-at-point)))
-	    ;; 	  (if prefix
-	    ;; 	      (nrepl-interactive-eval-print form)
-	    ;; 	    (eval-and-print-form form)))))
 	    ))
 
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
