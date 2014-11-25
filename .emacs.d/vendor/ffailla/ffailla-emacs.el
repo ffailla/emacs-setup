@@ -6,7 +6,12 @@
 (require 'imenu)
 (require 'recentf)
 (require 'ido-ubiquitous)
+
+;;;
+;;; flycheck
+;;;
 (require 'flycheck)
+(add-hook 'after-init-hook #'global-flycheck-mode)
 
 ;;;
 ;;; smex
