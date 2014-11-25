@@ -95,14 +95,6 @@
 (setq linum-format "%d ")
 (hlinum-activate)
 
-;; (require 'linum-off)
-;; (setq linum-disabled-modes-list '(eshell-mode 
-;; 				  wl-summary-mode 
-;; 				  compilation-mode 
-;; 				  erc-mode 
-;; 				  org-mode
-;; 				  grep-mode))
-
 (defun desktop-save-in-desktop-dir-nomessage ()
   "Save the desktop in directory `desktop-dirname'."
   (interactive)
@@ -284,7 +276,7 @@ Symbols matching the text at point are put first in the completion list."
   (imenu--make-index-alist)
   (let ((name-and-pos '())
         (symbol-names '()))
-    (flet ((addsymbols (symbol-list)
+    (cf-flet ((addsymbols (symbol-list)
                        (when (listp symbol-list)
                          (dolist (symbol symbol-list)
                            (let ((name nil) (position nil))
@@ -375,37 +367,7 @@ Symbols matching the text at point are put first in the completion list."
 ;;;
 ;;; erc settings
 ;;;
-(load "~/.ercpass" t)
-(require 'erc-services)
-(erc-services-mode 1)
-;; (setq erc-prompt-for-nickserv-password nil)
-;; (setq erc-nickserv-passwords
-;;       `((freenode (("ffailla" . ,freenode-ffailla-pass)))))
-
-;;(add-hook 'erc-text-matched-hook 'erc-beep-on-match)
-(setq erc-beep-match-types '(current-nick keyword pal))
-(setq erc-fill-column 115)
-(setq erc-hide-list '("JOIN" "PART" "QUIT" "NICK" "MODE"
-		      ;;"324" "329" "332" "333" "353" "477"
-))
-
-(setq erc-pals '("ethorsen" "thickey" "dkapsalis" "rhickey"))
-(setq erc-enable-logging t)
-(setq erc-log-channels-directory "~/.erc/logs/")
-(setq erc-save-buffer-on-part t)
-
-;; (setq apscript (format "
-;;     set cusrPath to (path to \"cusr\" as string)
-;;     set soundAlias to (cusrPath & \"bin:campfire-incoming.mp3\") as alias
-;;     tell application \"Play Sound\"
-;; 	play (soundAlias as alias)
-;;     end tell
-;;     "))
-
-;; FF - problems in iterm via ssh/screen
-;; (add-hook 'erc-text-matched-hook
-;; 	  (lambda (match-type nickuserhost message)
-;; 	    (do-applescript apscript)))
+(require 'erc)
 
 ;;;
 ;;; magit
