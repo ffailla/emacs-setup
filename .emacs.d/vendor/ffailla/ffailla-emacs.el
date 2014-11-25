@@ -27,11 +27,6 @@
                                          (revert-buffer-function " %b" ("%b - " default-directory)))))))
 
 ;;;
-;;; cl-lib
-;;;
-(require 'cl-lib)
-
-;;;
 ;;; yasnippet
 ;;;
 (require 'yasnippet)
@@ -145,8 +140,7 @@
 ;;; autosave/backup tmp file locations
 ;;;
 ;; Put autosave files (ie #foo#) in one place, *not* scattered all over the file system!
-(defvar autosave-dir
-  (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
+(defvar autosave-dir (concat "/tmp/emacs_autosaves/" (user-login-name) "/"))
 (make-directory autosave-dir t)
 (setq auto-save-file-name-transforms `(("\\(?:[^/]*/\\)*\\(.*\\)", (concat autosave-dir "\\1") t)))
 
@@ -213,32 +207,27 @@
 
 
 ;; emacs key bindings
-;;; xml
-(defalias 'ppx 'pprint-xml)
-
-;;; misc
 (defalias 'ttl 'toggle-truncate-lines)
-(defalias 'rnb 'rename-buffer)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 ;;; ido
 (global-set-key (kbd "C-x C-i") 'ido-imenu)
 (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
-(global-set-key (kbd "C-x f") 'recentf-ido-find-file)
+(global-set-key (kbd "C-x f")   'recentf-ido-find-file)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
 ;;; window layouts
-(define-key global-map "\C-cs"
-  (lambda ()
-    (interactive)
-    (message "saving current frame and window layout")
-    (setq my-favorite-frame-setup (current-frame-configuration))))
+;; (define-key global-map "\C-cs"
+;;   (lambda ()
+;;     (interactive)
+;;     (message "saving current frame and window layout")
+;;     (setq my-favorite-frame-setup (current-frame-configuration))))
 
-(define-key global-map "\C-cf"
-  (lambda ()
-    (interactive)
-    (message "restoring frame and window layout")
-    (set-frame-configuration my-favorite-frame-setup)))
+;; (define-key global-map "\C-cf"
+;;   (lambda ()
+;;     (interactive)
+;;     (message "restoring frame and window layout")
+;;     (set-frame-configuration my-favorite-frame-setup)))
 
 ;;; zoom in/out
 ;;(global-set-key [(control shift ?z)] 'text-scale-increase)
@@ -249,7 +238,7 @@
 (global-set-key "\C-c\C-m" 'execute-extended-command)
 
 ;;; tmux ?!?!?!?
-(global-set-key (kbd " [C") 'paredit-forward-slurp-sexp)
+;;(global-set-key (kbd " [C") 'paredit-forward-slurp-sexp)
 ;;(global-set-key (kbd "S-<left>") 'windmove-left)
 ;;(global-set-key (kbd "S-<up>") 'windmove-up)
 ;;(global-set-key (kbd "S-<down>") 'windmove-down)
@@ -262,16 +251,16 @@
 ;;;
 ;;; Emacs Starter Kit fns
 ;;;
-(defun view-url ()
-  "Open a new buffer containing the contents of URL."
-  (interactive)
-  (let* ((default (thing-at-point-url-at-point))
-         (url (read-from-minibuffer "URL: " default)))
-    (switch-to-buffer (url-retrieve-synchronously url))
-    (rename-buffer url t)
-    ;; TODO: switch to nxml/nxhtml mode
-    (cond ((search-forward "<?xml" nil t) (xml-mode))
-          ((search-forward "<html" nil t) (html-mode)))))
+;; (defun view-url ()
+;;   "Open a new buffer containing the contents of URL."
+;;   (interactive)
+;;   (let* ((default (thing-at-point-url-at-point))
+;;          (url (read-from-minibuffer "URL: " default)))
+;;     (switch-to-buffer (url-retrieve-synchronously url))
+;;     (rename-buffer url t)
+;;     ;; TODO: switch to nxml/nxhtml mode
+;;     (cond ((search-forward "<?xml" nil t) (xml-mode))
+;;           ((search-forward "<html" nil t) (html-mode)))))
 
 (defun untabify-buffer ()
   (interactive)
@@ -334,11 +323,6 @@ Symbols matching the text at point are put first in the completion list."
     (when file
       (find-file file))))
 
-(defun show-file-name ()
-  "Show the full path file name in the minibuffer."
-  (interactive)
-  (message (buffer-file-name)))
-
 (when (> emacs-major-version 21)
   (ido-mode t)
   (setq ido-enable-prefix nil
@@ -346,6 +330,11 @@ Symbols matching the text at point are put first in the completion list."
         ido-create-new-buffer 'always
         ido-use-filename-at-point 'guess
         ido-max-prospects 10))
+
+(defun show-file-name ()
+  "Show the full path file name in the minibuffer."
+  (interactive)
+  (message (buffer-file-name)))
 
 ;;;
 ;;; default font
@@ -384,27 +373,6 @@ Symbols matching the text at point are put first in the completion list."
  '(diff-removed ((t (:foreground "#de1923")))))
 
 ;;;
-;;; markdown mode
-;;;
-(autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
-(setq auto-mode-alist
-      (append '(("\\.text" . markdown-mode)
-		("\\.md" . markdown-mode)
-		("\\.mdwn" . markdown-mode) 
-		("\\.mdt" . markdown-mode))
-	      auto-mode-alist))
-
-(defun markdown-preview-file ()
-  "run Marked on the current file and revert the buffer"
-  (interactive)
-  (shell-command
-   (format "open -a /Applications/Marked.app %s"
-       (shell-quote-argument (buffer-file-name)))))
-
-(eval-after-load 'markdown-mode
-  '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
-
-;;;
 ;;; erc settings
 ;;;
 (load "~/.ercpass" t)
@@ -421,7 +389,7 @@ Symbols matching the text at point are put first in the completion list."
 		      ;;"324" "329" "332" "333" "353" "477"
 ))
 
-(setq erc-pals '("ethorsen1" "ethorsen" "thickey" "dkapsalis" "bstephenson" "pwade" "jstonier" "rhickey" "pairuser" "ffmacpro"))
+(setq erc-pals '("ethorsen" "thickey" "dkapsalis" "rhickey"))
 (setq erc-enable-logging t)
 (setq erc-log-channels-directory "~/.erc/logs/")
 (setq erc-save-buffer-on-part t)
@@ -513,7 +481,7 @@ by using nxml's indentation rules."
 ;;;
 ;;; sql-mode
 ;;;
-;;(sql-set-product 'ms)
+;; (sql-set-product 'ms)
 
 ;;;
 ;;; org-mode

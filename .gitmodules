@@ -1,15 +1,6 @@
-[submodule ".emacs.d/vendor/ac-slime"]
-	path = .emacs.d/vendor/ac-slime
-	url = https://github.com/purcell/ac-slime.git
-[submodule ".emacs.d/vendor/ac-nrepl"]
-	path = .emacs.d/vendor/ac-nrepl
-	url = https://github.com/clojure-emacs/ac-nrepl
 [submodule ".emacs.d/vendor/arduino-mode"]
 	path = .emacs.d/vendor/arduino-mode
 	url = https://github.com/bookest/arduino-mode.git
-[submodule ".emacs.d/vendor/auto-complete"]
-	path = .emacs.d/vendor/auto-complete
-	url = https://github.com/auto-complete/auto-complete.git
 [submodule ".emacs.d/vendor/clojure-mode"]
 	path = .emacs.d/vendor/clojure-mode
 	url = https://github.com/clojure-emacs/clojure-mode.git
@@ -19,9 +10,6 @@
 [submodule ".emacs.d/vendor/markdown-mode"]
 	path = .emacs.d/vendor/markdown-mode
 	url = git://jblevins.org/git/markdown-mode.git
-[submodule ".emacs.d/vendor/jdee"]
-	path = .emacs.d/vendor/jdee
-	url = https://github.com/emacsmirror/jdee.git
 [submodule ".emacs.d/vendor/js2-comint"]
 	path = .emacs.d/vendor/js2-comint
 	url = https://github.com/emacsmirror/js-comint.git
@@ -85,9 +73,6 @@
 [submodule ".emacs.d/vendor/hlinum-mode"]
 	path = .emacs.d/vendor/hlinum-mode
 	url = https://github.com/ffailla/hlinum-mode.git
-[submodule ".emacs.d/vendor/slime"]
-	path = .emacs.d/vendor/slime
-	url = https://github.com/ffailla/slime.git
 [submodule ".emacs.d/vendor/epl"]
 	path = .emacs.d/vendor/epl
 	url = https://github.com/cask/epl.git
@@ -118,9 +103,6 @@
 [submodule ".emacs.d/vendor/yaml-mode"]
 	path = .emacs.d/vendor/yaml-mode
 	url = https://github.com/yoshiki/yaml-mode.git
-[submodule ".emacs.d/vendor/cl-lib"]
-	path = .emacs.d/vendor/cl-lib
-	url = https://github.com/emacsmirror/cl-lib.git
 [submodule ".emacs.d/vendor/enhanced-ruby-mode"]
 	path = .emacs.d/vendor/enhanced-ruby-mode
 	url = https://github.com/zenspider/enhanced-ruby-mode.git
@@ -139,3 +121,6 @@
 [submodule ".emacs.d/vendor/company-mode"]
 	path = .emacs.d/vendor/company-mode
 	url = https://github.com/company-mode/company-mode.git
+[submodule ".emacs.d/vendor/elpa-queue"]
+	path = .emacs.d/vendor/elpa-queue
+	url = https://github.com/ffailla/elpa-queue.git

@@ -134,7 +134,6 @@
 ;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
 ;; (add-hook 'haskell-mode-hook 'font-lock-mode)
 
-
 ;; (setq haskell-program-name
 ;;       (if (eq system-type 'cygwin)
 ;;	  "/cygdrive/c/ghc/ghc-6.8.1/bin/ghcii.sh"
@@ -314,15 +313,13 @@
 (add-hook 'cider-repl-mode-hook 'rainbow-delimiters-mode)
 (autoload 'cider-interaction-mode "cider-interaction" "Minor mode for cider interaction from a Clojure buffer.")
 
-(autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
+;; (autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
 (setq nrepl-history-file "~/.nrepl.history")
 
 ;;;
 ;;; company-mode
 ;;;
 (require 'company)
-(add-hook 'cider-repl-mode-hook 'company-mode)
-(add-hook 'cider-mode-hook 'company-mode)
 
 ;;;
 ;;; ac-nrepl
@@ -339,11 +336,12 @@
 ;; clojure-mode
 ;;
 (defun clojure-mode-setup ()
-  ;;(slime-mode t)
-  ;;(cider-interaction-mode t)
-  (nrepl-interaction-mode t)
-  (ac-nrepl-setup)
+  ;; (slime-mode t)
+  ;; (cider-interaction-mode t)
+  ;; (nrepl-interaction-mode t)
+  ;; (ac-nrepl-setup)
   ;; (auto-complete-mode t)
+  (company-mode t)
   (show-paren-mode t)
   (column-number-mode t)
   (paredit-mode t)
@@ -352,65 +350,67 @@
   (clj-refactor-mode 1)
   (cljr-add-keybindings-with-prefix "C-c C-m"))
 
-(defun emit-form-handler (buffer form)
-  (lexical-let ((form form))
-    (nrepl-make-response-handler buffer
-                                 (lambda (buffer value)
-				   (nrepl-emit-result buffer (format "%s" form) t)
-				   (nrepl-emit-result buffer (format "%s" value) t))
-                                 (lambda (buffer out)
-                                   (nrepl-emit-output buffer out t))
-                                 (lambda (buffer err)
-                                   (nrepl-emit-output buffer err t))
-                                 (lambda (buffer)
-                                   (nrepl-emit-prompt buffer)))))
+;; (defun emit-form-handler (buffer form)
+;;   (lexical-let ((form form))
+;;     (nrepl-make-response-handler buffer
+;;                                  (lambda (buffer value)
+;; 				   (nrepl-emit-result buffer (format "%s" form) t)
+;; 				   (nrepl-emit-result buffer (format "%s" value) t))
+;;                                  (lambda (buffer out)
+;;                                    (nrepl-emit-output buffer out t))
+;;                                  (lambda (buffer err)
+;;                                    (nrepl-emit-output buffer err t))
+;;                                  (lambda (buffer)
+;;                                    (nrepl-emit-prompt buffer)))))
 
 ;; (require 'clojure-mode)
 ;;(autoload 'clojure-mode "clojure-mode" nil t)
 (add-hook 'clojure-mode-hook #'clojure-mode-setup)
-(add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
+;; (add-hook 'slime-repl-mode-hook #'clojure-mode-setup)
 (add-hook 'inferior-lisp-mode-hook #'clojure-mode-setup)
-
-(add-hook 'nrepl-mode-hook #'clojure-mode-setup)
-(add-hook 'nrepl-repl-mode-hook
+(add-hook 'cider-mode-hook #'clojure-mode-setup)
+(add-hook 'cider-repl-mode-hook
 	  (lambda ()
-            (nrepl-turn-on-eldoc-mode)
-	    (ac-nrepl-setup)
+            (cider-turn-on-eldoc-mode)
+	    ;; (ac-nrepl-setup)
 	    ;; (auto-complete-mode t)
+	    (company-mode t)
 	    (show-paren-mode t)
 	    (paredit-mode t)
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)))
 
-(defun eval-and-print-form (form)
-  (nrepl-send-string form
-		     (emit-form-handler (nrepl-current-repl-buffer) form)
-		     (nrepl-current-ns)))
+;; (defun eval-and-print-form (form)
+;;   (nrepl-send-string form
+;; 		     (emit-form-handler (nrepl-current-repl-buffer) form)
+;; 		     (nrepl-current-ns)))
  
-(add-hook 'nrepl-interaction-mode-hook
+(add-hook 'cider-interaction-mode-hook
           (lambda ()
             (nrepl-turn-on-eldoc-mode)
-	    (ac-nrepl-setup)
+	    ;; (ac-nrepl-setup)
 	    ;; (auto-complete-mode t)
+	    (company-mode t)
 	    (show-paren-mode t)
 	    (paredit-mode t)
 	    (outline-minor-mode t)
 	    (rainbow-delimiters-mode t)
 	    
-	    (define-key nrepl-interaction-mode-map
-              (kbd "C-x C-e")
-	      (lambda (&optional prefix)
-		(interactive "P")
-		(eval-and-print-form (nrepl-last-expression))))
+	    ;; (define-key nrepl-interaction-mode-map
+            ;;   (kbd "C-x C-e")
+	    ;;   (lambda (&optional prefix)
+	    ;; 	(interactive "P")
+	    ;; 	(eval-and-print-form (nrepl-last-expression))))
 	    
-            (define-key nrepl-interaction-mode-map
-              (kbd "C-M-x")
-	      (lambda (&optional prefix)
-		(interactive "P")
-		(let ((form (nrepl-expression-at-point)))
-		  (if prefix
-		      (nrepl-interactive-eval-print form)
-		    (eval-and-print-form form)))))))
+            ;; (define-key nrepl-interaction-mode-map
+            ;;   (kbd "C-M-x")
+	    ;;   (lambda (&optional prefix)
+	    ;; 	(interactive "P")
+	    ;; 	(let ((form (nrepl-expression-at-point)))
+	    ;; 	  (if prefix
+	    ;; 	      (nrepl-interactive-eval-print form)
+	    ;; 	    (eval-and-print-form form)))))
+	    ))
 
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 
@@ -468,5 +468,26 @@
 (setq enh-ruby-program "/usr/bin/ruby") ; so that still works if ruby points to
 (autoload 'inf-ruby "inf-ruby" "Run an inferior Ruby process" t)
 (add-hook 'enh-ruby-mode-hook 'inf-ruby-minor-mode)
+
+;;;
+;;; markdown mode
+;;;
+(autoload 'markdown-mode "markdown-mode.el" "Major mode for editing Markdown files" t)
+(setq auto-mode-alist
+      (append '(("\\.text" . markdown-mode)
+		("\\.md" . markdown-mode)
+		("\\.mdwn" . markdown-mode) 
+		("\\.mdt" . markdown-mode))
+	      auto-mode-alist))
+
+(defun markdown-preview-file ()
+  "run Marked on the current file and revert the buffer"
+  (interactive)
+  (shell-command
+   (format "open -a /Applications/Marked.app %s"
+       (shell-quote-argument (buffer-file-name)))))
+
+(eval-after-load 'markdown-mode
+  '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
 
 (provide 'ffailla-lang)
