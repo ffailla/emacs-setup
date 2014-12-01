@@ -91,9 +91,6 @@
 [submodule ".emacs.d/vendor/inf-ruby"]
 	path = .emacs.d/vendor/inf-ruby
 	url = https://github.com/nonsequitur/inf-ruby.git
-[submodule ".emacs.d/vendor/Emacs-Groovy-Mode"]
-	path = .emacs.d/vendor/Emacs-Groovy-Mode
-	url = https://github.com/russel/Emacs-Groovy-Mode.git
 [submodule ".emacs.d/vendor/vlfi"]
 	path = .emacs.d/vendor/vlfi
 	url = https://github.com/m00natic/vlfi.git
