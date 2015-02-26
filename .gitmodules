@@ -106,3 +106,6 @@
 [submodule ".emacs.d/vendor/flycheck"]
 	path = .emacs.d/vendor/flycheck
 	url = https://github.com/flycheck/flycheck.git
+[submodule ".emacs.d/vendor/groovy-emacs-modes"]
+	path = .emacs.d/vendor/groovy-emacs-modes
+	url = https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes.git
