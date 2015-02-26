@@ -109,3 +109,6 @@
 [submodule ".emacs.d/vendor/groovy-emacs-modes"]
 	path = .emacs.d/vendor/groovy-emacs-modes
 	url = https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes.git
+[submodule ".emacs.d/vendor/emacs-gradle-mode"]
+	path = .emacs.d/vendor/emacs-gradle-mode
+	url = https://github.com/jacobono/emacs-gradle-mode.git

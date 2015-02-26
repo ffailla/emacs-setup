@@ -396,6 +396,14 @@
 (eval-after-load 'markdown-mode
   '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
 
+;;;
+;;; groovy and gradle
+;;;
+(autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
+(autoload 'gradle-mode "gradle-mode" "Minor mode for editing gradle files" t)
+(add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode))
+(add-to-list 'auto-mode-alist '("\\.gradle\\'" . groovy-mode))
+
 (provide 'ffailla-lang)
 ;;; ffailla-lang.el ends here
 
