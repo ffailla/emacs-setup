@@ -115,14 +115,9 @@
          )
        auto-mode-alist))
 
-;;(setq inferior-R-program-name "c:/progra~1/R/R-2.2.1/bin/Rterm.exe")
-;;(setq inferior-R-program-name "/Applications/R64.app/Contents/MacOS/R")
-
-
 ;;;
 ;;; haskell
 ;;;
-
 ;;(load "~/.emacs.d/vendor/haskell-mode/ghc-core.el")
 ;;(require 'haskell-mode)
 
@@ -133,11 +128,6 @@
 ;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
 ;; ;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
 ;; (add-hook 'haskell-mode-hook 'font-lock-mode)
-
-;; (setq haskell-program-name
-;;       (if (eq system-type 'cygwin)
-;;	  "/cygdrive/c/ghc/ghc-6.8.1/bin/ghcii.sh"
-;; 	"c:/ghc/ghc-6.8.1/bin/ghci.exe"))
 
 (setq auto-mode-alist
       (append auto-mode-alist
@@ -240,7 +230,6 @@
 ;;;
 ;;; lisp
 ;;;
-
 (setq inferior-lisp-program "~/bin/lisp")
 (setq same-window-buffer-names (delete "*inferior-lisp*" same-window-buffer-names))
 
@@ -274,7 +263,9 @@
 (autoload 'cider-interaction-mode "cider-interaction" "Minor mode for cider interaction from a Clojure buffer.")
 
 ;; (autoload 'nrepl-interaction-mode "nrepl-interaction" "Minor mode for nrepl interaction from a Clojure buffer.")
-(setq nrepl-history-file "~/.nrepl.history")
+(setq cider-repl-wrap-history t)
+(setq cider-repl-history-size 1000)
+(setq cider-repl-history-file "~/.cider.history")
 
 ;;;
 ;;; company-mode
@@ -285,11 +276,18 @@
 ;; clojure-mode
 ;;
 (defun clojure-mode-setup ()
+  (if (and (stringp buffer-file-name)
+  	   (string-match "\\.cljs\\'" buffer-file-name))
+      (setq inferior-lisp-program "lein figwheel")
+    (setq inferior-lisp-program "lein repl"))
+  ;;(setq inferior-lisp-program "lein figwheel")
+  
   ;; (slime-mode t)
   ;; (cider-interaction-mode t)
   ;; (nrepl-interaction-mode t)
   ;; (ac-nrepl-setup)
   ;; (auto-complete-mode t)
+
   (company-mode t)
   (show-paren-mode t)
   (column-number-mode t)
@@ -321,8 +319,7 @@
 	    (show-paren-mode t)
 	    (paredit-mode t)
 	    (outline-minor-mode t)
-	    (rainbow-delimiters-mode t)
-	    ))
+	    (rainbow-delimiters-mode t)))
 (add-to-list 'auto-mode-alist '("\\.clj\\'" . clojure-mode))
 
 ;;;
@@ -364,7 +361,6 @@
 	   "/Applications/Emacs.app/Contents/MacOS/bin/etags" ; path-to-etags  
 	   "/Users/ffailla/bin/clojure.tags"
 	   project-root)))
-
 
 ;;;
 ;;; yaml-mode
