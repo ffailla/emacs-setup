@@ -1,6 +1,0 @@
-[submodule ".emacs.d/vendor/js2-comint"]
-	path = .emacs.d/vendor/js2-comint
-	url = https://github.com/emacsmirror/js-comint.git
-[submodule ".emacs.d/vendor/org-mode"]
-	path = .emacs.d/vendor/org-mode
-	url = git://orgmode.org/org-mode.git
