@@ -1,8 +1,0 @@
-#!/bin/sh
-
-#echo $@
-#echo $8 $4 $2
-echo /usr/local/bin/isql $6 $4 $2 -n -v
-
-/usr/local/bin/isql $6 $4 $2 -n
-
