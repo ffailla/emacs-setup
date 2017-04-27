@@ -237,6 +237,8 @@
 ;; (require 'ob-clojure)
 ;; (setq org-babel-clojure-backend 'cider)
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
+(setq org-clock-persist 'history)
+(org-clock-persistence-insinuate)
 
 ;;; cider
 
