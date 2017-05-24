@@ -15,55 +15,40 @@
 (add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
-(setq package-archive-enable-alist '(("melpa" deft magit)))
-
 (defvar ffailla/packages '(ac-slime
 			   auto-complete
 			   autopair
 			   clojure-mode
 			   coffee-mode
 			   csharp-mode
-			   ; deft
 			   erlang
-			   ; feature-mode
 			   flycheck
-			   ; gist
 			   go-autocomplete
 			   go-eldoc
 			   go-mode
-			   ; graphviz-dot-mode
-			   ; haml-mode
+			   graphviz-dot-mode
 			   haskell-mode
 			   htmlize
-			   ; idris-mode
-			   ; magit
 			   markdown-mode
 			   marmalade
 			   nodejs-repl
-			   ; o-blog
 			   org
 			   paredit
 			   php-mode
-			   ; puppet-mode
-			   ; restclient
 			   rvm
-			   ; scala-mode
 			   smex
-			   ; sml-mode
 			   solarized-theme
-			   ; web-mode
 			   writegood-mode
 			   yaml-mode
 			   ess
 			   cider
 			   pbcopy
 			   python
-			   ;;ido-ubiquitous
 			   powershell
 			   graphviz-dot-mode
 			   go-mode
 			   )
-  "Default packages")
+  "default packages")
 
 (defun ffailla/packages-installed-p ()
   (loop for pkg in ffailla/packages
@@ -77,6 +62,14 @@
     (when (not (package-installed-p pkg))
       (package-install pkg))))
 
+;;; vendor dir
+(defvar ffailla/vendor-dir (expand-file-name "vendor" user-emacs-directory))
+(add-to-list 'load-path ffailla/vendor-dir)
+
+(dolist (project (directory-files ffailla/vendor-dir t "\\w+"))
+  (when (file-directory-p project)
+    (add-to-list 'load-path project)))
+
 ;;; startup settings
 (setq inhibit-splash-screen t
       initial-scratch-message nil
@@ -88,34 +81,23 @@
 (delete-selection-mode t)
 (transient-mark-mode t)
 (setq x-select-enable-clipboard t)
-
+(setq column-number-mode t)
 (setq-default indicate-empty-lines t)
 (when (not indicate-empty-lines)
   (toggle-indicate-empty-lines))
-
 (setq tab-width 2 indent-tabs-mode nil)
 (setq make-backup-files nil)
-
 (defalias 'yes-or-no-p 'y-or-n-p)
-
 (setq echo-keystrokes 0.1
       use-dialog-box nil
       visible-bell t)
 (show-paren-mode t)
-
-(defvar ffailla/vendor-dir (expand-file-name "vendor" user-emacs-directory))
-(add-to-list 'load-path ffailla/vendor-dir)
-
-(dolist (project (directory-files ffailla/vendor-dir t "\\w+"))
-  (when (file-directory-p project)
-    (add-to-list 'load-path project)))
 
 ;;; smex
 (setq smex-save-file (expand-file-name ".smex-items" user-emacs-directory))
 (smex-initialize)
 (global-set-key (kbd "M-x") 'smex)
 (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-
 
 ;;; recent
 (require 'recentf)
@@ -127,7 +109,6 @@
 (ido-mode t)
 (setq ido-enable-flex-matching t
       ido-use-virtual-buffers t)
-;; (require 'ido-ubiquitous)
 (defun recentf-ido-find-file ()
   "Find a recent file using Ido."
   (interactive)
@@ -137,9 +118,6 @@
 (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
 (global-set-key (kbd "C-x f")   'recentf-ido-find-file)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
-
-;;; column nummbers
-(setq column-number-mode t)
 
 ;;; tmp files
 (setq backup-directory-alist `((".*" . ,temporary-file-directory)))
@@ -177,9 +155,9 @@
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
 
-;;; (setq-default show-trailing-whitespace t)
+;; (setq-default show-trailing-whitespace t)
 
-;; flyspell
+;;; flyspell
 (setq flyspell-issue-welcome-flag nil)
 (if (eq system-type 'darwin)
     (setq-default ispell-program-name "/usr/local/bin/aspell")
@@ -213,8 +191,8 @@
             (visual-line-mode t)
             (writegood-mode t)
             (flyspell-mode t)))
-;;(setq markdown-command "pandoc --smart -f markdown -t html")
-;;(setq markdown-css-paths `(,(expand-file-name "markdown.css" ffailla/vendor-dir)))
+;; (setq markdown-command "pandoc --smart -f markdown -t html")
+;; (setq markdown-css-paths `(,(expand-file-name "markdown.css" ffailla/vendor-dir)))
 
 (defun markdown-preview-file ()
   "run Marked on the current file and revert the buffer"
@@ -225,7 +203,6 @@
 
 (eval-after-load 'markdown-mode
   '(define-key markdown-mode-map (kbd "C-c C-p") 'markdown-preview-file))
-
 
 ;;; colortheme
 (if window-system
@@ -240,17 +217,15 @@
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
 
-;;; cider
-
+;;; clojure
+(add-hook 'clojure-mode-hook #'paredit-mode)
 
 ;;; pbcopy
 ; (require 'pbcopy)
 (turn-on-pbcopy)
 
-;;;
 ;;; xml pretty printer
 ;;;  * http://blog.bookworm.at/2007/03/pretty-print-xml-with-emacs.html
-;;;
 (defun xml-pprint-region (begin end)
   "Pretty format XML markup in region. You need to have nxml-mode
 http://www.emacswiki.org/cgi-bin/wiki/NxmlMode installed to do
@@ -271,8 +246,6 @@ by using nxml's indentation rules."
   (push-mark)
   (xml-pprint-region (point-min) (point-max)))
 
-
-;;;
 ;;; graphviz
-;;;
 ;;(setq graphviz-dot-view-command "dot -o $1.png -Tpng $1 && open $1.png")
+
