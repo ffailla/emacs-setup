@@ -44,9 +44,11 @@
 			   cider
 			   pbcopy
 			   python
+			   auto-virtualenv
 			   powershell
 			   graphviz-dot-mode
 			   go-mode
+			   nhexl-mode
 			   )
   "default packages")
 
@@ -249,3 +251,22 @@ by using nxml's indentation rules."
 ;;; graphviz
 ;;(setq graphviz-dot-view-command "dot -o $1.png -Tpng $1 && open $1.png")
 
+
+;;; Python
+(require 'auto-virtualenv)
+(add-hook 'python-mode-hook 'auto-virtualenv-set-virtualenv)
+(add-hook 'projectile-after-switch-project-hook 'auto-virtualenv-set-virtualenv)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (nhexl-mode yaml-mode writegood-mode solarized-theme smex rvm powershell php-mode pbcopy paredit nodejs-repl marmalade markdown-mode htmlize haskell-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck ess erlang csharp-mode coffee-mode cider autopair auto-virtualenv ac-slime))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
