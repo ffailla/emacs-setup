@@ -11,9 +11,10 @@
 (load "package")
 (package-initialize)
 (add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/"))
-(add-to-list 'package-archives
              '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(add-to-list 'package-archives
+             '("marmalade" . "http://marmalade-repo.org/packages/"))
+
 
 (defvar ffailla/packages '(ac-slime
 			   auto-complete
@@ -29,6 +30,7 @@
 			   graphviz-dot-mode
 			   haskell-mode
 			   htmlize
+			   magit
 			   markdown-mode
 			   marmalade
 			   nodejs-repl
@@ -49,6 +51,7 @@
 			   graphviz-dot-mode
 			   go-mode
 			   nhexl-mode
+			   vlf
 			   )
   "default packages")
 
@@ -218,6 +221,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
+(setq org-babel-clojure-sync-nrepl-timeout nil)
 
 (defun my-org-clocktable-indent-string (level)
   (if (= level 1)
@@ -232,6 +236,8 @@
 
 ;;; clojure
 (add-hook 'clojure-mode-hook #'paredit-mode)
+(setq cider-allow-jack-in-without-project t)
+(setq cider-clojure-cli-global-options "-R:cider-clj")
 
 ;;; pbcopy
 ; (require 'pbcopy)
@@ -267,6 +273,10 @@ by using nxml's indentation rules."
 (require 'auto-virtualenv)
 (add-hook 'python-mode-hook 'auto-virtualenv-set-virtualenv)
 (add-hook 'projectile-after-switch-project-hook 'auto-virtualenv-set-virtualenv)
+
+;;; magit
+(global-set-key (kbd "C-x g") 'magit-status)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -274,7 +284,7 @@ by using nxml's indentation rules."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (nhexl-mode yaml-mode writegood-mode solarized-theme smex rvm powershell php-mode pbcopy paredit nodejs-repl marmalade markdown-mode htmlize haskell-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck ess erlang csharp-mode coffee-mode cider autopair auto-virtualenv ac-slime))))
+    (cider yaml-mode writegood-mode vlf spinner solarized-theme smex sesman rvm queue powershell php-mode pbcopy paredit org-edna nodejs-repl nhexl-mode marmalade markdown-mode magit htmlize haskell-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck ess erlang csharp-mode coffee-mode clojure-mode autopair auto-virtualenv ac-slime))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
