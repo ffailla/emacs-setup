@@ -34,7 +34,7 @@
 			   markdown-mode
 			   marmalade
 			   nodejs-repl
-			   org
+			   ;; org
 			   paredit
 			   php-mode
 			   rvm
@@ -124,6 +124,18 @@
 (global-set-key (kbd "C-x f")   'recentf-ido-find-file)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 
+(setq ibuffer-formats 
+      '((mark modified read-only " "
+              (name 40 40 :left :elide) ; change: 30s were originally 18s
+              " "
+              (size 9 -1 :right)
+              " "
+              (mode 16 16 :left :elide)
+              " " filename-and-process)
+        (mark " "
+              (name 16 -1)
+              " " filename)))
+
 ;;; tmp files
 (setq backup-directory-alist `((".*" . ,temporary-file-directory)))
 (setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
@@ -212,13 +224,16 @@
 ;;; colortheme
 (if window-system
     (load-theme 'solarized-light t)
-    (load-theme 'wombat t))
+    (load-theme 'wombat t)
+    ;; (load-theme 'tsdh-dark t)
+    ;; (load-theme 'cyberpunk t)
+  )
 
 ;;; org-mode
 ;; (require 'org)
 ;; (require 'ob-clojure)
 ;; (setq org-babel-clojure-backend 'cider)
-(add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/org-mode/lisp")
 (setq org-clock-persist 'history)
 (org-clock-persistence-insinuate)
 (setq org-babel-clojure-sync-nrepl-timeout nil)
@@ -237,7 +252,9 @@
 ;;; clojure
 (add-hook 'clojure-mode-hook #'paredit-mode)
 (setq cider-allow-jack-in-without-project t)
-(setq cider-clojure-cli-global-options "-R:cider-clj")
+(setq cider-clojure-cli-global-options "-A:cider-clj")
+;; (setq cider-clojure-cli-parameters "-A:cider-clj -m nrepl.cmdline --middleware '%s'")
+(add-hook 'cider-repl-mode-hook '(lambda () (setq scroll-conservatively 101)))
 
 ;;; pbcopy
 ; (require 'pbcopy)
@@ -268,11 +285,33 @@ by using nxml's indentation rules."
 ;;; graphviz
 ;;(setq graphviz-dot-view-command "dot -o $1.png -Tpng $1 && open $1.png")
 
+;;; ediff
+(custom-set-faces
+ '(ediff-fine-diff-A    ((t (:background "grey-d" :bold t))))
+ '(ediff-fine-diff-B    ((t (:background "grey-d" :bold t))))
+ '(ediff-fine-diff-C    ((t (:background "grey-d" :bold t))))
+ '(ediff-current-diff-A ((t (:background "black"))))
+ '(ediff-current-diff-B ((t (:background "black"))))
+ '(ediff-current-diff-C ((t (:background "black"))))
+ '(ediff-even-diff-A    ((t (:inherit hl-line))))
+ '(ediff-even-diff-B    ((t (:inherit hl-line))))
+ '(ediff-even-diff-C    ((t (:inherit hl-line))))
+ '(ediff-odd-diff-A     ((t (:inherit hl-line))))
+ '(ediff-odd-diff-B     ((t (:inherit hl-line))))
+ '(ediff-odd-diff-C     ((t (:inherit hl-line)))))
 
 ;;; Python
 (require 'auto-virtualenv)
 (add-hook 'python-mode-hook 'auto-virtualenv-set-virtualenv)
 (add-hook 'projectile-after-switch-project-hook 'auto-virtualenv-set-virtualenv)
+;; (use-package pyenv-mode
+;;   :init
+;;   (add-to-list 'exec-path "~/.pyenv/shims")
+;;   (setenv "WORKON_HOME" "~/.pyenv/versions/")
+;;   :config
+;;   (pyenv-mode)
+;;   :bind
+;;   ("C-x p e" . pyenv-activate-current-project))
 
 ;;; magit
 (global-set-key (kbd "C-x g") 'magit-status)
@@ -284,10 +323,5 @@ by using nxml's indentation rules."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (cider yaml-mode writegood-mode vlf spinner solarized-theme smex sesman rvm queue powershell php-mode pbcopy paredit org-edna nodejs-repl nhexl-mode marmalade markdown-mode magit htmlize haskell-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck ess erlang csharp-mode coffee-mode clojure-mode autopair auto-virtualenv ac-slime))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+    (## cider yaml-mode writegood-mode vlf spinner solarized-theme smex sesman rvm queue powershell php-mode pbcopy paredit org-edna nodejs-repl nhexl-mode marmalade markdown-mode magit htmlize haskell-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck ess erlang csharp-mode coffee-mode clojure-mode autopair auto-virtualenv ac-slime))))
+
