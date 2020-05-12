@@ -224,7 +224,8 @@
 ;;; colortheme
 (if window-system
     (load-theme 'solarized-light t)
-    (load-theme 'wombat t)
+    (load-theme 'misterioso t
+    ;; (load-theme 'wombat t)
     ;; (load-theme 'tsdh-dark t)
     ;; (load-theme 'cyberpunk t)
   )
